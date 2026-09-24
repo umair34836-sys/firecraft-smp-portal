@@ -44,6 +44,7 @@
         <button class="nav-btn" data-section="server">🌐 Server Settings</button>
         <button class="nav-btn" data-section="website">📢 Website Settings</button>
         <button class="nav-btn" data-section="staff">🛡️ Staff Management</button>
+        <button class="nav-btn" data-section="sponsored">💼 Sponsored</button>
       </aside>
 
       <main class="content">
@@ -159,7 +160,64 @@
           </div>
         </section>
 
-        <section id="staff" class="section">
+        
+        <section id="sponsored" class="section">
+          <div class="section-head">
+            <div><h1>Sponsored Placements</h1><p>Manage the three paid sponsor placements without changing the existing FireCraft systems.</p></div>
+            <button id="refreshSponsors" class="btn btn-primary">Refresh</button>
+          </div>
+
+          <div class="sponsor-grid">
+            <div class="card sponsor-admin-card">
+              <div class="sponsor-slot-title"><span>Slot 1</span><span class="pill">Homepage</span></div>
+              <label>Enabled<input type="checkbox" id="s1Enabled"></label>
+              <label>Sponsor Name<input id="s1Name" placeholder="Sponsor name"></label>
+              <label>Logo URL<input id="s1Logo" placeholder="https://..."></label>
+              <label>Description<textarea id="s1Description" rows="3" placeholder="Short sponsor description"></textarea></label>
+              <label>Destination URL<input id="s1Url" placeholder="https://..."></label>
+              <div class="two-col">
+                <label>Start Date<input type="date" id="s1Start"></label>
+                <label>End Date<input type="date" id="s1End"></label>
+              </div>
+              <button class="btn btn-primary save-sponsor" data-slot="slot1">Save Slot 1</button>
+            </div>
+
+            <div class="card sponsor-admin-card">
+              <div class="sponsor-slot-title"><span>Slot 2</span><span class="pill">Community</span></div>
+              <label>Enabled<input type="checkbox" id="s2Enabled"></label>
+              <label>Sponsor Name<input id="s2Name" placeholder="Sponsor name"></label>
+              <label>Logo URL<input id="s2Logo" placeholder="https://..."></label>
+              <label>Description<textarea id="s2Description" rows="3" placeholder="Short sponsor description"></textarea></label>
+              <label>Destination URL<input id="s2Url" placeholder="https://..."></label>
+              <div class="two-col">
+                <label>Start Date<input type="date" id="s2Start"></label>
+                <label>End Date<input type="date" id="s2End"></label>
+              </div>
+              <button class="btn btn-primary save-sponsor" data-slot="slot2">Save Slot 2</button>
+            </div>
+
+            <div class="card sponsor-admin-card">
+              <div class="sponsor-slot-title"><span>Slot 3</span><span class="pill">Footer / Sidebar</span></div>
+              <label>Enabled<input type="checkbox" id="s3Enabled"></label>
+              <label>Sponsor Name<input id="s3Name" placeholder="Sponsor name"></label>
+              <label>Logo URL<input id="s3Logo" placeholder="https://..."></label>
+              <label>Description<textarea id="s3Description" rows="3" placeholder="Short sponsor description"></textarea></label>
+              <label>Destination URL<input id="s3Url" placeholder="https://..."></label>
+              <div class="two-col">
+                <label>Start Date<input type="date" id="s3Start"></label>
+                <label>End Date<input type="date" id="s3End"></label>
+              </div>
+              <button class="btn btn-primary save-sponsor" data-slot="slot3">Save Slot 3</button>
+            </div>
+          </div>
+
+          <div class="card sponsor-policy">
+            <strong>Sponsored content policy</strong>
+            <p>Every public placement is automatically labeled “SPONSORED”. Only enabled placements inside their date range are displayed. Sponsor destination URLs open in a new tab.</p>
+          </div>
+        </section>
+
+<section id="staff" class="section">
           <div class="section-head">
             <div><h1>Staff Management</h1><p>Manage accounts that have elevated website permissions.</p></div>
             <button id="refreshStaff" class="btn btn-primary">Refresh</button>

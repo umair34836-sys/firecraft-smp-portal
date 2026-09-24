@@ -32,6 +32,55 @@ async function loadFireCraftPublicSettings() {
 }
 
 
+async function loadFireCraftSponsoredPlacements() {
+  const containers = Array.from(document.querySelectorAll("[data-sponsored-slot]"));
+  if (!containers.length) return;
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  for (const container of containers) {
+    const slot = container.dataset.sponsoredSlot;
+    try {
+      const snap = await getDoc(doc(db, "sponsoredPlacements", slot));
+      if (!snap.exists()) {
+        container.remove();
+        continue;
+      }
+      const s = snap.data();
+      const inDateRange =
+        (!s.startDate || today >= s.startDate) &&
+        (!s.endDate || today <= s.endDate);
+
+      if (!s.enabled || !s.name || !s.url || !inDateRange) {
+        container.remove();
+        continue;
+      }
+
+      const safeUrl = /^https?:\/\//i.test(s.url) ? s.url : "";
+      if (!safeUrl) {
+        container.remove();
+        continue;
+      }
+
+      container.classList.add("fc-sponsored-visible");
+      container.innerHTML = `
+        <div class="fc-sponsored">
+          ${s.logo ? `<img src="${String(s.logo).replace(/"/g, "&quot;")}" alt="">` : ""}
+          <div class="fc-sponsored-body">
+            <div class="fc-sponsored-title">${String(s.name).replace(/[&<>]/g, "")}</div>
+            <div class="fc-sponsored-desc">${String(s.description || "").replace(/[&<>]/g, "")}</div>
+            <a class="fc-sponsored-btn" href="${safeUrl.replace(/"/g, "&quot;")}" target="_blank" rel="sponsored noopener noreferrer">Visit Sponsor</a>
+          </div>
+        </div>`;
+    } catch (e) {
+      console.warn("Sponsored placement unavailable:", e);
+      container.remove();
+    }
+  }
+}
+
+
+
 const $ = id => document.getElementById(id);
 const toast = (msg) => { const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2500); };
 const normIgn = s => s.trim().toLowerCase();
@@ -157,5 +206,6 @@ function loadAdmin(){
 }
 
 loadFireCraftPublicSettings();
+loadFireCraftSponsoredPlacements();
 
 onAuthStateChanged(auth,user=>{if(user)loadUser(user);else resetUI();});

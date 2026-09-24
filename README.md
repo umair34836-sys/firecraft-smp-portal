@@ -76,3 +76,15 @@ The `/admin/` panel now focuses on FireCraft website/community administration:
 4. Firebase Authentication passwords are never readable by the admin panel.
 5. Additional staff should use the `staff` role. The built-in main admin UID remains the protected admin account.
 6. Do not put a Pterodactyl API token or Firebase Admin SDK service-account key in this frontend project.
+
+
+## Sponsored Placements
+
+The admin panel now includes three isolated sponsored-placement slots:
+- Slot 1: Homepage
+- Slot 2: Community area
+- Slot 3: Footer/sidebar area
+
+Each slot supports enable/disable, sponsor name, logo URL, description, destination URL, start date and end date. Public cards are labeled `SPONSORED`, show only while enabled and within their date range, and use `rel="sponsored noopener noreferrer"`.
+
+The feature uses a separate `sponsoredPlacements` Firestore collection. Public users can read it; only the main admin UID can create/update/delete it.

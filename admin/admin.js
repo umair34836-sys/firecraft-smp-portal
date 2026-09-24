@@ -54,6 +54,68 @@ function navigate(section){
   location.hash = section;
 }
 
+
+const sponsorFields = {
+  slot1: { enabled:"s1Enabled", name:"s1Name", logo:"s1Logo", description:"s1Description", url:"s1Url", start:"s1Start", end:"s1End" },
+  slot2: { enabled:"s2Enabled", name:"s2Name", logo:"s2Logo", description:"s2Description", url:"s2Url", start:"s2Start", end:"s2End" },
+  slot3: { enabled:"s3Enabled", name:"s3Name", logo:"s3Logo", description:"s3Description", url:"s3Url", start:"s3Start", end:"s3End" }
+};
+
+function fillSponsorForm(slot, data = {}) {
+  const f = sponsorFields[slot];
+  $(f.enabled).checked = !!data.enabled;
+  $(f.name).value = data.name || "";
+  $(f.logo).value = data.logo || "";
+  $(f.description).value = data.description || "";
+  $(f.url).value = data.url || "";
+  $(f.start).value = data.startDate || "";
+  $(f.end).value = data.endDate || "";
+}
+
+async function loadSponsoredPlacements() {
+  for (const slot of Object.keys(sponsorFields)) {
+    try {
+      const snap = await getDoc(doc(db, "sponsoredPlacements", slot));
+      fillSponsorForm(slot, snap.exists() ? snap.data() : {});
+    } catch (e) {
+      showToast("Sponsor load error: " + e.message);
+    }
+  }
+}
+
+async function saveSponsoredPlacement(slot) {
+  const f = sponsorFields[slot];
+  const url = $(f.url).value.trim();
+  if (url && !/^https?:\/\//i.test(url)) {
+    showToast("Sponsor URL must start with http:// or https://");
+    return;
+  }
+  const data = {
+    slot,
+    enabled: $(f.enabled).checked,
+    name: $(f.name).value.trim(),
+    logo: $(f.logo).value.trim(),
+    description: $(f.description).value.trim(),
+    url,
+    startDate: $(f.start).value || "",
+    endDate: $(f.end).value || "",
+    updatedAt: new Date(),
+    updatedBy: currentUser.uid
+  };
+  try {
+    await setDoc(doc(db, "sponsoredPlacements", slot), data, { merge:true });
+    showToast(`${slot} saved.`);
+  } catch (e) {
+    showToast("Sponsor save error: " + e.message);
+  }
+}
+
+document.querySelectorAll(".save-sponsor").forEach(btn => {
+  btn.addEventListener("click", () => saveSponsoredPlacement(btn.dataset.slot));
+});
+$("refreshSponsors")?.addEventListener("click", loadSponsoredPlacements);
+
+
 document.querySelectorAll(".nav-btn").forEach(btn => {
   btn.addEventListener("click", () => navigate(btn.dataset.section));
 });
@@ -85,6 +147,7 @@ onAuthStateChanged(auth, async user => {
   subscribeStaff();
   loadServerSettings();
   loadWebsiteSettings();
+  loadSponsoredPlacements();
 
   const hash = location.hash.replace("#","");
   if(hash && $(hash)) navigate(hash);
