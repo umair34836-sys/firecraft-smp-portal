@@ -7,6 +7,31 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+async function loadFireCraftPublicSettings() {
+  try {
+    const serverSnap = await getDoc(doc(db, "settings", "server"));
+    if (serverSnap.exists()) {
+      const s = serverSnap.data();
+      const ipCandidates = document.querySelectorAll("[data-server-java-ip]");
+      ipCandidates.forEach(el => el.textContent = `${s.javaIp || ""}${s.javaPort ? ":" + s.javaPort : ""}`);
+      document.querySelectorAll("[data-server-name]").forEach(el => el.textContent = s.name || "FireCraft SMP");
+      document.querySelectorAll("[data-server-message]").forEach(el => el.textContent = s.message || "");
+      document.querySelectorAll("[data-server-bedrock-ip]").forEach(el => el.textContent = `${s.bedrockIp || ""}${s.bedrockPort ? ":" + s.bedrockPort : ""}`);
+    }
+    const webSnap = await getDoc(doc(db, "settings", "website"));
+    if (webSnap.exists()) {
+      const w = webSnap.data();
+      document.querySelectorAll("[data-announcement]").forEach(el => {
+        el.textContent = w.announcementText || "";
+        el.closest("[data-announcement-wrap]")?.classList.toggle("hidden", !w.announcementEnabled);
+      });
+    }
+  } catch (e) {
+    console.warn("Public settings could not be loaded:", e);
+  }
+}
+
+
 const $ = id => document.getElementById(id);
 const toast = (msg) => { const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2500); };
 const normIgn = s => s.trim().toLowerCase();
@@ -130,5 +155,7 @@ function loadAdmin(){
     document.querySelectorAll("[data-ticket]").forEach(b=>b.onclick=()=>updateDoc(doc(db,"tickets",b.dataset.ticket),{status:"closed"}));
   });
 }
+
+loadFireCraftPublicSettings();
 
 onAuthStateChanged(auth,user=>{if(user)loadUser(user);else resetUI();});

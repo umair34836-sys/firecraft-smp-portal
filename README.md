@@ -52,3 +52,27 @@ This build uses Authentication + Cloud Firestore only. Firestore's current free 
 - Server status widget
 - Discord link
 - Pterodactyl integration through a separate trusted backend if you later choose to add one.
+
+## Updated Admin Panel
+
+The `/admin/` panel now focuses on FireCraft website/community administration:
+
+- Server IP/port settings
+- Website announcement settings
+- User search and account/profile management
+- Application management
+- Support ticket management
+- Staff management
+- Dashboard statistics
+- Firestore security rules with the main admin UID
+
+### Main Admin UID
+`5yLTkB3FBRUauL0fc09vcLhYj7y2`
+
+### Important Firebase setup
+1. Deploy the included `firestore.rules` in Firebase Console.
+2. Existing application/ticket composite indexes may still be required because the admin panel uses `orderBy(createdAt)`.
+3. User profile deletion from this browser panel deletes the Firestore profile only. It does not delete the Firebase Authentication account.
+4. Firebase Authentication passwords are never readable by the admin panel.
+5. Additional staff should use the `staff` role. The built-in main admin UID remains the protected admin account.
+6. Do not put a Pterodactyl API token or Firebase Admin SDK service-account key in this frontend project.
