@@ -17,8 +17,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 import {
-  firebaseConfig,
-  ADMIN_UID
+  firebaseConfig
 } from "../js/firebase-config.js";
 
 
@@ -27,6 +26,13 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 const db = getFirestore(app);
+
+
+/*
+ * FIRECRAFT ADMIN UID
+ * This must match the UID in Firebase Authentication.
+ */
+const ADMIN_UID = "5yLTkB3FBRUauL0fc09vcLhYj7y2";
 
 
 const $ = id => document.getElementById(id);
@@ -188,6 +194,8 @@ $("logoutBtn").onclick = async () => {
     window.location.href = "../";
 
   } catch (error) {
+
+    console.error(error);
 
     showToast("Logout failed.");
 
@@ -423,32 +431,32 @@ function openApplication(id) {
 
     <div class="detail-row">
       <strong>IGN</strong>
-      <span>${escapeHtml(application.ign)}</span>
+      <span>${escapeHtml(application.ign || "")}</span>
     </div>
 
     <div class="detail-row">
       <strong>Age</strong>
-      <span>${escapeHtml(application.age)}</span>
+      <span>${escapeHtml(application.age || "")}</span>
     </div>
 
     <div class="detail-row">
       <strong>Country</strong>
-      <span>${escapeHtml(application.country)}</span>
+      <span>${escapeHtml(application.country || "")}</span>
     </div>
 
     <div class="detail-row">
       <strong>Experience</strong>
-      <span>${escapeHtml(application.experience)}</span>
+      <span>${escapeHtml(application.experience || "")}</span>
     </div>
 
     <div class="detail-row">
       <strong>Why do you want to join?</strong>
-      <span>${escapeHtml(application.why)}</span>
+      <span>${escapeHtml(application.why || "")}</span>
     </div>
 
     <div class="detail-row">
       <strong>What can you contribute?</strong>
-      <span>${escapeHtml(application.contribution)}</span>
+      <span>${escapeHtml(application.contribution || "")}</span>
     </div>
 
     <div class="detail-row">
@@ -733,12 +741,12 @@ function openTicket(id) {
 
     <div class="detail-row">
       <strong>Player</strong>
-      <span>${escapeHtml(ticket.ign)}</span>
+      <span>${escapeHtml(ticket.ign || "")}</span>
     </div>
 
     <div class="detail-row">
       <strong>Category</strong>
-      <span>${escapeHtml(ticket.category)}</span>
+      <span>${escapeHtml(ticket.category || "")}</span>
     </div>
 
     <div class="detail-row">
@@ -748,7 +756,7 @@ function openTicket(id) {
 
     <div class="detail-row">
       <strong>Message</strong>
-      <span>${escapeHtml(ticket.message)}</span>
+      <span>${escapeHtml(ticket.message || "")}</span>
     </div>
 
     <div class="detail-row">
