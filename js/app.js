@@ -41,45 +41,54 @@ async function loadFireCraftSponsoredPlacements() {
 
   for (const container of containers) {
     const slot = container.dataset.sponsoredSlot;
+
     try {
       const snap = await getDoc(doc(db, "sponsoredPlacements", slot));
+
       if (!snap.exists()) {
-        container.remove();
+        container.hidden = true;
         continue;
       }
+
       const s = snap.data();
       const inDateRange =
         (!s.startDate || today >= s.startDate) &&
         (!s.endDate || today <= s.endDate);
 
-      if (!s.enabled || !s.name || !s.url || !inDateRange) {
-        container.remove();
+      const safeUrl = /^https?:\/\//i.test(s.url || "") ? s.url : "";
+
+      if (!s.enabled || !s.name || !safeUrl || !inDateRange) {
+        container.hidden = true;
         continue;
       }
 
-      const safeUrl = /^https?:\/\//i.test(s.url) ? s.url : "";
-      if (!safeUrl) {
-        container.remove();
-        continue;
-      }
+      const clean = value => String(value ?? "").replace(/[&<>"]/g, ch => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;"
+      }[ch]));
 
-      container.classList.add("fc-sponsored-visible");
       container.innerHTML = `
-        <div class="fc-sponsored">
-          ${s.logo ? `<img src="${String(s.logo).replace(/"/g, "&quot;")}" alt="">` : ""}
-          <div class="fc-sponsored-body">
-            <div class="fc-sponsored-title">${String(s.name).replace(/[&<>]/g, "")}</div>
-            <div class="fc-sponsored-desc">${String(s.description || "").replace(/[&<>]/g, "")}</div>
-            <a class="fc-sponsored-btn" href="${safeUrl.replace(/"/g, "&quot;")}" target="_blank" rel="sponsored noopener noreferrer">Visit Sponsor</a>
+        <article class="fc-sponsored">
+          <div class="fc-sponsored-media">
+            ${s.logo ? `<img src="${clean(s.logo)}" alt="${clean(s.name)} logo">` : `<span class="fc-sponsored-placeholder">AD</span>`}
           </div>
-        </div>`;
+          <div class="fc-sponsored-body">
+            <span class="fc-sponsored-label">SPONSORED</span>
+            <h3 class="fc-sponsored-title">${clean(s.name)}</h3>
+            <p class="fc-sponsored-desc">${clean(s.description || "Official FireCraft partner.")}</p>
+            <a class="fc-sponsored-btn" href="${clean(safeUrl)}" target="_blank" rel="sponsored noopener noreferrer">Visit Sponsor</a>
+          </div>
+        </article>`;
+
+      container.hidden = false;
     } catch (e) {
       console.warn("Sponsored placement unavailable:", e);
-      container.remove();
+      container.hidden = true;
     }
   }
 }
-
 
 
 const $ = id => document.getElementById(id);

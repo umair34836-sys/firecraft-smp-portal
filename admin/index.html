@@ -45,7 +45,7 @@
         <button class="nav-btn" data-section="website">📢 Website Settings</button>
         <button class="nav-btn" data-section="staff">🛡️ Staff Management</button>
         <button class="nav-btn" data-section="sponsored">💼 Sponsored</button>
-      <button class="nav-item" data-section="announcements">📢 Announcements</button>
+      <button class="nav-btn" data-section="announcements">📢 Announcements</button>
       </aside>
 
       <main class="content">
@@ -240,6 +240,49 @@
             </table>
           </div>
         </section>
+      <section id="announcements" class="section">
+  <div class="section-head">
+    <div>
+      <h1>Announcements</h1>
+      <p>Publish events, daily rewards, and important player updates.</p>
+    </div>
+  </div>
+
+  <div class="card announcement-editor">
+    <form id="announcementForm" class="form-grid">
+      <input type="hidden" id="announcementId">
+      <label>Title<input id="announcementTitle" maxlength="120" required></label>
+      <label>Type
+        <select id="announcementType">
+          <option value="event">Event</option>
+          <option value="daily-reward">Daily Reward</option>
+          <option value="notice">Notice</option>
+        </select>
+      </label>
+      <label class="full">Message<textarea id="announcementMessage" maxlength="1000" rows="5" required></textarea></label>
+      <label>Start date/time<input id="announcementStart" type="datetime-local"></label>
+      <label>End date/time<input id="announcementEnd" type="datetime-local"></label>
+      <label class="checkbox-row full">
+        <input id="announcementEnabled" type="checkbox" checked>
+        <span>Show this announcement to users</span>
+      </label>
+      <div class="form-actions full">
+        <button type="submit" class="btn btn-primary">Publish Announcement</button>
+        <button type="button" id="announcementCancel" class="btn btn-ghost">Clear</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card announcement-list-panel">
+    <div class="announcement-list-head">
+      <div>
+        <h2>Published Announcements</h2>
+        <p>Manage events, daily rewards, and notices shown on the website.</p>
+      </div>
+    </div>
+    <div id="announcementsList" class="announcement-admin-list"></div>
+  </div>
+</section>
       </main>
     </div>
   </div>
@@ -294,18 +337,3 @@
   <script type="module" src="./admin.js"></script>
 </body>
 </html>
-<section id="section-announcements" class="admin-section">
-  <div class="section-head"><div><h2>Announcements</h2><p>Publish events, daily rewards, and important player updates.</p></div></div>
-  <div class="panel"><form id="announcementForm" class="form-grid">
-    <input type="hidden" id="announcementId">
-    <label>Title<input id="announcementTitle" maxlength="120" required></label>
-    <label>Type<select id="announcementType"><option value="event">Event</option><option value="daily-reward">Daily Reward</option><option value="notice">Notice</option></select></label>
-    <label class="full">Message<textarea id="announcementMessage" maxlength="1000" rows="5" required></textarea></label>
-    <label>Start date/time<input id="announcementStart" type="datetime-local"></label>
-    <label>End date/time<input id="announcementEnd" type="datetime-local"></label>
-    <label class="checkbox-row full"><input id="announcementEnabled" type="checkbox" checked> Show this announcement to users</label>
-    <div class="form-actions full"><button type="submit" class="primary-btn">Publish Announcement</button><button type="button" id="announcementCancel" class="secondary-btn">Clear</button></div>
-  </form></div>
-  <div class="panel"><h3>Published Announcements</h3><div id="announcementsList" class="announcement-admin-list"></div></div>
-</section>
-
