@@ -33,63 +33,69 @@ async function loadFireCraftPublicSettings() {
 }
 
 
-async function loadFireCraftSponsoredPlacements() {
-  const containers = Array.from(document.querySelectorAll("[data-sponsored-slot]"));
-  if (!containers.length) return;
+async function loadFireCraftSponsoredPlacements(){
+  const containers=Array.from(document.querySelectorAll("[data-sponsored-slot]"));
+  if(!containers.length)return;
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today=new Date().toISOString().slice(0,10);
 
-  for (const container of containers) {
-    const slot = container.dataset.sponsoredSlot;
+  for(const container of containers){
+    const slot=container.dataset.sponsoredSlot;
 
-    try {
-      const snap = await getDoc(doc(db, "sponsoredPlacements", slot));
+    try{
+      const snap=await getDoc(doc(db,"sponsoredPlacements",slot));
 
-      if (!snap.exists()) {
-        container.hidden = true;
-        continue;
-      }
+      container.innerHTML="";
+      container.hidden=true;
+      container.classList.remove("fc-sponsored-visible");
 
-      const s = snap.data();
-      const inDateRange =
-        (!s.startDate || today >= s.startDate) &&
-        (!s.endDate || today <= s.endDate);
+      if(!snap.exists())continue;
 
-      const safeUrl = /^https?:\/\//i.test(s.url || "") ? s.url : "";
+      const s=snap.data();
 
-      if (!s.enabled || !s.name || !safeUrl || !inDateRange) {
-        container.hidden = true;
-        continue;
-      }
+      // Current schema + compatibility with older saved sponsor documents.
+      const enabled=s.enabled===true;
+      const name=s.name ?? s.sponsorName ?? "";
+      const logo=s.logo ?? s.logoUrl ?? "";
+      const description=s.description ?? "";
+      const url=s.url ?? s.destinationUrl ?? "";
+      const startDate=s.startDate ?? "";
+      const endDate=s.endDate ?? "";
 
-      const clean = value => String(value ?? "").replace(/[&<>"]/g, ch => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;"
-      }[ch]));
+      const activeDates=
+        (!startDate || today>=String(startDate).slice(0,10)) &&
+        (!endDate || today<=String(endDate).slice(0,10));
 
-      container.innerHTML = `
+      if(!enabled || !name || !/^https?:\/\//i.test(url) || !activeDates)continue;
+
+      const clean=v=>String(v??"").replace(/[&<>"']/g,c=>({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[c]));
+
+      container.innerHTML=`
         <article class="fc-sponsored">
           <div class="fc-sponsored-media">
-            ${s.logo ? `<img src="${clean(s.logo)}" alt="${clean(s.name)} logo">` : `<span class="fc-sponsored-placeholder">AD</span>`}
+            ${logo
+              ? `<img src="${clean(logo)}" alt="${clean(name)} logo">`
+              : `<span class="fc-sponsored-placeholder">AD</span>`}
           </div>
           <div class="fc-sponsored-body">
             <span class="fc-sponsored-label">SPONSORED</span>
-            <h3 class="fc-sponsored-title">${clean(s.name)}</h3>
-            <p class="fc-sponsored-desc">${clean(s.description || "Official FireCraft partner.")}</p>
-            <a class="fc-sponsored-btn" href="${clean(safeUrl)}" target="_blank" rel="sponsored noopener noreferrer">Visit Sponsor</a>
+            <h3 class="fc-sponsored-title">${clean(name)}</h3>
+            <p class="fc-sponsored-desc">${clean(description||"Official FireCraft partner.")}</p>
+            <a class="fc-sponsored-btn" href="${clean(url)}" target="_blank" rel="sponsored noopener noreferrer">Visit Sponsor</a>
           </div>
         </article>`;
 
-      container.hidden = false;
-    } catch (e) {
-      console.warn("Sponsored placement unavailable:", e);
-      container.hidden = true;
+      container.hidden=false;
+      container.classList.add("fc-sponsored-visible");
+    }catch(e){
+      console.error("Sponsored placement error:",e);
+      container.hidden=true;
+      container.classList.remove("fc-sponsored-visible");
     }
   }
 }
-
 
 const $ = id => document.getElementById(id);
 const toast = (msg) => { const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2500); };

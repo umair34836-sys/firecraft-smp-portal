@@ -391,3 +391,11 @@
     width:100%;
   }
 }
+
+/* Final sponsored visibility fix */
+.fc-sponsored-wrap.fc-sponsored-visible{
+  display:block !important;
+}
+.fc-sponsored-wrap[hidden]{
+  display:none !important;
+}

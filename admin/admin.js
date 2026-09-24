@@ -396,13 +396,13 @@ async function loadWebsiteSettings(){
   const snap = await getDoc(doc(db,"settings","website"));
   const s = snap.exists() ? snap.data() : {};
   $("announcementText").value = s.announcementText || "";
-  $("announcementEnabled").checked = !!s.announcementEnabled;
+  $("websiteAnnouncementEnabled").checked = !!s.announcementEnabled;
 }
 $("saveWebsiteSettings").onclick = async () => {
   try{
     await setDoc(doc(db,"settings","website"),{
       announcementText:$("announcementText").value.trim(),
-      announcementEnabled:$("announcementEnabled").checked,
+      announcementEnabled:$("websiteAnnouncementEnabled").checked,
       updatedAt:new Date(),updatedBy:currentUser.uid
     },{merge:true});
     showToast("Website settings saved.");
@@ -468,24 +468,104 @@ $("logoutBtn").onclick = async () => {
 /* FireCraft announcements admin */
 let announcementsCache=[];
 const escAnnouncement=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+
 async function loadAnnouncements(){
- const list=document.getElementById("announcementsList"); if(!list)return;
- try{
-  const snap=await getDocs(collection(db,"announcements"));
-  announcementsCache=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0));
-  list.innerHTML=announcementsCache.length?announcementsCache.map(a=>`<div class="announcement-admin-card"><div><strong>${escAnnouncement(a.title)}</strong><span class="announcement-type">${escAnnouncement(a.type||"notice")}</span><p>${escAnnouncement(a.message).replace(/\n/g,"<br>")}</p><small>${a.enabled===false?"Hidden":"Visible"}${a.startAt?" • Starts: "+escAnnouncement(a.startAt):""}${a.endAt?" • Ends: "+escAnnouncement(a.endAt):""}</small></div><div class="announcement-actions"><button class="secondary-btn" data-ann-edit="${a.id}">Edit</button><button class="danger-btn" data-ann-delete="${a.id}">Delete</button></div></div>`).join(""):"<p>No announcements published yet.</p>";
-  list.querySelectorAll("[data-ann-edit]").forEach(b=>b.onclick=()=>{const a=announcementsCache.find(x=>x.id===b.dataset.annEdit);if(!a)return;announcementId.value=a.id;announcementTitle.value=a.title||"";announcementType.value=a.type||"notice";announcementMessage.value=a.message||"";announcementStart.value=a.startAt||"";announcementEnd.value=a.endAt||"";announcementEnabled.checked=a.enabled!==false;});
-  list.querySelectorAll("[data-ann-delete]").forEach(b=>b.onclick=async()=>{if(confirm("Delete this announcement?")){await deleteDoc(doc(db,"announcements",b.dataset.annDelete));loadAnnouncements();}});
- }catch(e){console.error(e);list.innerHTML="<p>Could not load announcements.</p>";}
+  const list=document.getElementById("announcementsList");
+  if(!list)return;
+  try{
+    const snap=await getDocs(collection(db,"announcements"));
+    announcementsCache=snap.docs.map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0));
+
+    list.innerHTML=announcementsCache.length
+      ? announcementsCache.map(a=>`
+        <div class="announcement-admin-card">
+          <div>
+            <strong>${escAnnouncement(a.title)}</strong>
+            <span class="announcement-type">${escAnnouncement(a.type||"notice")}</span>
+            <p>${escAnnouncement(a.message).replace(/\n/g,"<br>")}</p>
+            <small>${a.enabled===false?"Hidden":"Visible"}${a.startAt?" • Starts: "+escAnnouncement(a.startAt):""}${a.endAt?" • Ends: "+escAnnouncement(a.endAt):""}</small>
+          </div>
+          <div class="announcement-actions">
+            <button class="secondary-btn" data-ann-edit="${a.id}">Edit</button>
+            <button class="danger-btn" data-ann-delete="${a.id}">Delete</button>
+          </div>
+        </div>`).join("")
+      : "<p>No announcements published yet.</p>";
+
+    list.querySelectorAll("[data-ann-edit]").forEach(btn=>{
+      btn.onclick=()=>{
+        const a=announcementsCache.find(x=>x.id===btn.dataset.annEdit);
+        if(!a)return;
+        const form=document.getElementById("announcementForm");
+        form.querySelector("#announcementId").value=a.id;
+        form.querySelector("#announcementTitle").value=a.title||"";
+        form.querySelector("#announcementType").value=a.type||"notice";
+        form.querySelector("#announcementMessage").value=a.message||"";
+        form.querySelector("#announcementStart").value=a.startAt||"";
+        form.querySelector("#announcementEnd").value=a.endAt||"";
+        form.querySelector("#announcementEnabled").checked=a.enabled!==false;
+      };
+    });
+
+    list.querySelectorAll("[data-ann-delete]").forEach(btn=>{
+      btn.onclick=async()=>{
+        if(confirm("Delete this announcement?")){
+          await deleteDoc(doc(db,"announcements",btn.dataset.annDelete));
+          await loadAnnouncements();
+        }
+      };
+    });
+  }catch(e){
+    console.error("Announcements admin:",e);
+    list.innerHTML="<p>Could not load announcements.</p>";
+  }
 }
+
 async function saveAnnouncement(e){
- e.preventDefault();
- const id=announcementId.value.trim(), data={title:announcementTitle.value.trim(),type:announcementType.value,message:announcementMessage.value.trim(),startAt:announcementStart.value,endAt:announcementEnd.value,enabled:announcementEnabled.checked,updatedAt:serverTimestamp()};
- if(!data.title||!data.message)return alert("Title and message are required.");
- if(data.startAt&&data.endAt&&data.endAt<data.startAt)return alert("End date/time cannot be before start date/time.");
- if(id)await updateDoc(doc(db,"announcements",id),data);else{data.createdAt=serverTimestamp();await setDoc(doc(collection(db,"announcements")),data);}
- announcementForm.reset();announcementId.value="";announcementEnabled.checked=true;loadAnnouncements();
+  e.preventDefault();
+
+  const form=document.getElementById("announcementForm");
+  const id=form.querySelector("#announcementId").value.trim();
+  const title=form.querySelector("#announcementTitle").value.trim();
+  const type=form.querySelector("#announcementType").value || "notice";
+  const message=form.querySelector("#announcementMessage").value.trim();
+  const startAt=form.querySelector("#announcementStart").value || "";
+  const endAt=form.querySelector("#announcementEnd").value || "";
+  const enabled=Boolean(form.querySelector("#announcementEnabled").checked);
+
+  if(!title || !message)return alert("Title and message are required.");
+  if(startAt && endAt && endAt<startAt)return alert("End date/time cannot be before start date/time.");
+
+  const data={
+    title:String(title),
+    type:String(type),
+    message:String(message),
+    startAt:String(startAt),
+    endAt:String(endAt),
+    enabled:Boolean(enabled),
+    updatedAt:serverTimestamp()
+  };
+
+  if(id){
+    await updateDoc(doc(db,"announcements",id),data);
+  }else{
+    data.createdAt=serverTimestamp();
+    await setDoc(doc(collection(db,"announcements")),data);
+  }
+
+  form.reset();
+  form.querySelector("#announcementId").value="";
+  form.querySelector("#announcementEnabled").checked=true;
+  await loadAnnouncements();
+  showToast("Announcement published successfully.");
 }
+
 document.getElementById("announcementForm")?.addEventListener("submit",saveAnnouncement);
-document.getElementById("announcementCancel")?.addEventListener("click",()=>{announcementForm.reset();announcementId.value="";announcementEnabled.checked=true;});
+document.getElementById("announcementCancel")?.addEventListener("click",()=>{
+  const form=document.getElementById("announcementForm");
+  form.reset();
+  form.querySelector("#announcementId").value="";
+  form.querySelector("#announcementEnabled").checked=true;
+});
 loadAnnouncements();
