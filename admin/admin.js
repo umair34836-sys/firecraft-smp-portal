@@ -6,8 +6,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import {
   getFirestore, collection, query, orderBy, onSnapshot, doc, getDoc,
-  setDoc, updateDoc, deleteDoc, getDocs, where, limit
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+  setDoc, updateDoc, deleteDoc, getDocs, where, limit,
+  serverTimestamp,} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
