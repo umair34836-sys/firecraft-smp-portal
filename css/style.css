@@ -11,3 +11,216 @@
 .fc-announcements-list{display:grid;gap:12px}.fc-announcement-card{padding:16px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
 .fc-announcement-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.75rem;opacity:.72}
 .fc-announcement-type{text-transform:uppercase;letter-spacing:.08em}.fc-announcement-card h3{margin:8px 0 6px}.fc-announcement-card p{margin:0;line-height:1.6}.fc-announcements-empty{opacity:.65;margin:0}
+
+/* =========================================================
+   FireCraft Sponsored + Announcements UI
+   Matches the existing dark/neon portal design
+   ========================================================= */
+.fc-sponsored-wrap,
+.fc-announcements-section {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 24px 0;
+}
+
+.fc-sponsored-card,
+.fc-announcements-section {
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(18,25,42,.96), rgba(8,13,25,.96));
+  box-shadow: 0 12px 35px rgba(0,0,0,.22);
+  overflow: hidden;
+}
+
+.fc-sponsored-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+}
+
+.fc-sponsored-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg,#5ee7ff,#7c5cff);
+}
+
+.fc-sponsored-card img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  border-radius: 13px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+  padding: 7px;
+  box-sizing: border-box;
+}
+
+.fc-sponsored-content {
+  min-width: 0;
+}
+
+.fc-sponsored-label {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 5px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(124,92,255,.13);
+  border: 1px solid rgba(124,92,255,.25);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  opacity: .9;
+}
+
+.fc-sponsored-card h3 {
+  margin: 0 0 5px;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.fc-sponsored-card p {
+  margin: 0;
+  color: rgba(255,255,255,.68);
+  font-size: .88rem;
+  line-height: 1.5;
+}
+
+.fc-sponsored-card a,
+.fc-sponsored-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 15px;
+  border-radius: 10px;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,.11);
+  background: rgba(255,255,255,.055);
+  color: inherit;
+  font-weight: 700;
+  font-size: .82rem;
+  transition: .2s ease;
+}
+
+.fc-sponsored-card a:hover,
+.fc-sponsored-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.09);
+}
+
+.fc-announcements-section {
+  padding: 22px;
+}
+
+.fc-section-heading {
+  margin-bottom: 17px;
+}
+
+.fc-section-kicker {
+  display: inline-block;
+  margin-bottom: 5px;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  opacity: .58;
+}
+
+.fc-section-heading h2 {
+  margin: 0 0 5px;
+  font-size: 1.35rem;
+}
+
+.fc-section-heading p {
+  margin: 0;
+  color: rgba(255,255,255,.62);
+  font-size: .88rem;
+}
+
+.fc-announcements-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
+  gap: 12px;
+}
+
+.fc-announcement-card {
+  min-width: 0;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.035);
+  transition: .2s ease;
+}
+
+.fc-announcement-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,.15);
+  background: rgba(255,255,255,.05);
+}
+
+.fc-announcement-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: .68rem;
+  color: rgba(255,255,255,.52);
+}
+
+.fc-announcement-type {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(94,231,255,.08);
+  border: 1px solid rgba(94,231,255,.16);
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.fc-announcement-card h3 {
+  margin: 0 0 7px;
+  font-size: 1rem;
+}
+
+.fc-announcement-card p {
+  margin: 0;
+  color: rgba(255,255,255,.68);
+  font-size: .86rem;
+  line-height: 1.55;
+}
+
+.fc-announcements-empty {
+  margin: 0;
+  padding: 10px 0;
+  color: rgba(255,255,255,.5);
+}
+
+@media (max-width: 700px) {
+  .fc-sponsored-card {
+    grid-template-columns: auto 1fr;
+    padding: 15px;
+    gap: 13px;
+  }
+  .fc-sponsored-card > a,
+  .fc-sponsored-card > .fc-sponsored-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .fc-sponsored-card img {
+    width: 50px;
+    height: 50px;
+  }
+  .fc-announcements-section {
+    padding: 16px;
+  }
+  .fc-announcements-list {
+    grid-template-columns: 1fr;
+  }
+}

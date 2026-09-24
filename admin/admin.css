@@ -5,3 +5,111 @@
 /* FireCraft announcements */
 .announcement-admin-list{display:grid;gap:12px;margin-top:14px}.announcement-admin-card{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.03)}
 .announcement-admin-card p{margin:8px 0}.announcement-type{display:inline-block;margin-left:8px;font-size:.72rem;opacity:.7;text-transform:uppercase}.announcement-actions{display:flex;gap:8px;flex-wrap:wrap}.checkbox-row{display:flex;align-items:center;gap:8px}
+
+/* =========================================================
+   FireCraft Sponsored + Announcements Admin UI
+   ========================================================= */
+#section-sponsored .sponsor-grid,
+#section-sponsored .sponsored-grid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 16px;
+}
+
+#section-sponsored .sponsor-card,
+#section-sponsored .sponsored-card {
+  min-width: 0;
+  padding: 17px;
+  border-radius: 15px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.035);
+  box-sizing: border-box;
+}
+
+#section-sponsored input,
+#section-sponsored textarea,
+#section-sponsored select,
+#section-announcements input,
+#section-announcements textarea,
+#section-announcements select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#section-announcements .panel,
+#section-sponsored .panel {
+  border-radius: 16px;
+}
+
+.announcement-admin-list {
+  display: grid;
+  gap: 11px;
+  margin-top: 14px;
+}
+
+.announcement-admin-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 15px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.035);
+}
+
+.announcement-admin-card strong {
+  font-size: .95rem;
+}
+
+.announcement-admin-card p {
+  margin: 7px 0;
+  color: rgba(255,255,255,.66);
+  line-height: 1.5;
+}
+
+.announcement-type {
+  display: inline-flex;
+  margin-left: 8px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(94,231,255,.15);
+  background: rgba(94,231,255,.07);
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.announcement-actions {
+  display: flex;
+  gap: 7px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.checkbox-row {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: auto !important;
+}
+
+@media (max-width: 900px) {
+  #section-sponsored .sponsor-grid,
+  #section-sponsored .sponsored-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .announcement-admin-card {
+    flex-direction: column;
+  }
+  .announcement-actions {
+    width: 100%;
+  }
+}
