@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>FireCraft SMP — Admin Panel</title>
+
+  <link rel="stylesheet" href="./admin.css">
+</head>
+
+<body>
+
+  <div class="background-glow glow-1"></div>
+  <div class="background-glow glow-2"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">🔥</div>
+
+      <div>
+        <h1>FireCraft SMP</h1>
+        <span>Administration Panel</span>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <span id="adminName" class="admin-name">Checking...</span>
+      <button id="logoutBtn" class="logout-btn">Logout</button>
+    </div>
+  </header>
+
+
+  <main class="container">
+
+    <!-- AUTH CHECK -->
+    <section id="loadingPanel" class="center-panel">
+      <div class="loader"></div>
+      <h2>Checking administrator access...</h2>
+      <p>Please wait.</p>
+    </section>
+
+
+    <!-- ACCESS DENIED -->
+    <section id="deniedPanel" class="center-panel hidden">
+
+      <div class="denied-icon">⛔</div>
+
+      <h2>Access Denied</h2>
+
+      <p>
+        Your account does not have administrator permissions.
+      </p>
+
+      <button id="backHomeBtn" class="primary-btn">
+        Back to FireCraft
+      </button>
+
+    </section>
+
+
+    <!-- ADMIN CONTENT -->
+    <section id="adminContent" class="hidden">
+
+      <div class="page-heading">
+
+        <div>
+          <span class="eyebrow">CONTROL CENTER</span>
+          <h2>Admin Dashboard</h2>
+          <p>
+            Manage FireCraft SMP applications, support tickets and server members.
+          </p>
+        </div>
+
+        <div class="status-online">
+          <span></span>
+          Admin Online
+        </div>
+
+      </div>
+
+
+      <!-- STATISTICS -->
+
+      <div class="stats-grid">
+
+        <div class="stat-card">
+          <div class="stat-icon">📋</div>
+
+          <div>
+            <span>Total Applications</span>
+            <strong id="totalApplications">0</strong>
+          </div>
+        </div>
+
+
+        <div class="stat-card">
+          <div class="stat-icon">⏳</div>
+
+          <div>
+            <span>Pending Applications</span>
+            <strong id="pendingApplications">0</strong>
+          </div>
+        </div>
+
+
+        <div class="stat-card">
+          <div class="stat-icon">🎫</div>
+
+          <div>
+            <span>Total Tickets</span>
+            <strong id="totalTickets">0</strong>
+          </div>
+        </div>
+
+
+        <div class="stat-card">
+          <div class="stat-icon">🔴</div>
+
+          <div>
+            <span>Open Tickets</span>
+            <strong id="openTickets">0</strong>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- APPLICATIONS -->
+
+      <section class="admin-section">
+
+        <div class="section-header">
+
+          <div>
+            <span class="section-label">WHITELIST</span>
+            <h3>Whitelist Applications</h3>
+          </div>
+
+          <button id="refreshApplications" class="small-btn">
+            Refresh
+          </button>
+
+        </div>
+
+        <div id="applicationsList" class="items-list">
+          <div class="empty-state">
+            Loading applications...
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- SUPPORT TICKETS -->
+
+      <section class="admin-section">
+
+        <div class="section-header">
+
+          <div>
+            <span class="section-label">SUPPORT</span>
+            <h3>Support Tickets</h3>
+          </div>
+
+          <button id="refreshTickets" class="small-btn">
+            Refresh
+          </button>
+
+        </div>
+
+        <div id="ticketsList" class="items-list">
+          <div class="empty-state">
+            Loading tickets...
+          </div>
+        </div>
+
+      </section>
+
+    </section>
+
+  </main>
+
+
+  <!-- APPLICATION DETAILS MODAL -->
+
+  <div id="applicationModal" class="modal hidden">
+
+    <div class="modal-box">
+
+      <button class="modal-close" data-close="applicationModal">
+        ×
+      </button>
+
+      <span class="section-label">APPLICATION</span>
+
+      <h2 id="modalApplicationTitle">
+        Application
+      </h2>
+
+      <div id="applicationDetails"></div>
+
+      <div class="modal-actions">
+
+        <button
+          id="approveApplicationBtn"
+          class="approve-btn">
+          Approve
+        </button>
+
+        <button
+          id="rejectApplicationBtn"
+          class="reject-btn">
+          Reject
+        </button>
+
+        <button
+          id="pendingApplicationBtn"
+          class="pending-btn">
+          Pending
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- TICKET DETAILS MODAL -->
+
+  <div id="ticketModal" class="modal hidden">
+
+    <div class="modal-box">
+
+      <button class="modal-close" data-close="ticketModal">
+        ×
+      </button>
+
+      <span class="section-label">SUPPORT TICKET</span>
+
+      <h2 id="modalTicketTitle">
+        Ticket
+      </h2>
+
+      <div id="ticketDetails"></div>
+
+      <div class="reply-box">
+
+        <label for="staffReply">
+          Staff Reply
+        </label>
+
+        <textarea
+          id="staffReply"
+          rows="5"
+          placeholder="Write your response to the player..."
+        ></textarea>
+
+      </div>
+
+      <div class="modal-actions">
+
+        <button
+          id="replyTicketBtn"
+          class="approve-btn">
+          Save Reply
+        </button>
+
+        <button
+          id="closeTicketBtn"
+          class="reject-btn">
+          Close Ticket
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div id="toast" class="toast"></div>
+
+
+  <script type="module" src="./admin.js"></script>
+
+</body>
+</html>
