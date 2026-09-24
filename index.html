@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FireCraft SMP | Private Lifesteal</title>
+  <meta name="description" content="FireCraft SMP — private Lifesteal SMP with custom plugins. Apply for whitelist, open support tickets and manage your account.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#home"><span class="brand-fire">🔥</span> FIRECRAFT <small>SMP</small></a>
+    <nav id="nav">
+      <a href="#home">Home</a><a href="#apply">Apply</a><a href="#status">My Status</a><a href="#support">Support</a><a href="#rules">Rules</a>
+      <button id="authBtn" class="btn btn-small">Login</button>
+    </nav>
+    <button class="menu" id="menuBtn">☰</button>
+  </header>
+
+  <main>
+    <section id="home" class="hero section">
+      <div class="hero-glow"></div>
+      <div class="hero-content">
+        <div class="pill">PRIVATE • WHITELISTED • LIFESTEAL</div>
+        <h1>Welcome to <span>FireCraft SMP</span></h1>
+        <p>A private Lifesteal SMP built around custom plugins, community events and a controlled whitelist.</p>
+        <div class="hero-actions">
+          <a class="btn" href="#apply">Apply for Whitelist</a>
+          <a class="btn btn-ghost" href="#status">Check Application</a>
+        </div>
+        <div class="server-box">
+          <div><span class="dot"></span><b>Server Address</b><code>YOUR-SERVER-IP:PORT</code></div>
+          <button class="copy-btn" data-copy="YOUR-SERVER-IP:PORT">Copy</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section cards">
+      <article><div class="icon">🩸</div><h3>Lifesteal</h3><p>Every fight matters. Your heart count and survival are part of the game.</p></article>
+      <article><div class="icon">⚙️</div><h3>Custom Plugins</h3><p>FireCraft features custom gameplay systems instead of a generic SMP setup.</p></article>
+      <article><div class="icon">🔒</div><h3>Private SMP</h3><p>Players join only after an application is reviewed and approved.</p></article>
+    </section>
+
+    <section id="apply" class="section panel-section">
+      <div class="section-head"><div><span class="eyebrow">JOIN FIRECRAFT</span><h2>Whitelist Application</h2><p>Tell the staff who you are and why you want to join.</p></div></div>
+      <form id="applicationForm" class="panel form-grid auth-required">
+        <div class="field"><label>Minecraft IGN</label><input id="appIgn" readonly></div>
+        <div class="field"><label>Age</label><input id="appAge" type="number" min="13" max="99" required></div>
+        <div class="field"><label>Country / Timezone</label><input id="appCountry" maxlength="80" required></div>
+        <div class="field full"><label>Why do you want to join?</label><textarea id="appWhy" rows="4" maxlength="1000" required></textarea></div>
+        <div class="field full"><label>What will you contribute to FireCraft?</label><textarea id="appContribution" rows="4" maxlength="1000" required></textarea></div>
+        <div class="field full"><label>Have you played Lifesteal before?</label><select id="appExperience" required><option value="">Choose</option><option>Yes</option><option>No</option><option>A little</option></select></div>
+        <div class="field full"><label>Do you agree to follow the FireCraft rules?</label><select id="appRules" required><option value="">Choose</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+        <button class="btn full" type="submit">Submit Application</button>
+        <div id="applicationMsg" class="msg full"></div>
+      </form>
+    </section>
+
+    <section id="status" class="section panel-section">
+      <div class="section-head"><div><span class="eyebrow">YOUR ACCOUNT</span><h2>Application Status</h2></div></div>
+      <div id="statusBox" class="panel auth-required"><p>Login to view your whitelist/application status.</p></div>
+    </section>
+
+    <section id="support" class="section panel-section">
+      <div class="section-head"><div><span class="eyebrow">STAFF SUPPORT</span><h2>Support & Complaints</h2><p>Open a private ticket for server-related issues, player reports or technical problems.</p></div></div>
+      <form id="ticketForm" class="panel form-grid auth-required">
+        <div class="field"><label>Category</label><select id="ticketCategory" required><option>General Support</option><option>Player Report</option><option>Bug Report</option><option>Whitelist / Application</option><option>Staff Complaint</option><option>Other</option></select></div>
+        <div class="field"><label>Subject</label><input id="ticketSubject" maxlength="100" required></div>
+        <div class="field full"><label>Message</label><textarea id="ticketMessage" rows="6" maxlength="2000" required></textarea></div>
+        <button class="btn full" type="submit">Open Ticket</button>
+        <div id="ticketMsg" class="msg full"></div>
+      </form>
+      <div id="myTickets" class="ticket-list auth-required"></div>
+    </section>
+
+    <section id="rules" class="section panel-section">
+      <div class="section-head"><div><span class="eyebrow">FIRECRAFT</span><h2>Rules</h2></div></div>
+      <div class="rules-grid">
+        <article><b>01</b><h3>Respect</h3><p>No harassment, hate speech or targeted abuse.</p></article>
+        <article><b>02</b><h3>Fair Play</h3><p>No cheats, exploits or unauthorized clients.</p></article>
+        <article><b>03</b><h3>Community</h3><p>Keep chat and gameplay suitable for the private SMP.</p></article>
+        <article><b>04</b><h3>Staff Decisions</h3><p>Use support tickets for appeals and complaints rather than public arguments.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>🔥 FireCraft SMP</span><span>Private Lifesteal • Custom Plugins</span><span>© <span id="year"></span> FireCraft</span></footer>
+
+  <div id="authModal" class="modal hidden">
+    <div class="modal-card">
+      <button class="modal-close" id="closeAuth">×</button>
+      <div id="loginView">
+        <span class="eyebrow">FIRECRAFT ACCOUNT</span><h2>Login</h2><p class="muted">Use your Minecraft IGN and FireCraft password.</p>
+        <form id="loginForm">
+          <div class="field"><label>Minecraft IGN</label><input id="loginIgn" autocomplete="username" required></div>
+          <div class="field"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password" required></div>
+          <button class="btn full">Login</button><div id="loginMsg" class="msg"></div>
+        </form>
+        <button class="link-btn" id="showSignup">New here? Create FireCraft account</button>
+      </div>
+      <div id="signupView" class="hidden">
+        <span class="eyebrow">JOIN THE COMMUNITY</span><h2>Create Account</h2><p class="muted">Your IGN is your FireCraft username. Use a strong password.</p>
+        <form id="signupForm">
+          <div class="field"><label>Minecraft IGN</label><input id="signupIgn" maxlength="16" pattern="[A-Za-z0-9_]{3,16}" required></div>
+          <div class="field"><label>Password</label><input id="signupPassword" type="password" minlength="6" autocomplete="new-password" required></div>
+          <div class="field"><label>Confirm Password</label><input id="signupPassword2" type="password" minlength="6" required></div>
+          <button class="btn full">Create Account</button><div id="signupMsg" class="msg"></div>
+        </form>
+        <button class="link-btn" id="showLogin">Already have an account? Login</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminPanel" class="section admin hidden">
+    <div class="section-head"><div><span class="eyebrow">STAFF ONLY</span><h2>Admin Dashboard</h2></div></div>
+    <div class="admin-grid">
+      <div class="panel"><h3>Applications</h3><div id="adminApps"></div></div>
+      <div class="panel"><h3>Support Tickets</h3><div id="adminTickets"></div></div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
