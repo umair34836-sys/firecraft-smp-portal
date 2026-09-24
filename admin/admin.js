@@ -464,3 +464,28 @@ $("logoutBtn").onclick = async () => {
   await signOut(auth);
   location.href = "../";
 };
+
+/* FireCraft announcements admin */
+let announcementsCache=[];
+const escAnnouncement=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+async function loadAnnouncements(){
+ const list=document.getElementById("announcementsList"); if(!list)return;
+ try{
+  const snap=await getDocs(collection(db,"announcements"));
+  announcementsCache=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0));
+  list.innerHTML=announcementsCache.length?announcementsCache.map(a=>`<div class="announcement-admin-card"><div><strong>${escAnnouncement(a.title)}</strong><span class="announcement-type">${escAnnouncement(a.type||"notice")}</span><p>${escAnnouncement(a.message).replace(/\n/g,"<br>")}</p><small>${a.enabled===false?"Hidden":"Visible"}${a.startAt?" • Starts: "+escAnnouncement(a.startAt):""}${a.endAt?" • Ends: "+escAnnouncement(a.endAt):""}</small></div><div class="announcement-actions"><button class="secondary-btn" data-ann-edit="${a.id}">Edit</button><button class="danger-btn" data-ann-delete="${a.id}">Delete</button></div></div>`).join(""):"<p>No announcements published yet.</p>";
+  list.querySelectorAll("[data-ann-edit]").forEach(b=>b.onclick=()=>{const a=announcementsCache.find(x=>x.id===b.dataset.annEdit);if(!a)return;announcementId.value=a.id;announcementTitle.value=a.title||"";announcementType.value=a.type||"notice";announcementMessage.value=a.message||"";announcementStart.value=a.startAt||"";announcementEnd.value=a.endAt||"";announcementEnabled.checked=a.enabled!==false;});
+  list.querySelectorAll("[data-ann-delete]").forEach(b=>b.onclick=async()=>{if(confirm("Delete this announcement?")){await deleteDoc(doc(db,"announcements",b.dataset.annDelete));loadAnnouncements();}});
+ }catch(e){console.error(e);list.innerHTML="<p>Could not load announcements.</p>";}
+}
+async function saveAnnouncement(e){
+ e.preventDefault();
+ const id=announcementId.value.trim(), data={title:announcementTitle.value.trim(),type:announcementType.value,message:announcementMessage.value.trim(),startAt:announcementStart.value,endAt:announcementEnd.value,enabled:announcementEnabled.checked,updatedAt:serverTimestamp()};
+ if(!data.title||!data.message)return alert("Title and message are required.");
+ if(data.startAt&&data.endAt&&data.endAt<data.startAt)return alert("End date/time cannot be before start date/time.");
+ if(id)await updateDoc(doc(db,"announcements",id),data);else{data.createdAt=serverTimestamp();await setDoc(doc(collection(db,"announcements")),data);}
+ announcementForm.reset();announcementId.value="";announcementEnabled.checked=true;loadAnnouncements();
+}
+document.getElementById("announcementForm")?.addEventListener("submit",saveAnnouncement);
+document.getElementById("announcementCancel")?.addEventListener("click",()=>{announcementForm.reset();announcementId.value="";announcementEnabled.checked=true;});
+loadAnnouncements();

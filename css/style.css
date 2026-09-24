@@ -3,3 +3,11 @@
 @media(max-width:760px){.topbar nav{display:none;position:absolute;left:0;right:0;top:64px;background:#0c0a0b;padding:18px;flex-direction:column;border-bottom:1px solid var(--line)}.topbar nav.open{display:flex}.menu{display:block}.cards,.rules-grid,.admin-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}.hero{min-height:590px}.server-box{align-items:flex-start;flex-direction:column}footer{flex-direction:column;gap:7px}}
 
 .fc-sponsored-wrap{width:100%;margin:22px auto;display:none}.fc-sponsored-wrap.fc-sponsored-visible{display:block}.fc-sponsored{position:relative;display:flex;align-items:center;gap:14px;padding:15px 17px;background:linear-gradient(135deg,#111722,#0d1118);border:1px solid #303746;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.18)}.fc-sponsored::before{content:"SPONSORED";position:absolute;right:12px;top:9px;font-size:9px;letter-spacing:1px;color:#aeb7c7}.fc-sponsored img{width:52px;height:52px;object-fit:contain;border-radius:10px;background:#0a0d13;border:1px solid #252b37}.fc-sponsored-body{min-width:0;flex:1;padding-right:60px}.fc-sponsored-title{font-weight:800;color:#fff}.fc-sponsored-desc{color:#9da7b8;font-size:13px;margin-top:4px;line-height:1.45}.fc-sponsored-btn{display:inline-block;margin-top:9px;padding:7px 10px;border-radius:8px;text-decoration:none;background:#d96514;color:#fff;font-size:12px;font-weight:700}.fc-sponsored-btn:hover{filter:brightness(1.1)}
+
+/* FireCraft announcements */
+.fc-announcements-section{margin:24px 0;padding:20px;border-radius:18px;background:rgba(10,18,32,.72);border:1px solid rgba(255,255,255,.08)}
+.fc-section-heading{margin-bottom:16px}.fc-section-kicker{font-size:.72rem;letter-spacing:.16em;opacity:.7}
+.fc-section-heading h2{margin:4px 0 6px}.fc-section-heading p{margin:0;opacity:.72}
+.fc-announcements-list{display:grid;gap:12px}.fc-announcement-card{padding:16px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.fc-announcement-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.75rem;opacity:.72}
+.fc-announcement-type{text-transform:uppercase;letter-spacing:.08em}.fc-announcement-card h3{margin:8px 0 6px}.fc-announcement-card p{margin:0;line-height:1.6}.fc-announcements-empty{opacity:.65;margin:0}

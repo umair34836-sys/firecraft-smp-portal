@@ -209,3 +209,20 @@ loadFireCraftPublicSettings();
 loadFireCraftSponsoredPlacements();
 
 onAuthStateChanged(auth,user=>{if(user)loadUser(user);else resetUI();});
+
+/* FireCraft announcements */
+async function loadFireCraftAnnouncements() {
+  const list=document.getElementById("firecraft-announcements-list");
+  if(!list)return;
+  try{
+    const snap=await getDocs(collection(db,"announcements")), now=Date.now();
+    const items=snap.docs.map(d=>({id:d.id,...d.data()}))
+      .filter(a=>a.enabled!==false)
+      .filter(a=>!a.startAt||!Date.parse(a.startAt)||Date.parse(a.startAt)<=now)
+      .filter(a=>!a.endAt||!Date.parse(a.endAt)||Date.parse(a.endAt)>=now)
+      .sort((a,b)=>(Date.parse(b.startAt||"")||0)-(Date.parse(a.startAt||"")||0));
+    const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+    list.innerHTML=items.length?items.map(a=>`<article class="fc-announcement-card"><div class="fc-announcement-top"><span class="fc-announcement-type">${esc(a.type||"notice")}</span><span>${esc(a.startAt||"")}</span></div><h3>${esc(a.title)}</h3><p>${esc(a.message).replace(/\n/g,"<br>")}</p></article>`).join(""):'<p class="fc-announcements-empty">No new announcements right now.</p>';
+  }catch(e){console.error("Announcements:",e);list.innerHTML='<p class="fc-announcements-empty">Announcements are temporarily unavailable.</p>';}
+}
+loadFireCraftAnnouncements();
