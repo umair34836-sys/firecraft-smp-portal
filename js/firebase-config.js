@@ -8,4 +8,4 @@ export const firebaseConfig = {
 };
 
 // First admin account banane ke baad yahan Firebase Auth UID paste karna hai.
-export const ADMIN_UID = "PASTE_ADMIN_UID";
+export const ADMIN_UID = "5yLTkB3FBRUauL0fc09vcLhYj7y2";
