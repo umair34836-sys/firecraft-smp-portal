@@ -1,0 +1,23 @@
+.powers-page{background:radial-gradient(circle at 50% -10%,#271312 0,#0b090a 38%,#080708 100%);min-height:100vh}
+.power-main{width:min(1120px,90%);margin:0 auto;padding:72px 0 80px}
+.power-hero{text-align:center;max-width:780px;margin:0 auto 38px}
+.power-hero h1{font-size:clamp(42px,7vw,76px);line-height:1;margin:10px 0 18px;letter-spacing:-2px}
+.power-hero h1 span{color:#ff775d;text-shadow:0 0 30px #ff4e3533}
+.power-hero p{color:#a9a0a3;font-size:17px;line-height:1.7;margin:0}
+.power-panel{position:relative;border:1px solid #3a3033;background:linear-gradient(145deg,#171214,#0c0b0c);border-radius:24px;padding:34px;box-shadow:0 24px 80px #0008;margin-bottom:36px;text-align:center;overflow:hidden}
+.power-panel::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 0,#ff684818,transparent 42%);pointer-events:none}
+.power-panel>*{position:relative}
+.spin-area{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:40px;text-align:left}
+.power-wheel-wrap{position:relative;width:min(390px,100%);aspect-ratio:1;margin:auto}
+.power-wheel{width:100%;height:100%;border-radius:50%;border:10px solid #211a1c;box-shadow:0 0 0 2px #594347,0 20px 60px #000b;position:relative;overflow:hidden;background:conic-gradient(from -30deg,#8f4b32 0deg 60deg,#5d3150 60deg 120deg,#34576c 120deg 180deg,#7b5a28 180deg 240deg,#41663f 240deg 300deg,#5d3d6e 300deg 360deg);transition:transform 4.6s cubic-bezier(.12,.75,.13,1)}
+.power-wheel::after{content:"";position:absolute;inset:14%;border-radius:50%;border:1px solid #ffffff35;box-shadow:inset 0 0 50px #0008}
+.wheel-center{position:absolute;z-index:2;inset:35%;border-radius:50%;display:grid;place-content:center;text-align:center;background:#100d0f;border:2px solid #ff765c;color:#fff;font-weight:900;letter-spacing:2px;box-shadow:0 0 30px #ff5b4233}
+.wheel-center small{font-size:9px;letter-spacing:3px;color:#ff9c88}
+.wheel-pointer{position:absolute;z-index:4;top:-4px;left:50%;transform:translateX(-50%);font-size:36px;color:#ff775d;text-shadow:0 3px 12px #000}
+.spin-copy h2{font-size:38px;margin:8px 0 12px}.spin-copy p{color:#a9a0a3;line-height:1.7}.spin-btn{margin-top:12px;min-width:210px;font-weight:900;letter-spacing:.5px}.spin-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}.spin-status{min-height:22px;color:#ffab98!important;font-size:13px}
+.result-badge{display:inline-block;padding:7px 12px;border-radius:999px;background:#62e6a015;border:1px solid #62e6a044;color:#62e6a0;font-size:11px;font-weight:900;letter-spacing:1.4px}.result-icon{font-size:64px;margin:16px 0 4px}.result-card h2{font-size:50px;margin:5px 0 8px}.power-panel #resultName{font-size:50px;margin:5px 0 8px}.power-panel #resultTagline{color:#a9a0a3}.ability-list{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin:22px 0}.ability{padding:9px 12px;border-radius:10px;background:#ffffff08;border:1px solid #ffffff12;color:#eee;font-size:13px}.result-note{margin:10px auto 22px;max-width:600px;color:#62e6a0;font-size:13px}
+.power-info{padding-top:18px}.power-info .section-head{text-align:center}.power-info .section-head h2{margin-top:7px}.power-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.power-card{border:1px solid #2d2729;background:#100e0f;border-radius:17px;padding:20px;transition:.2s}.power-card:hover{transform:translateY(-3px);border-color:#ffffff22}.power-card>span{font-size:29px}.power-card h3{margin:10px 0 5px}.power-card p{color:#a49b9e;line-height:1.55;margin:0 0 10px}.power-card small{color:#ff9b84}.power-card.miner{box-shadow:inset 0 2px #e29a52}.power-card.pvper{box-shadow:inset 0 2px #e55f54}.power-card.trader{box-shadow:inset 0 2px #7acb8a}.power-card.flyer{box-shadow:inset 0 2px #6cbde4}.power-card.foody{box-shadow:inset 0 2px #e8c45c}.power-card.hider{box-shadow:inset 0 2px #a982d8}
+.power-message-icon{font-size:42px}.power-panel h2{margin:8px 0}.power-panel p{color:#a9a0a3;line-height:1.6}.power-spinner{width:38px;height:38px;border-radius:50%;border:3px solid #ffffff12;border-top-color:#ff765c;animation:fcspin .8s linear infinite;margin:0 auto 14px}.power-spinner.small{width:30px;height:30px}@keyframes fcspin{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+@media(max-width:800px){.spin-area{grid-template-columns:1fr}.spin-copy{text-align:center}.power-grid{grid-template-columns:1fr 1fr}.power-panel{padding:24px}.power-wheel-wrap{width:min(330px,90vw)}}
+@media(max-width:520px){.power-main{padding-top:45px}.power-grid{grid-template-columns:1fr}.power-hero h1{font-size:45px}.power-panel #resultName{font-size:40px}}

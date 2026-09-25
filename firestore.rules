@@ -76,6 +76,15 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /powerAssignments/{uid} {
+      allow read: if isSelf(uid) || isAdmin();
+      allow create: if isSelf(uid)
+        && !exists(/databases/$(database)/documents/powerAssignments/$(uid))
+        && request.resource.data.uid == uid
+        && request.resource.data.powerId in ["miner", "pvper", "trader", "flyer", "foody", "hider"];
+      allow update, delete: if isAdmin();
+    }
+
     match /staff/{uid} {
       allow read: if isAdmin();
       allow create, update, delete: if isAdmin();

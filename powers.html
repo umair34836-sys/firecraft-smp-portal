@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FireCraft SMP | Choose Your Power</title>
+  <meta name="description" content="FireCraft SMP one-time Power Spin.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/powers.css">
+</head>
+<body class="powers-page">
+  <header class="topbar">
+    <a class="brand" href="index.html#home"><span class="brand-fire">🔥</span> FIRECRAFT <small>SMP</small></a>
+    <nav id="nav">
+      <a href="index.html#home">Home</a>
+      <a href="index.html#apply">Apply</a>
+      <a href="index.html#status">My Status</a>
+      <a href="powers.html" class="active">My Power</a>
+      <a href="index.html#support">Support</a>
+    </nav>
+    <button class="menu" id="menuBtn">☰</button>
+  </header>
+
+  <main class="power-main">
+    <section class="power-hero">
+      <span class="eyebrow">FIRECRAFT SMP • POWER SYSTEM</span>
+      <h1>Spin for your <span>Power</span></h1>
+      <p>Every player gets one random Power. Your spin can only be used once, so make it count.</p>
+    </section>
+
+    <section id="loginCard" class="power-panel hidden">
+      <div class="power-message-icon">🔒</div>
+      <h2>Login required</h2>
+      <p>You need to be logged in with your FireCraft IGN before you can spin.</p>
+      <a class="btn" href="index.html#home">Go to FireCraft</a>
+    </section>
+
+    <section id="loadingCard" class="power-panel">
+      <div class="power-spinner small"></div>
+      <p>Checking your FireCraft Power...</p>
+    </section>
+
+    <section id="spinCard" class="power-panel hidden">
+      <div class="spin-area">
+        <div class="power-wheel-wrap">
+          <div class="wheel-pointer">▼</div>
+          <div id="powerWheel" class="power-wheel">
+            <div class="wheel-center">FIRE<br><small>CRAFT</small></div>
+          </div>
+        </div>
+        <div class="spin-copy">
+          <span class="eyebrow">ONE TIME ONLY</span>
+          <h2>Your Power is waiting.</h2>
+          <p>Press the button once. The wheel will select one of the six FireCraft Powers and permanently save it to your account.</p>
+          <button id="spinBtn" class="btn spin-btn">SPIN FOR POWER</button>
+          <p id="spinStatus" class="spin-status"></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultCard" class="power-panel hidden">
+      <div class="result-badge">POWER ASSIGNED</div>
+      <div id="resultIcon" class="result-icon">🔥</div>
+      <span id="resultKicker" class="eyebrow">YOUR FIRECRAFT POWER</span>
+      <h2 id="resultName">Power</h2>
+      <p id="resultTagline"></p>
+      <div id="resultAbilities" class="ability-list"></div>
+      <div class="result-note">This Power has been permanently assigned to your FireCraft account.</div>
+      <a class="btn btn-ghost" href="index.html#home">Back to FireCraft</a>
+    </section>
+
+    <section id="powersInfo" class="power-info">
+      <div class="section-head">
+        <span class="eyebrow">THE SIX POWERS</span>
+        <h2>Know your possibilities</h2>
+      </div>
+      <div class="power-grid">
+        <article class="power-card miner"><span>⛏️</span><h3>Miner</h3><p>Haste II + Night Vision for 30 seconds.</p><small>Cooldown: 2 minutes</small></article>
+        <article class="power-card pvper"><span>⚔️</span><h3>PvPer</h3><p>Strength II + Resistance I for 20 seconds.</p><small>Cooldown: 2 minutes</small></article>
+        <article class="power-card trader"><span>💰</span><h3>Trader</h3><p>Hero of the Village X for 30 seconds.</p><small>Cooldown: 5 minutes</small></article>
+        <article class="power-card flyer"><span>🪽</span><h3>Flyer</h3><p>Jump Boost X + Slow Falling X for 30 seconds.</p><small>Cooldown: 3 minutes</small></article>
+        <article class="power-card foody"><span>🍖</span><h3>Foody</h3><p>Saturation X + Regeneration II for 30 seconds.</p><small>Cooldown: 1 minute</small></article>
+        <article class="power-card hider"><span>👁️</span><h3>Hider</h3><p>Invisibility X + Night Vision II for 60 seconds.</p><small>Cooldown: 15 minutes</small></article>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>🔥 FireCraft SMP</span><span>Private Lifesteal • Custom Plugins</span><span>© <span id="year"></span> FireCraft</span></footer>
+
+  <script type="module" src="js/powers.js"></script>
+</body>
+</html>
