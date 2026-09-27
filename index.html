@@ -11,7 +11,7 @@
   <header class="topbar">
     <a class="brand" href="#home"><span class="brand-fire">🔥</span> FIRECRAFT <small>SMP</small></a>
     <nav id="nav">
-      <a href="#home">Home</a><a href="#apply">Apply</a><a href="#status">My Status</a><a href="powers.html">My Power</a><a href="#rules">Rules</a>
+      <a href="#home">Home</a><a href="#apply">Apply</a><a href="#status">My Status</a><a href="#support">Support</a><a href="#rules">Rules</a>
       <button id="authBtn" class="btn btn-small">Login</button>
     </nav>
     <button class="menu" id="menuBtn">☰</button>
@@ -86,8 +86,19 @@
       <div id="statusBox" class="panel auth-required"><p>Login to view your whitelist/application status.</p></div>
     </section>
 
+    <section id="support" class="section panel-section">
+      <div class="section-head"><div><span class="eyebrow">STAFF SUPPORT</span><h2>Support & Complaints</h2><p>Open a private ticket for server-related issues, player reports or technical problems.</p></div></div>
+      <form id="ticketForm" class="panel form-grid auth-required">
+        <div class="field"><label>Category</label><select id="ticketCategory" required><option>General Support</option><option>Player Report</option><option>Bug Report</option><option>Whitelist / Application</option><option>Staff Complaint</option><option>Other</option></select></div>
+        <div class="field"><label>Subject</label><input id="ticketSubject" maxlength="100" required></div>
+        <div class="field full"><label>Message</label><textarea id="ticketMessage" rows="6" maxlength="2000" required></textarea></div>
+        <button class="btn full" type="submit">Open Ticket</button>
+        <div id="ticketMsg" class="msg full"></div>
+      </form>
+      <div id="myTickets" class="ticket-list auth-required"></div>
+    </section>
 
-<section id="rules" class="section panel-section">
+    <section id="rules" class="section panel-section">
       <div class="section-head"><div><span class="eyebrow">FIRECRAFT</span><h2>Rules</h2></div></div>
       <div class="rules-grid">
         <article><b>01</b><h3>Respect</h3><p>No harassment, hate speech or targeted abuse.</p></article>
