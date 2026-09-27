@@ -284,6 +284,15 @@ async function setApplicationStatus(status){
     await updateDoc(doc(db,"applications",selectedApplication.id), {
       status, reviewedBy: currentUser.uid, reviewedAt:new Date()
     });
+    if(status === "approved" && selectedApplication.ign){
+      const ignKey = selectedApplication.ign.toLowerCase();
+      await setDoc(doc(db,"approvedPlayers",ignKey), {
+        ign: selectedApplication.ign,
+        approvedAt: new Date(),
+        approvedBy: currentUser.uid,
+        applicationId: selectedApplication.id
+      });
+    }
     showToast(`Application marked ${status}.`);
     closeModal("applicationModal");
   }catch(e){showToast(e.message);}

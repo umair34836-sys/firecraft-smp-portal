@@ -14,14 +14,20 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class FireCraftNotifier extends JavaPlugin implements Listener {
@@ -36,26 +42,30 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
     private long reminderIntervalMinutes;
     private boolean showJoinTitle;
 
-    // Display types rotated randomly
+    // Tracks IGNs already whitelisted so we never process them twice
+    private final Set<String> processedIgns = new HashSet<>();
+    private File processedIgnsFile;
+
     private static final String[] DISPLAY_TYPES = {"CHAT", "ACTIONBAR", "TITLE"};
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
 
-        projectId          = getConfig().getString("firebase-project-id", "firecraft-smp-portal");
-        websiteUrl         = getConfig().getString("website-url", "https://firecraft-smp-portal.web.app");
+        projectId               = getConfig().getString("firebase-project-id", "firecraft-smp-portal");
+        websiteUrl              = getConfig().getString("website-url", "https://firecraft-smp-portal.web.app");
         reminderIntervalMinutes = getConfig().getLong("reminder-interval-minutes", 10);
-        showJoinTitle      = getConfig().getBoolean("show-join-title", true);
+        showJoinTitle           = getConfig().getBoolean("show-join-title", true);
 
-        // Shared HTTP client — reused for all requests (efficient, no per-request overhead)
         httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(8))
                 .build();
 
+        loadProcessedIgns();
+
         getServer().getPluginManager().registerEvents(this, this);
 
-        // Fetch announcements once on startup, then every 5 minutes (async — zero main-thread impact)
+        // Fetch announcements once on startup, then every 5 minutes (async)
         Bukkit.getScheduler().runTaskTimerAsynchronously(this,
                 this::fetchAnnouncements, 40L, 20L * 60 * 5);
 
@@ -63,6 +73,10 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
         long intervalTicks = reminderIntervalMinutes * 60 * 20;
         Bukkit.getScheduler().runTaskTimerAsynchronously(this,
                 this::triggerReminder, intervalTicks, intervalTicks);
+
+        // Poll approvedPlayers every 30 seconds for auto-whitelist
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this,
+                this::pollApprovedPlayers, 200L, 20L * 30);
 
         getLogger().info("[FireCraftNotifier] Enabled — reminders every " + reminderIntervalMinutes + " min.");
     }
@@ -72,7 +86,7 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
         getLogger().info("[FireCraftNotifier] Disabled.");
     }
 
-    // ─── Fetch announcements from Firestore REST (runs async) ─────────────────
+    // ─── Announcement fetch ───────────────────────────────────────────────────
 
     private void fetchAnnouncements() {
         try {
@@ -114,13 +128,11 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
                 JsonObject fields = el.getAsJsonObject().getAsJsonObject("fields");
                 if (fields == null) continue;
 
-                // Skip disabled announcements
                 if (fields.has("enabled")) {
                     JsonObject enabledObj = fields.getAsJsonObject("enabled");
                     if (enabledObj.has("booleanValue") && !enabledObj.get("booleanValue").getAsBoolean()) continue;
                 }
 
-                // Skip expired announcements (endAt field)
                 if (fields.has("endAt")) {
                     try {
                         String endAt = fields.getAsJsonObject("endAt").get("stringValue").getAsString();
@@ -128,7 +140,6 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
                     } catch (Exception ignored) {}
                 }
 
-                // Grab title
                 if (!fields.has("title")) continue;
                 String title = fields.getAsJsonObject("title").get("stringValue").getAsString().trim();
                 if (!title.isEmpty()) titles.add(title);
@@ -143,22 +154,96 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
         }
     }
 
-    // ─── Reminder logic (triggered async, sends on main thread) ──────────────
+    // ─── Auto-whitelist via approvedPlayers collection ────────────────────────
+
+    private void loadProcessedIgns() {
+        processedIgnsFile = new File(getDataFolder(), "whitelisted.txt");
+        if (!processedIgnsFile.exists()) return;
+        try {
+            Files.readAllLines(processedIgnsFile.toPath()).stream()
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .forEach(processedIgns::add);
+        } catch (IOException e) {
+            getLogger().warning("[FireCraftNotifier] Could not read whitelisted.txt: " + e.getMessage());
+        }
+    }
+
+    private void saveProcessedIgn(String ign) {
+        try {
+            if (!getDataFolder().exists()) getDataFolder().mkdirs();
+            Files.writeString(processedIgnsFile.toPath(), ign + System.lineSeparator(),
+                    StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            getLogger().warning("[FireCraftNotifier] Could not write whitelisted.txt: " + e.getMessage());
+        }
+    }
+
+    private void pollApprovedPlayers() {
+        try {
+            String url = "https://firestore.googleapis.com/v1/projects/" + projectId
+                    + "/databases/(default)/documents/approvedPlayers?pageSize=100";
+
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofSeconds(8))
+                    .header("Accept", "application/json")
+                    .GET()
+                    .build();
+
+            HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+
+            if (res.statusCode() != 200) return;
+
+            JsonObject root = JsonParser.parseString(res.body()).getAsJsonObject();
+            if (!root.has("documents")) return;
+
+            JsonArray docs = root.getAsJsonArray("documents");
+            List<String> toWhitelist = new ArrayList<>();
+
+            for (JsonElement el : docs) {
+                JsonObject fields = el.getAsJsonObject().getAsJsonObject("fields");
+                if (fields == null || !fields.has("ign")) continue;
+
+                String ign = fields.getAsJsonObject("ign").get("stringValue").getAsString().trim();
+                if (ign.isEmpty()) continue;
+
+                String ignLower = ign.toLowerCase();
+                if (!processedIgns.contains(ignLower)) {
+                    toWhitelist.add(ign);
+                    processedIgns.add(ignLower);
+                    saveProcessedIgn(ignLower);
+                }
+            }
+
+            if (!toWhitelist.isEmpty()) {
+                // whitelist commands must run on the main thread
+                Bukkit.getScheduler().runTask(this, () -> {
+                    for (String ign : toWhitelist) {
+                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "whitelist add " + ign);
+                        getLogger().info("[FireCraftNotifier] Auto-whitelisted: " + ign);
+                    }
+                });
+            }
+
+        } catch (Exception e) {
+            getLogger().warning("[FireCraftNotifier] approvedPlayers poll error: " + e.getMessage());
+        }
+    }
+
+    // ─── Reminder logic ───────────────────────────────────────────────────────
 
     private void triggerReminder() {
         if (Bukkit.getOnlinePlayers().isEmpty()) return;
 
-        // Pick a random announcement title (if any)
         String announcementSnippet = "";
         if (!cachedTitles.isEmpty()) {
             announcementSnippet = cachedTitles.get(random.nextInt(cachedTitles.size()));
         }
 
-        // Randomly choose how this reminder appears
         String displayType = DISPLAY_TYPES[random.nextInt(DISPLAY_TYPES.length)];
         String finalSnippet = announcementSnippet;
 
-        // Push to main thread for safe player interaction
         Bukkit.getScheduler().runTask(this, () -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 switch (displayType) {
@@ -216,7 +301,6 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
         if (!showJoinTitle) return;
 
         Player player = event.getPlayer();
-        // 3-second delay so join title appears after other messages settle
         Bukkit.getScheduler().runTaskLater(this, () -> {
             if (!player.isOnline()) return;
             player.showTitle(Title.title(
@@ -233,7 +317,6 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
 
     // ─── Utility ─────────────────────────────────────────────────────────────
 
-    // Escape < and > so announcement text cannot inject MiniMessage tags
     private String escapeForMM(String input) {
         return input.replace("<", "\\<").replace(">", "\\>");
     }
