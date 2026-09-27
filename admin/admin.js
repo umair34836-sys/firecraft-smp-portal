@@ -284,7 +284,11 @@ async function setApplicationStatus(status){
     await updateDoc(doc(db,"applications",selectedApplication.id), {
       status, reviewedBy: currentUser.uid, reviewedAt:new Date()
     });
-    if(status === "approved" && selectedApplication.ign){
+    showToast(`Application marked ${status}.`);
+    closeModal("applicationModal");
+  }catch(e){showToast(e.message); return;}
+  if(status === "approved" && selectedApplication.ign){
+    try{
       const ignKey = selectedApplication.ign.toLowerCase();
       await setDoc(doc(db,"approvedPlayers",ignKey), {
         ign: selectedApplication.ign,
@@ -292,10 +296,10 @@ async function setApplicationStatus(status){
         approvedBy: currentUser.uid,
         applicationId: selectedApplication.id
       });
+    }catch(e){
+      console.warn("approvedPlayers write failed (rules not deployed yet?):", e.message);
     }
-    showToast(`Application marked ${status}.`);
-    closeModal("applicationModal");
-  }catch(e){showToast(e.message);}
+  }
 }
 $("approveApplicationBtn").onclick = () => setApplicationStatus("approved");
 $("pendingApplicationBtn").onclick = () => setApplicationStatus("pending");
