@@ -1,0 +1,6 @@
+name: FireCraftNotifier
+version: 1.0.0
+main: com.firecraft.notifier.FireCraftNotifier
+api-version: '1.21'
+description: Reminds players to visit the FireCraft website for announcements and events.
+author: FireCraft

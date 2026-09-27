@@ -1,0 +1,14 @@
+# FireCraftNotifier Configuration
+
+# Firebase project ID (do not change unless you moved to a new project)
+firebase-project-id: "firecraft-smp-portal"
+
+# Your website URL shown to players
+website-url: "https://firecraft-smp-portal.web.app"
+
+# How often (in minutes) to show a random reminder to online players
+# Recommended: 8-15 minutes so players are not annoyed
+reminder-interval-minutes: 10
+
+# Show a welcome title to players when they join the server
+show-join-title: true
