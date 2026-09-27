@@ -221,6 +221,20 @@ function loadAdmin(){
   });
 }
 
+/* Character counters */
+document.querySelectorAll(".counter[data-for]").forEach(counter => {
+  const field = document.getElementById(counter.dataset.for);
+  if (!field) return;
+  const max = field.maxLength;
+  const update = () => {
+    const len = field.value.length;
+    counter.textContent = `${len} / ${max} characters`;
+    counter.style.color = len > max * 0.9 ? "#ff8c70" : "";
+  };
+  field.addEventListener("input", update);
+  update();
+});
+
 loadFireCraftPublicSettings();
 loadFireCraftSponsoredPlacements();
 

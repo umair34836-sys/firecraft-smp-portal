@@ -69,13 +69,50 @@
     <section id="apply" class="section panel-section">
       <div class="section-head"><div><span class="eyebrow">JOIN FIRECRAFT</span><h2>Whitelist Application</h2><p>Tell the staff who you are and why you want to join.</p></div></div>
       <form id="applicationForm" class="panel form-grid auth-required">
-        <div class="field"><label>Minecraft IGN</label><input id="appIgn" readonly></div>
-        <div class="field"><label>Age</label><input id="appAge" type="number" min="13" max="99" required></div>
-        <div class="field"><label>Country / Timezone</label><input id="appCountry" maxlength="80" required></div>
-        <div class="field full"><label>Why do you want to join?</label><textarea id="appWhy" rows="4" maxlength="1000" required></textarea></div>
-        <div class="field full"><label>What will you contribute to FireCraft?</label><textarea id="appContribution" rows="4" maxlength="1000" required></textarea></div>
-        <div class="field full"><label>Have you played Lifesteal before?</label><select id="appExperience" required><option value="">Choose</option><option>Yes</option><option>No</option><option>A little</option></select></div>
-        <div class="field full"><label>Do you agree to follow the FireCraft rules?</label><select id="appRules" required><option value="">Choose</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+        <div class="field">
+          <label>Minecraft IGN</label>
+          <input id="appIgn" readonly>
+          <small class="hint">Auto-filled from your account — cannot be changed here</small>
+        </div>
+        <div class="field">
+          <label>Age <span class="req">*</span></label>
+          <input id="appAge" type="number" min="13" max="99" placeholder="e.g. 18" required>
+          <small class="hint">You must be at least 13 years old to apply</small>
+        </div>
+        <div class="field full">
+          <label>Country / Timezone <span class="req">*</span></label>
+          <input id="appCountry" maxlength="80" placeholder="e.g. Pakistan / UTC+5" required>
+          <small class="hint">Helps staff know your region and online hours</small>
+        </div>
+        <div class="field full">
+          <label>Why do you want to join FireCraft? <span class="req">*</span></label>
+          <textarea id="appWhy" rows="4" maxlength="1000" placeholder="Tell us about yourself — what draws you to Lifesteal SMP and why FireCraft specifically?" required></textarea>
+          <small class="hint counter" data-for="appWhy">0 / 1000 characters</small>
+        </div>
+        <div class="field full">
+          <label>What will you contribute to the community? <span class="req">*</span></label>
+          <textarea id="appContribution" rows="4" maxlength="1000" placeholder="e.g. builder, content creator, active player, event organiser — be specific!" required></textarea>
+          <small class="hint counter" data-for="appContribution">0 / 1000 characters</small>
+        </div>
+        <div class="field full">
+          <label>Have you played Lifesteal before? <span class="req">*</span></label>
+          <select id="appExperience" required>
+            <option value="">— Select an option —</option>
+            <option>Yes</option>
+            <option>No</option>
+            <option>A little</option>
+          </select>
+          <small class="hint">No worries if you haven't — we welcome new players too</small>
+        </div>
+        <div class="field full">
+          <label>Do you agree to follow the FireCraft rules? <span class="req">*</span></label>
+          <select id="appRules" required>
+            <option value="">— Select an option —</option>
+            <option value="yes">Yes, I agree to all FireCraft rules</option>
+            <option value="no">No</option>
+          </select>
+          <small class="hint">You must agree to the rules before your application can be reviewed</small>
+        </div>
         <button class="btn full" type="submit">Submit Application</button>
         <div id="applicationMsg" class="msg full"></div>
       </form>
@@ -89,9 +126,29 @@
     <section id="support" class="section panel-section">
       <div class="section-head"><div><span class="eyebrow">STAFF SUPPORT</span><h2>Support & Complaints</h2><p>Open a private ticket for server-related issues, player reports or technical problems.</p></div></div>
       <form id="ticketForm" class="panel form-grid auth-required">
-        <div class="field"><label>Category</label><select id="ticketCategory" required><option>General Support</option><option>Player Report</option><option>Bug Report</option><option>Whitelist / Application</option><option>Staff Complaint</option><option>Other</option></select></div>
-        <div class="field"><label>Subject</label><input id="ticketSubject" maxlength="100" required></div>
-        <div class="field full"><label>Message</label><textarea id="ticketMessage" rows="6" maxlength="2000" required></textarea></div>
+        <div class="field">
+          <label>Category <span class="req">*</span></label>
+          <select id="ticketCategory" required>
+            <option value="">— Choose a category —</option>
+            <option>General Support</option>
+            <option>Player Report</option>
+            <option>Bug Report</option>
+            <option>Whitelist / Application</option>
+            <option>Staff Complaint</option>
+            <option>Other</option>
+          </select>
+          <small class="hint">Pick the category that best matches your issue</small>
+        </div>
+        <div class="field">
+          <label>Subject <span class="req">*</span></label>
+          <input id="ticketSubject" maxlength="100" placeholder="e.g. Player griefed my base" required>
+          <small class="hint">Short, clear summary of your issue (max 100 characters)</small>
+        </div>
+        <div class="field full">
+          <label>Message <span class="req">*</span></label>
+          <textarea id="ticketMessage" rows="6" maxlength="2000" placeholder="Describe your issue in as much detail as possible. Include player names, times, and any relevant screenshots or evidence." required></textarea>
+          <small class="hint counter" data-for="ticketMessage">0 / 2000 characters</small>
+        </div>
         <button class="btn full" type="submit">Open Ticket</button>
         <div id="ticketMsg" class="msg full"></div>
       </form>
@@ -116,8 +173,15 @@
       <div id="loginView">
         <span class="eyebrow">FIRECRAFT ACCOUNT</span><h2>Login</h2><p class="muted">Use your Minecraft IGN and FireCraft password.</p>
         <form id="loginForm">
-          <div class="field"><label>Minecraft IGN</label><input id="loginIgn" autocomplete="username" required></div>
-          <div class="field"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password" required></div>
+          <div class="field">
+            <label>Minecraft IGN</label>
+            <input id="loginIgn" autocomplete="username" placeholder="e.g. Steve123" required>
+            <small class="hint">Enter the username you registered with</small>
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Your FireCraft password" required>
+          </div>
           <button class="btn full">Login</button><div id="loginMsg" class="msg"></div>
         </form>
         <button class="link-btn" id="showSignup">New here? Create FireCraft account</button>
@@ -125,9 +189,20 @@
       <div id="signupView" class="hidden">
         <span class="eyebrow">JOIN THE COMMUNITY</span><h2>Create Account</h2><p class="muted">Your IGN is your FireCraft username. Use a strong password.</p>
         <form id="signupForm">
-          <div class="field"><label>Minecraft IGN</label><input id="signupIgn" maxlength="16" pattern="[A-Za-z0-9_]{3,16}" required></div>
-          <div class="field"><label>Password</label><input id="signupPassword" type="password" minlength="6" autocomplete="new-password" required></div>
-          <div class="field"><label>Confirm Password</label><input id="signupPassword2" type="password" minlength="6" required></div>
+          <div class="field">
+            <label>Minecraft IGN <span class="req">*</span></label>
+            <input id="signupIgn" maxlength="16" pattern="[A-Za-z0-9_]{3,16}" placeholder="e.g. Steve123" required>
+            <small class="hint">3–16 characters — letters, numbers and underscores only</small>
+          </div>
+          <div class="field">
+            <label>Password <span class="req">*</span></label>
+            <input id="signupPassword" type="password" minlength="6" autocomplete="new-password" placeholder="At least 6 characters" required>
+            <small class="hint">Choose a strong password you haven't used elsewhere</small>
+          </div>
+          <div class="field">
+            <label>Confirm Password <span class="req">*</span></label>
+            <input id="signupPassword2" type="password" minlength="6" placeholder="Re-enter your password" required>
+          </div>
           <button class="btn full">Create Account</button><div id="signupMsg" class="msg"></div>
         </form>
         <button class="link-btn" id="showLogin">Already have an account? Login</button>
