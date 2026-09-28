@@ -824,11 +824,75 @@ function loadEarnAdmin() {
 let allApprovedPlayers = [];
 
 async function loadWhitelist() {
-  const snap = await getDocs(collection(db, "approvedPlayers"));
-  allApprovedPlayers = snap.docs
-    .map(d => ({ id: d.id, ...d.data() }))
+  // Pull from both approvedPlayers collection AND applications with status=approved
+  // so we never miss anyone approved before approvedPlayers was created
+  const [apSnap, appSnap] = await Promise.all([
+    getDocs(collection(db, "approvedPlayers")),
+    getDocs(query(collection(db, "applications"), where("status", "==", "approved")))
+  ]);
+
+  const map = {};
+
+  // Seed from applications first (has all historical data)
+  appSnap.docs.forEach(d => {
+    const data = d.data();
+    const ign = data.ign?.trim();
+    if (!ign) return;
+    const key = ign.toLowerCase();
+    if (!map[key]) {
+      map[key] = { id: key, ign, approvedAt: data.approvedAt || data.createdAt || null };
+    }
+  });
+
+  // Overlay with approvedPlayers (may have more precise approvedAt)
+  apSnap.docs.forEach(d => {
+    const data = d.data();
+    const ign = data.ign?.trim();
+    if (!ign) return;
+    const key = ign.toLowerCase();
+    map[key] = { id: key, ign, approvedAt: data.approvedAt || map[key]?.approvedAt || null };
+  });
+
+  allApprovedPlayers = Object.values(map)
     .sort((a, b) => String(a.ign).localeCompare(String(b.ign)));
   renderWhitelist();
+}
+
+async function syncApprovedToWhitelist() {
+  const btn = $("syncWhitelistBtn");
+  btn.disabled = true;
+  btn.textContent = "Syncing...";
+  try {
+    const appSnap = await getDocs(
+      query(collection(db, "applications"), where("status", "==", "approved"))
+    );
+    let count = 0;
+    const writes = [];
+    const seen = new Set();
+    appSnap.docs.forEach(d => {
+      const data = d.data();
+      const ign = data.ign?.trim();
+      if (!ign) return;
+      const key = ign.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      writes.push(setDoc(doc(db, "approvedPlayers", key), {
+        ign,
+        approvedAt: data.approvedAt || data.createdAt || new Date(),
+        approvedBy: data.reviewedBy || "sync",
+        syncedAt: new Date()
+      }, { merge: true }));
+      count++;
+    });
+    await Promise.all(writes);
+    showToast(`Synced ${count} unique approved players to whitelist.`);
+    await loadWhitelist();
+  } catch(e) {
+    showToast("Sync error: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Sync from Applications";
+  }
 }
 
 function renderWhitelist() {
@@ -889,4 +953,5 @@ $("downloadWhitelistBtn").onclick = () => {
 };
 
 $("refreshWhitelist").onclick = loadWhitelist;
+$("syncWhitelistBtn").onclick = syncApprovedToWhitelist;
 $("whitelistSearch").addEventListener("input", renderWhitelist);
