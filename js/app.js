@@ -126,14 +126,18 @@ $("backToLogin").onclick=()=>openAuth("login");
 
 function setMsg(id,msg,error=true){$(id).textContent=msg;$(id).style.color=error?"#ff9d87":"#62e6a0";}
 
+let _signupBusy=false;
 $("signupForm").onsubmit=async e=>{
   e.preventDefault();
+  if(_signupBusy) return;
   const ign=$("signupIgn").value.trim();
   const email=$("signupEmail").value.trim().toLowerCase();
   const p=$("signupPassword").value, p2=$("signupPassword2").value;
   if(!/^[A-Za-z0-9_]{3,16}$/.test(ign)) return setMsg("signupMsg","IGN must be 3–16 letters, numbers or underscores.");
   if(!email) return setMsg("signupMsg","Email address is required.");
+  if(p.length<6) return setMsg("signupMsg","Password must be at least 6 characters.");
   if(p!==p2) return setMsg("signupMsg","Passwords do not match.");
+  _signupBusy=true;
   try{
     const cred=await createUserWithEmailAndPassword(auth,email,p);
     const user=cred.user;
@@ -145,10 +149,11 @@ $("signupForm").onsubmit=async e=>{
         tx.set(ref,{uid:user.uid,ign,email});
         tx.set(doc(db,"users",user.uid),{uid:user.uid,ign,ignLower:normIgn(ign),email,role:"player",createdAt:serverTimestamp()});
       });
-      setMsg("signupMsg","Account created. Welcome to FireCraft!","success");
+      setMsg("signupMsg","Account created. Welcome to FireCraft!",false);
       setTimeout(async()=>{ closeAuth(); await loadUser(auth.currentUser); },700);
-    }catch(err){ await deleteUser(user); if(err.message==="IGN_TAKEN") throw new Error("That IGN is already registered."); throw err; }
+    }catch(err){ await deleteUser(user); if(err.message==="IGN_TAKEN") throw new Error("That IGN is already taken. Choose a different IGN."); throw err; }
   }catch(err){ setMsg("signupMsg",friendlyAuth(err)); }
+  finally{ _signupBusy=false; }
 };
 
 $("loginForm").onsubmit=async e=>{
@@ -183,9 +188,14 @@ $("resetForm").onsubmit=async e=>{
 function friendlyAuth(e){
   const c=e?.code||"";
   if(c.includes("invalid-credential")||c.includes("wrong-password")||c.includes("user-not-found")) return "Invalid IGN or password.";
-  if(c.includes("email-already-in-use")) return "That IGN is already registered.";
+  if(c.includes("email-already-in-use")) return "That email address is already registered. Try logging in or use password reset.";
   if(c.includes("weak-password")) return "Password must be at least 6 characters.";
-  return e?.message||"Something went wrong.";
+  if(c.includes("operation-not-allowed")) return "Sign-up is currently disabled. Please contact an admin.";
+  if(c.includes("invalid-email")) return "Please enter a valid email address.";
+  if(c.includes("network-request-failed")) return "Network error. Check your connection and try again.";
+  if(c.includes("too-many-requests")) return "Too many attempts. Please wait a few minutes and try again.";
+  console.error("Auth error:", c, e?.message);
+  return e?.message||"Something went wrong. Try again.";
 }
 
 let unsubApps=null, unsubTickets=null;
