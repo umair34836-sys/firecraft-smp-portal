@@ -334,6 +334,14 @@
     </div>
   </div>
 
+  <!-- EmailJS — optional: for approval email notifications.
+       1. Sign up at https://www.emailjs.com (free plan: 200 emails/month)
+       2. Create a service + template, then replace YOUR_PUBLIC_KEY below
+       3. In admin.js replace YOUR_SERVICE_ID and YOUR_TEMPLATE_ID -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    if(window.emailjs) emailjs.init({ publicKey: "YOUR_PUBLIC_KEY" });
+  </script>
   <script type="module" src="./admin.js"></script>
 </body>
 </html>

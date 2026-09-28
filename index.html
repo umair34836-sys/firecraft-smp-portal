@@ -24,7 +24,7 @@
   <header class="topbar">
     <a class="brand" href="#home"><img src="images/logo-192.png" alt="FireCraft SMP" class="brand-logo"> FIRECRAFT <small>SMP</small></a>
     <nav id="nav">
-      <a href="#home">Home</a><a href="#apply">Apply</a><a href="#status">My Status</a><a href="#support">Support</a><a href="#rules">Rules</a>
+      <a href="#home">Home</a><a href="#apply">Apply</a><a href="#status">My Status</a><a href="#support">Support</a><a href="#rules">Rules</a><a href="#faq">FAQ</a>
       <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="btn btn-small btn-discord">Discord</a>
       <button id="authBtn" class="btn btn-small">Login</button>
     </nav>
@@ -43,6 +43,10 @@
           <a class="btn" href="#apply">Apply for Whitelist</a>
           <a class="btn btn-ghost" href="#status">Check Application</a>
           <a class="btn btn-discord" href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener">Join Discord</a>
+        </div>
+        <div id="serverStatusBadge" class="server-status-badge">
+          <span id="statusDot" class="dot dot-checking"></span>
+          <span id="statusText">Checking server…</span>
         </div>
         <div class="server-box">
           <div><span class="dot"></span><b>Server Address</b><code><span data-server-java-ip>play.firecraft.fun:20011</span></code></div>
@@ -135,8 +139,11 @@
     </section>
 
     <section id="status" class="section panel-section">
-      <div class="section-head"><div><span class="eyebrow">YOUR ACCOUNT</span><h2>Application Status</h2></div></div>
-      <div id="statusBox" class="panel auth-required"><p>Login to view your whitelist/application status.</p></div>
+      <div class="section-head"><div><span class="eyebrow">YOUR ACCOUNT</span><h2>My Profile</h2></div></div>
+      <div id="profileBox" class="panel auth-required hidden">
+        <div id="profileGrid" class="profile-grid"></div>
+      </div>
+      <div id="statusBox" class="panel auth-required"><p>Login to view your profile and application status.</p></div>
     </section>
 
     <section id="support" class="section panel-section">
@@ -180,6 +187,51 @@
         <article><b>04</b><h3>Staff Decisions</h3><p>Use support tickets for appeals and complaints rather than public arguments.</p></article>
       </div>
     </section>
+
+    <section id="faq" class="section panel-section">
+      <div class="section-head"><div><span class="eyebrow">GOT QUESTIONS?</span><h2>FAQ</h2><p>Quick answers to the most common questions about FireCraft SMP.</p></div></div>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>What is the server IP address?</summary>
+          <p>The server address is <code>play.firecraft.fun:20011</code>. Java Edition only. You can copy it directly from the homepage.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How long does a whitelist application take?</summary>
+          <p>Staff typically review applications within 24–48 hours. Once reviewed you'll see your status update in the <a href="#status">My Status</a> section after logging in.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Is Bedrock Edition supported?</summary>
+          <p>FireCraft SMP currently runs Java Edition only. Bedrock support may be introduced in a future update — stay tuned in <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener">Discord</a> for announcements.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What Minecraft version do I need?</summary>
+          <p>We run the latest stable Paper build. We recommend matching your client to the current server version for the best experience. Check the Discord for the exact version.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What is Lifesteal SMP?</summary>
+          <p>In a Lifesteal SMP, killing another player steals one of their hearts and adds it to your own. Lose all your hearts and you're out. It makes every fight carry real stakes.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How do I report a player or griefer?</summary>
+          <p>Login and use the <a href="#support">Support</a> section to open a ticket. Select <em>Player Report</em> as the category and include the player name, time, and any screenshots or evidence.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can I appeal a ban or a rejected application?</summary>
+          <p>Yes. Open a support ticket with the <em>Whitelist / Application</em> category or reach out to staff directly on <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener">Discord</a>.</p>
+        </details>
+        <details class="faq-item">
+          <summary>I forgot my password — how do I reset it?</summary>
+          <p>Click <em>Login</em> in the navigation and then <em>Forgot password?</em>. Enter your Minecraft IGN and a reset link will be sent to the email address you registered with.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="gallery" class="section panel-section">
+      <div class="section-head"><div><span class="eyebrow">SCREENSHOTS</span><h2>Gallery</h2><p>A look inside the world of FireCraft SMP.</p></div></div>
+      <div id="galleryGrid" class="gallery-grid">
+        <div class="gallery-empty"><span>📸</span><p>No screenshots yet — check back soon!</p></div>
+      </div>
+    </section>
   </main>
 <footer><span>🔥 FireCraft SMP</span><span>Private Lifesteal • Custom Plugins</span><a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="footer-discord">Discord</a><span>© <span id="year"></span> FireCraft</span></footer>
 
@@ -200,7 +252,19 @@
           </div>
           <button class="btn full">Login</button><div id="loginMsg" class="msg"></div>
         </form>
+        <button class="link-btn" id="showReset">Forgot password?</button>
         <button class="link-btn" id="showSignup">New here? Create FireCraft account</button>
+      </div>
+      <div id="resetView" class="hidden">
+        <span class="eyebrow">ACCOUNT RECOVERY</span><h2>Reset Password</h2><p class="muted">Enter your Minecraft IGN — a reset link will be sent to your registered email.</p>
+        <form id="resetForm">
+          <div class="field">
+            <label>Minecraft IGN</label>
+            <input id="resetIgn" placeholder="e.g. Steve123" required>
+          </div>
+          <button class="btn full">Send Reset Link</button><div id="resetMsg" class="msg"></div>
+        </form>
+        <button class="link-btn" id="backToLogin">← Back to Login</button>
       </div>
       <div id="signupView" class="hidden">
         <span class="eyebrow">JOIN THE COMMUNITY</span><h2>Create Account</h2><p class="muted">Your IGN is your FireCraft username. Use a strong password.</p>
@@ -209,6 +273,11 @@
             <label>Minecraft IGN <span class="req">*</span></label>
             <input id="signupIgn" maxlength="16" pattern="[A-Za-z0-9_]{3,16}" placeholder="e.g. Steve123" required>
             <small class="hint">3–16 characters — letters, numbers and underscores only</small>
+          </div>
+          <div class="field">
+            <label>Email Address <span class="req">*</span></label>
+            <input id="signupEmail" type="email" autocomplete="email" placeholder="your@email.com" required>
+            <small class="hint">Used for account recovery — never shown publicly</small>
           </div>
           <div class="field">
             <label>Password <span class="req">*</span></label>

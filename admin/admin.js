@@ -299,6 +299,21 @@ async function setApplicationStatus(status){
     }catch(e){
       console.warn("approvedPlayers write failed (rules not deployed yet?):", e.message);
     }
+    // Email notification — requires EmailJS (see README for setup)
+    try{
+      const userSnap = await getDoc(doc(db,"users",selectedApplication.uid));
+      const email = userSnap.exists() ? userSnap.data().email : null;
+      if(email && window.emailjs){
+        await window.emailjs.send(
+          "YOUR_SERVICE_ID",   // replace with EmailJS service ID
+          "YOUR_TEMPLATE_ID",  // replace with EmailJS template ID
+          { to_email: email, ign: selectedApplication.ign, site_url: "https://www.firecraft.fun" }
+        );
+        showToast("Approval email sent to " + selectedApplication.ign);
+      }
+    }catch(e){
+      console.warn("Email notification failed:", e.message);
+    }
   }
 }
 $("approveApplicationBtn").onclick = () => setApplicationStatus("approved");

@@ -32,7 +32,7 @@ service cloud.firestore {
     }
 
     match /usernames/{username} {
-      allow read: if signedIn();
+      allow read: if true;  // needed for login email lookup before auth
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid;
       allow update, delete: if isAdmin();
@@ -77,6 +77,11 @@ service cloud.firestore {
     }
 
     match /approvedPlayers/{ign} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /gallery/{docId} {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }

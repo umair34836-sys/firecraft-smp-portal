@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, deleteUser, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, orderBy, onSnapshot, updateDoc, serverTimestamp, runTransaction,
   getDocs,} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { firebaseConfig, ADMIN_UID } from "./firebase-config.js";
@@ -110,32 +110,40 @@ $("menuBtn").onclick=()=>$("nav").classList.toggle("open");
 document.querySelectorAll("nav a").forEach(a=>a.onclick=()=>$("nav").classList.remove("open"));
 document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(b.dataset.copy);toast("Server address copied.");});
 
-function openAuth(view="login"){ $("authModal").classList.remove("hidden"); $("loginView").classList.toggle("hidden",view!=="login"); $("signupView").classList.toggle("hidden",view!=="signup"); }
+function openAuth(view="login"){
+  $("authModal").classList.remove("hidden");
+  $("loginView").classList.toggle("hidden",view!=="login");
+  $("signupView").classList.toggle("hidden",view!=="signup");
+  $("resetView").classList.toggle("hidden",view!=="reset");
+}
 function closeAuth(){ $("authModal").classList.add("hidden"); }
 $("authBtn").onclick=()=>auth.currentUser ? signOut(auth) : openAuth();
 $("closeAuth").onclick=closeAuth;
 $("showSignup").onclick=()=>openAuth("signup");
 $("showLogin").onclick=()=>openAuth("login");
+$("showReset").onclick=()=>openAuth("reset");
+$("backToLogin").onclick=()=>openAuth("login");
 
 function setMsg(id,msg,error=true){$(id).textContent=msg;$(id).style.color=error?"#ff9d87":"#62e6a0";}
 
 $("signupForm").onsubmit=async e=>{
   e.preventDefault();
   const ign=$("signupIgn").value.trim();
+  const email=$("signupEmail").value.trim().toLowerCase();
   const p=$("signupPassword").value, p2=$("signupPassword2").value;
   if(!/^[A-Za-z0-9_]{3,16}$/.test(ign)) return setMsg("signupMsg","IGN must be 3–16 letters, numbers or underscores.");
+  if(!email) return setMsg("signupMsg","Email address is required.");
   if(p!==p2) return setMsg("signupMsg","Passwords do not match.");
   try{
-    // The real password is handled by Firebase Authentication; it is never stored in Firestore.
-    const cred=await createUserWithEmailAndPassword(auth,pseudoEmail(ign),p);
+    const cred=await createUserWithEmailAndPassword(auth,email,p);
     const user=cred.user;
     try{
       await runTransaction(db, async tx=>{
         const ref=doc(db,"usernames",normIgn(ign));
         const existing=await tx.get(ref);
         if(existing.exists()) throw new Error("IGN_TAKEN");
-        tx.set(ref,{uid:user.uid,ign});
-        tx.set(doc(db,"users",user.uid),{uid:user.uid,ign,ignLower:normIgn(ign),role:"player",createdAt:serverTimestamp()});
+        tx.set(ref,{uid:user.uid,ign,email});
+        tx.set(doc(db,"users",user.uid),{uid:user.uid,ign,ignLower:normIgn(ign),email,role:"player",createdAt:serverTimestamp()});
       });
       setMsg("signupMsg","Account created. Welcome to FireCraft!","success");
       setTimeout(closeAuth,700);
@@ -145,8 +153,30 @@ $("signupForm").onsubmit=async e=>{
 
 $("loginForm").onsubmit=async e=>{
   e.preventDefault();
-  try{ await signInWithEmailAndPassword(auth,pseudoEmail($("loginIgn").value),$("loginPassword").value); setMsg("loginMsg","Login successful.","success"); setTimeout(closeAuth,400); }
-  catch(err){setMsg("loginMsg",friendlyAuth(err));}
+  const ign=$("loginIgn").value.trim();
+  const pass=$("loginPassword").value;
+  try{
+    const usernameSnap=await getDoc(doc(db,"usernames",normIgn(ign)));
+    const authEmail=usernameSnap.exists()&&usernameSnap.data().email
+      ? usernameSnap.data().email
+      : pseudoEmail(ign);
+    await signInWithEmailAndPassword(auth,authEmail,pass);
+    setMsg("loginMsg","Login successful.","success");
+    setTimeout(closeAuth,400);
+  }catch(err){setMsg("loginMsg",friendlyAuth(err));}
+};
+
+$("resetForm").onsubmit=async e=>{
+  e.preventDefault();
+  const ign=$("resetIgn").value.trim();
+  try{
+    const usernameSnap=await getDoc(doc(db,"usernames",normIgn(ign)));
+    if(!usernameSnap.exists()) return setMsg("resetMsg","No account found for that IGN.");
+    const email=usernameSnap.data().email;
+    if(!email) return setMsg("resetMsg","No recovery email on file. Contact staff on Discord to reset your password.",true);
+    await sendPasswordResetEmail(auth,email);
+    setMsg("resetMsg","Reset link sent! Check your inbox.","success");
+  }catch(err){setMsg("resetMsg",friendlyAuth(err));}
 };
 
 function friendlyAuth(e){
@@ -164,14 +194,27 @@ async function loadUser(user){
   const profile=snap.data();
   $("authBtn").textContent=`Logout (${profile.ign})`;
   $("appIgn").value=profile.ign;
+  renderProfile(profile);
   await loadStatus(user.uid);
   await loadTickets(user.uid);
   if(profile.role==="admin" || user.uid===ADMIN_UID){ $("adminPanel").classList.remove("hidden"); loadAdmin(); }
 }
+function renderProfile(profile){
+  const joined=profile.createdAt?.toDate?.().toLocaleDateString()||"Unknown";
+  const roleLabel=profile.role==="admin"?"⭐ Admin":profile.role==="staff"?"🛡 Staff":"🎮 Player";
+  $("profileGrid").innerHTML=`
+    <div class="profile-stat"><div class="profile-stat-label">IGN</div><div class="profile-stat-value">${escapeHtml(profile.ign)}</div></div>
+    <div class="profile-stat"><div class="profile-stat-label">Role</div><div class="profile-stat-value">${roleLabel}</div></div>
+    <div class="profile-stat"><div class="profile-stat-label">Joined</div><div class="profile-stat-value">${escapeHtml(joined)}</div></div>
+    <div class="profile-stat"><div class="profile-stat-label">Email</div><div class="profile-stat-value profile-stat-muted">${escapeHtml(profile.email||"Not set")}</div></div>
+  `;
+  $("profileBox").classList.remove("hidden");
+}
 function resetUI(){
   $("authBtn").textContent="Login";
   document.querySelectorAll(".auth-required").forEach(x=>x.classList.add("needs-login"));
-  $("statusBox").innerHTML="<p>Login to view your whitelist/application status.</p>";
+  $("statusBox").innerHTML="<p>Login to view your profile and application status.</p>";
+  $("profileBox").classList.add("hidden");
   $("myTickets").innerHTML="";
   $("adminPanel").classList.add("hidden");
 }
@@ -258,3 +301,44 @@ async function loadFireCraftAnnouncements() {
   }catch(e){console.error("Announcements:",e);list.innerHTML='<p class="fc-announcements-empty">Announcements are temporarily unavailable.</p>';}
 }
 loadFireCraftAnnouncements();
+
+/* Server Status Widget */
+async function loadServerStatus(){
+  const dot=$("statusDot"), text=$("statusText");
+  if(!dot||!text) return;
+  try{
+    const res=await fetch("https://api.mcsrvstat.us/3/play.firecraft.fun:20011");
+    if(!res.ok) throw new Error("API error");
+    const data=await res.json();
+    if(data.online){
+      const online=data.players?.online??0, max=data.players?.max??20;
+      dot.className="dot";
+      text.textContent=`Online — ${online}/${max} players`;
+    }else{
+      dot.className="dot dot-offline";
+      text.textContent="Server offline";
+    }
+  }catch{
+    dot.className="dot dot-offline";
+    text.textContent="Status unavailable";
+  }
+}
+loadServerStatus();
+
+/* Gallery */
+async function loadGallery(){
+  const grid=$("galleryGrid");
+  if(!grid) return;
+  try{
+    const snap=await getDocs(collection(db,"gallery"));
+    const items=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.enabled!==false&&x.imageUrl);
+    if(!items.length) return;
+    const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+    grid.innerHTML=items.map(item=>`
+      <div class="gallery-item">
+        <img src="${esc(item.imageUrl)}" alt="${esc(item.caption||"FireCraft SMP screenshot")}" loading="lazy">
+        ${item.caption?`<div class="gallery-caption">${esc(item.caption)}</div>`:""}
+      </div>`).join("");
+  }catch(e){ console.warn("Gallery load error:",e); }
+}
+loadGallery();
