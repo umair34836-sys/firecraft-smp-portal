@@ -117,7 +117,10 @@ $("refreshSponsors")?.addEventListener("click", loadSponsoredPlacements);
 
 
 document.querySelectorAll(".nav-btn").forEach(btn => {
-  btn.addEventListener("click", () => navigate(btn.dataset.section));
+  btn.addEventListener("click", () => {
+    navigate(btn.dataset.section);
+    if (btn.dataset.section === "whitelist") loadWhitelist();
+  });
 });
 document.querySelectorAll("[data-close]").forEach(btn => {
   btn.addEventListener("click", () => closeModal(btn.dataset.close));
@@ -815,3 +818,75 @@ function loadEarnAdmin() {
   loadWithdrawals();
   loadEarnSettings();
 }
+
+// ── Whitelist Manager ──────────────────────────────────────────────────────
+
+let allApprovedPlayers = [];
+
+async function loadWhitelist() {
+  const snap = await getDocs(collection(db, "approvedPlayers"));
+  allApprovedPlayers = snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => String(a.ign).localeCompare(String(b.ign)));
+  renderWhitelist();
+}
+
+function renderWhitelist() {
+  const q = ($("whitelistSearch")?.value || "").toLowerCase();
+  const list = allApprovedPlayers.filter(p =>
+    !q || String(p.ign || "").toLowerCase().includes(q)
+  );
+
+  $("whitelistTotal").textContent = allApprovedPlayers.length;
+  $("whitelistCount").textContent = allApprovedPlayers.length + " approved player(s)";
+
+  const cmds = allApprovedPlayers.map(p => `whitelist add ${p.ign}`).join("\n");
+  $("whitelistCmdPreview").value = cmds;
+
+  $("whitelistList").innerHTML = list.length ? list.map((p, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><strong>${esc(p.ign)}</strong></td>
+      <td style="font-size:.8rem;color:var(--muted)">${p.approvedAt?.toDate ? p.approvedAt.toDate().toLocaleDateString() : "—"}</td>
+      <td><button class="btn btn-small btn-danger" onclick="removeFromWhitelist('${esc(p.id)}','${esc(p.ign)}')">Remove</button></td>
+    </tr>`).join("") :
+    `<tr><td colspan="4" class="empty">No approved players found.</td></tr>`;
+}
+
+window.removeFromWhitelist = async (id, ign) => {
+  if (!confirm(`Remove ${ign} from approved players list?`)) return;
+  try {
+    await deleteDoc(doc(db, "approvedPlayers", id));
+    allApprovedPlayers = allApprovedPlayers.filter(p => p.id !== id);
+    renderWhitelist();
+    showToast(`${ign} removed.`);
+  } catch(e) { showToast(e.message); }
+};
+
+$("copyWhitelistCmdsBtn").onclick = () => {
+  const cmds = $("whitelistCmdPreview").value;
+  if (!cmds) { showToast("No approved players found."); return; }
+  navigator.clipboard.writeText(cmds).then(() =>
+    showToast("Commands copied! Paste into server console.")
+  ).catch(() => {
+    $("whitelistCmdPreview").select();
+    document.execCommand("copy");
+    showToast("Commands copied!");
+  });
+};
+
+$("downloadWhitelistBtn").onclick = () => {
+  if (!allApprovedPlayers.length) { showToast("No approved players."); return; }
+  const json = JSON.stringify(
+    allApprovedPlayers.map(p => ({ uuid: "", name: p.ign })),
+    null, 2
+  );
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+  a.download = "whitelist.json";
+  a.click();
+  showToast("whitelist.json downloaded. Note: UUIDs are blank — server will fill them when players join.");
+};
+
+$("refreshWhitelist").onclick = loadWhitelist;
+$("whitelistSearch").addEventListener("input", renderWhitelist);
