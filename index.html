@@ -24,7 +24,7 @@
   <header class="topbar">
     <a class="brand" href="#home"><img src="images/logo-192.png" alt="FireCraft SMP" class="brand-logo"> FIRECRAFT <small>SMP</small></a>
     <nav id="nav">
-      <a href="#home">Home</a><a href="#apply">Apply</a><a href="#status">My Status</a><a href="#support">Support</a><a href="#rules">Rules</a><a href="#faq">FAQ</a>
+      <a href="#home">Home</a><a href="#apply">Apply</a><a href="#earn">Earn</a><a href="#status">My Status</a><a href="#support">Support</a><a href="#rules">Rules</a><a href="#faq">FAQ</a>
       <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="btn btn-small btn-discord">Discord</a>
       <button id="authBtn" class="btn btn-small">Login</button>
     </nav>
@@ -142,6 +142,17 @@
       <div class="section-head"><div><span class="eyebrow">YOUR ACCOUNT</span><h2>My Profile</h2></div></div>
       <div id="profileBox" class="panel auth-required hidden">
         <div id="profileGrid" class="profile-grid"></div>
+        <div id="walletBox" class="wallet-box hidden">
+          <div class="wallet-head">
+            <span class="wallet-icon">💰</span>
+            <div>
+              <div class="wallet-label">Earn Wallet</div>
+              <div id="walletBalance" class="wallet-amount">PKR 0.00</div>
+            </div>
+            <button id="withdrawBtn" class="btn btn-small btn-primary">Withdraw</button>
+          </div>
+          <div id="walletHistory" class="wallet-history"></div>
+        </div>
       </div>
       <div id="statusBox" class="panel auth-required"><p>Login to view your profile and application status.</p></div>
     </section>
@@ -226,6 +237,33 @@
       </div>
     </section>
 
+    <section id="earn" class="section panel-section">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">PLAY & EARN</span>
+          <h2>Partner Servers</h2>
+          <p>Play on partner servers and earn real money. Withdraw via Easypaisa, JazzCash or bank anytime.</p>
+        </div>
+      </div>
+      <div id="earnSystemNotice" class="earn-notice hidden"></div>
+      <div id="earnDisabledMsg" class="earn-disabled hidden">
+        <span>🔧</span><p>The earn system is currently offline. Check back soon.</p>
+      </div>
+      <div id="partnerServerGrid" class="partner-server-grid">
+        <div class="ps-loading">Loading partner servers…</div>
+      </div>
+      <div class="earn-how">
+        <h3>How it works</h3>
+        <ol>
+          <li><strong>Register</strong> on this website and create your account.</li>
+          <li><strong>Join</strong> any partner server listed above using your Minecraft IGN.</li>
+          <li><strong>Play</strong> — our plugin tracks your time automatically.</li>
+          <li><strong>Earn</strong> — PKR accumulates in your wallet as you play.</li>
+          <li><strong>Withdraw</strong> — request a payout anytime via your wallet. Admin pays on Discord.</li>
+        </ol>
+      </div>
+    </section>
+
     <section id="gallery" class="section panel-section">
       <div class="section-head"><div><span class="eyebrow">SCREENSHOTS</span><h2>Gallery</h2><p>A look inside the world of FireCraft SMP.</p></div></div>
       <div id="galleryGrid" class="gallery-grid">
@@ -234,6 +272,40 @@
     </section>
   </main>
 <footer><span>🔥 FireCraft SMP</span><span>Private Lifesteal • Custom Plugins</span><a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="footer-discord">Discord</a><span>© <span id="year"></span> FireCraft</span></footer>
+
+  <div id="withdrawModal" class="modal hidden">
+    <div class="modal-card">
+      <button class="modal-close" id="closeWithdrawModal">×</button>
+      <span class="eyebrow">YOUR WALLET</span><h2>Withdraw Earnings</h2>
+      <p class="muted">After submitting, an admin will contact you on Discord to process the payment.</p>
+      <form id="withdrawForm">
+        <div class="field">
+          <label>Amount (PKR) <span class="req">*</span></label>
+          <input id="withdrawAmount" type="number" min="1" step="0.01" placeholder="e.g. 500" required>
+          <small id="withdrawAvailableHint" class="hint">Available: calculating…</small>
+        </div>
+        <div class="field">
+          <label>Payment Method <span class="req">*</span></label>
+          <select id="withdrawMethod" required>
+            <option value="">— Choose —</option>
+            <option value="easypaisa">Easypaisa</option>
+            <option value="jazzcash">JazzCash</option>
+            <option value="bank">Bank Transfer</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Account Number / IBAN <span class="req">*</span></label>
+          <input id="withdrawAccount" placeholder="Your Easypaisa / JazzCash / IBAN number" required>
+        </div>
+        <div class="field">
+          <label>Note (optional)</label>
+          <input id="withdrawNote" placeholder="Any extra info for admin">
+        </div>
+        <button type="submit" class="btn full">Submit Withdrawal Request</button>
+        <div id="withdrawMsg" class="msg"></div>
+      </form>
+    </div>
+  </div>
 
   <div id="authModal" class="modal hidden">
     <div class="modal-card">

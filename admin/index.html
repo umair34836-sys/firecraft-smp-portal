@@ -46,6 +46,9 @@
         <button class="nav-btn" data-section="staff">🛡️ Staff Management</button>
         <button class="nav-btn" data-section="sponsored">💼 Sponsored</button>
       <button class="nav-btn" data-section="announcements">📢 Announcements</button>
+      <button class="nav-btn" data-section="partnerServers">🤝 Partner Servers</button>
+      <button class="nav-btn" data-section="withdrawals">💸 Withdrawals</button>
+      <button class="nav-btn" data-section="earnSettings">⚙️ Earn Settings</button>
       </aside>
 
       <main class="content">
@@ -283,6 +286,89 @@
     <div id="announcementsList" class="announcement-admin-list"></div>
   </div>
 </section>
+
+<!-- ── PARTNER SERVERS ── -->
+<section id="partnerServers" class="section">
+  <div class="section-head">
+    <div><h1>Partner Servers</h1><p>Add and manage servers where players can earn rewards.</p></div>
+    <button id="refreshPartnerServers" class="btn btn-primary">Refresh</button>
+  </div>
+  <div class="card form-card">
+    <h2>Add / Edit Partner Server</h2>
+    <input type="hidden" id="psEditId">
+    <label>Server Name<input id="psName" placeholder="e.g. PvP Arena"></label>
+    <div class="two-col">
+      <label>Java IP<input id="psIp" placeholder="play.example.com"></label>
+      <label>Port<input id="psPort" placeholder="25565"></label>
+    </div>
+    <label>Description<textarea id="psDesc" rows="3" placeholder="Short description shown to players"></textarea></label>
+    <label>Logo URL<input id="psLogo" placeholder="https://... (optional)"></label>
+    <div class="two-col">
+      <label>Rate (PKR per hour)<input id="psRate" type="number" min="0" step="0.01" placeholder="5.00"></label>
+      <label>Min Hours to Earn<input id="psMinHours" type="number" min="0" step="0.5" placeholder="1"></label>
+    </div>
+    <label>Server Firebase Email<input id="psFirebaseEmail" placeholder="server-id@firecraft.server (Firebase Auth account)"></label>
+    <label>Server ID (auto or custom)<input id="psServerId" placeholder="Leave blank to auto-generate"></label>
+    <label><input type="checkbox" id="psEnabled" checked> Enabled (show to players)</label>
+    <div class="two-col">
+      <button id="savePsBtn" class="btn btn-primary">Save Server</button>
+      <button id="clearPsBtn" class="btn btn-ghost">Clear Form</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Server Accounts</h2>
+    <p class="muted-text">Each partner server needs a Firebase Auth account. Create one in Firebase Console → Authentication → Add user, then enter the UID + serverId below.</p>
+    <div class="two-col">
+      <label>Firebase UID<input id="saUid" placeholder="Server's Firebase Auth UID"></label>
+      <label>Server ID<input id="saServerId" placeholder="Must match partnerServer doc ID"></label>
+    </div>
+    <button id="saveServerAccountBtn" class="btn btn-primary">Save Server Account</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>IP</th><th>Rate/hr</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="partnerServersList"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── WITHDRAWALS ── -->
+<section id="withdrawals" class="section">
+  <div class="section-head">
+    <div><h1>Withdrawal Requests</h1><p>Review and process player payment requests. Pay via Discord then mark as paid.</p></div>
+    <button id="refreshWithdrawals" class="btn btn-primary">Refresh</button>
+  </div>
+  <div class="toolbar">
+    <select id="withdrawalStatusFilter">
+      <option value="">All statuses</option>
+      <option value="pending">Pending</option>
+      <option value="paid">Paid</option>
+      <option value="rejected">Rejected</option>
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>IGN</th><th>Amount (PKR)</th><th>Method</th><th>Status</th><th>Requested</th><th>Actions</th></tr></thead>
+      <tbody id="withdrawalsList"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── EARN SETTINGS ── -->
+<section id="earnSettings" class="section">
+  <div class="section-head">
+    <div><h1>Earn Settings</h1><p>Global configuration for the earn system.</p></div>
+  </div>
+  <div class="card form-card">
+    <label>Currency Label<input id="earnCurrency" placeholder="PKR" value="PKR"></label>
+    <label>Minimum Withdrawal Amount<input id="earnMinWithdraw" type="number" min="0" placeholder="100"></label>
+    <label>Maximum Withdrawal Per Week<input id="earnMaxWeekly" type="number" min="0" placeholder="5000"></label>
+    <label>Earn System Notice (shown on Earn page)<textarea id="earnNotice" rows="3" placeholder="e.g. Withdrawals processed within 24 hours via Discord."></textarea></label>
+    <label><input type="checkbox" id="earnEnabled" checked> Earn system enabled</label>
+    <button id="saveEarnSettings" class="btn btn-primary">Save Earn Settings</button>
+  </div>
+</section>
+
       </main>
     </div>
   </div>
@@ -329,6 +415,21 @@
         <div class="modal-actions">
           <button id="replyTicketBtn" class="btn btn-primary">Save Reply</button>
           <button id="closeTicketBtn" class="btn btn-danger">Close Ticket</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="withdrawalModal" class="modal hidden">
+    <div class="modal-box">
+      <button class="modal-close" data-close="withdrawalModal">×</button>
+      <h2>Withdrawal Request</h2>
+      <div id="withdrawalDetails"></div>
+      <div class="form-card compact">
+        <label>Admin Note (optional)<textarea id="withdrawalAdminNote" rows="3"></textarea></label>
+        <div class="modal-actions">
+          <button id="payWithdrawalBtn" class="btn btn-success">Mark as Paid</button>
+          <button id="rejectWithdrawalBtn" class="btn btn-danger">Reject</button>
         </div>
       </div>
     </div>

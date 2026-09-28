@@ -148,6 +148,7 @@ onAuthStateChanged(auth, async user => {
   loadServerSettings();
   loadWebsiteSettings();
   loadSponsoredPlacements();
+  loadEarnAdmin();
 
   const hash = location.hash.replace("#","");
   if(hash && $(hash)) navigate(hash);
@@ -597,3 +598,220 @@ document.getElementById("announcementCancel")?.addEventListener("click",()=>{
   form.querySelector("#announcementEnabled").checked=true;
 });
 loadAnnouncements();
+
+// ── EARN SYSTEM ADMIN ────────────────────────────────────────────────────────
+
+let partnerServers = [], withdrawals = [];
+let selectedWithdrawal = null;
+
+// ── Partner Servers ──
+
+async function loadPartnerServers() {
+  const snap = await getDocs(collection(db, "partnerServers"));
+  partnerServers = snap.docs.map(d => ({id: d.id, ...d.data()}));
+  renderPartnerServers();
+}
+
+function renderPartnerServers() {
+  $("partnerServersList").innerHTML = partnerServers.length ? partnerServers.map(s => `
+    <tr>
+      <td><strong>${esc(s.name || "—")}</strong></td>
+      <td>${esc(s.ip || "—")}${s.port ? ":"+esc(s.port) : ""}</td>
+      <td>${esc(String(s.ratePerHour || 0))} PKR</td>
+      <td>${statusPill(s.enabled ? "active" : "disabled")}</td>
+      <td>
+        <button class="btn btn-primary ps-edit" data-id="${esc(s.id)}">Edit</button>
+        <button class="btn btn-danger ps-delete" data-id="${esc(s.id)}">Delete</button>
+      </td>
+    </tr>`).join("") : emptyRow(5, "No partner servers added yet.");
+  document.querySelectorAll(".ps-edit").forEach(b => b.onclick = () => editPartnerServer(b.dataset.id));
+  document.querySelectorAll(".ps-delete").forEach(b => b.onclick = () => deletePartnerServer(b.dataset.id));
+}
+
+function editPartnerServer(id) {
+  const s = partnerServers.find(x => x.id === id);
+  if (!s) return;
+  $("psEditId").value = s.id;
+  $("psName").value = s.name || "";
+  $("psIp").value = s.ip || "";
+  $("psPort").value = s.port || "";
+  $("psDesc").value = s.description || "";
+  $("psLogo").value = s.logo || "";
+  $("psRate").value = s.ratePerHour || "";
+  $("psMinHours").value = s.minHoursToEarn || "";
+  $("psFirebaseEmail").value = s.firebaseEmail || "";
+  $("psServerId").value = s.id || "";
+  $("psEnabled").checked = s.enabled !== false;
+}
+
+async function deletePartnerServer(id) {
+  if (!confirm("Delete this partner server?")) return;
+  try {
+    await deleteDoc(doc(db, "partnerServers", id));
+    showToast("Partner server deleted.");
+    loadPartnerServers();
+  } catch(e) { showToast(e.message); }
+}
+
+$("savePsBtn").onclick = async () => {
+  const name = $("psName").value.trim();
+  const ip   = $("psIp").value.trim();
+  if (!name || !ip) return showToast("Server name and IP are required.");
+  const editId = $("psEditId").value.trim();
+  const serverId = $("psServerId").value.trim() || crypto.randomUUID().slice(0,8);
+  const data = {
+    name, ip,
+    port: $("psPort").value.trim(),
+    description: $("psDesc").value.trim(),
+    logo: $("psLogo").value.trim(),
+    ratePerHour: parseFloat($("psRate").value) || 0,
+    minHoursToEarn: parseFloat($("psMinHours").value) || 1,
+    firebaseEmail: $("psFirebaseEmail").value.trim(),
+    enabled: $("psEnabled").checked,
+    updatedAt: serverTimestamp(),
+    updatedBy: currentUser.uid
+  };
+  try {
+    const docId = editId || serverId;
+    await setDoc(doc(db, "partnerServers", docId), data, {merge: true});
+    showToast("Partner server saved. ID: " + docId);
+    $("psEditId").value = "";
+    ["psName","psIp","psPort","psDesc","psLogo","psRate","psMinHours","psFirebaseEmail","psServerId"]
+      .forEach(id => $(id).value = "");
+    $("psEnabled").checked = true;
+    loadPartnerServers();
+  } catch(e) { showToast(e.message); }
+};
+$("clearPsBtn").onclick = () => {
+  $("psEditId").value = "";
+  ["psName","psIp","psPort","psDesc","psLogo","psRate","psMinHours","psFirebaseEmail","psServerId"]
+    .forEach(id => $(id).value = "");
+  $("psEnabled").checked = true;
+};
+$("refreshPartnerServers").onclick = loadPartnerServers;
+
+// Server Accounts (maps Firebase UID → serverId)
+$("saveServerAccountBtn").onclick = async () => {
+  const uid = $("saUid").value.trim();
+  const serverId = $("saServerId").value.trim();
+  if (!uid || !serverId) return showToast("UID and Server ID are required.");
+  try {
+    await setDoc(doc(db, "serverAccounts", uid), {uid, serverId, active: true, createdAt: serverTimestamp()}, {merge: true});
+    showToast("Server account saved.");
+    $("saUid").value = "";
+    $("saServerId").value = "";
+  } catch(e) { showToast(e.message); }
+};
+
+// ── Withdrawals ──
+
+async function loadWithdrawals() {
+  const snap = await getDocs(query(collection(db, "withdrawalRequests"), orderBy("createdAt", "desc")));
+  withdrawals = snap.docs.map(d => ({id: d.id, ...d.data()}));
+  renderWithdrawals();
+}
+
+function renderWithdrawals() {
+  const statusFilter = $("withdrawalStatusFilter").value;
+  const list = withdrawals.filter(w => !statusFilter || w.status === statusFilter);
+  $("withdrawalsList").innerHTML = list.length ? list.map(w => `
+    <tr>
+      <td><strong>${esc(w.ign || "—")}</strong></td>
+      <td><strong>${esc(String(w.amount || 0))} PKR</strong></td>
+      <td>${esc(w.paymentMethod || "—")}</td>
+      <td>${statusPill(w.status || "pending")}</td>
+      <td>${fmt(w.createdAt)}</td>
+      <td><button class="btn btn-primary wd-view" data-id="${esc(w.id)}">View</button></td>
+    </tr>`).join("") : emptyRow(6, "No withdrawal requests.");
+  document.querySelectorAll(".wd-view").forEach(b => b.onclick = () => openWithdrawal(b.dataset.id));
+}
+
+function openWithdrawal(id) {
+  selectedWithdrawal = withdrawals.find(x => x.id === id);
+  if (!selectedWithdrawal) return;
+  const w = selectedWithdrawal;
+  $("withdrawalDetails").innerHTML = `<div class="detail-grid">
+    <div class="detail"><small>IGN</small><strong>${esc(w.ign || "—")}</strong></div>
+    <div class="detail"><small>Amount</small><strong>${esc(String(w.amount))} PKR</strong></div>
+    <div class="detail"><small>Method</small><strong>${esc(w.paymentMethod || "—")}</strong></div>
+    <div class="detail"><small>Account</small><strong>${esc(w.accountNumber || "—")}</strong></div>
+    <div class="detail"><small>Status</small><strong>${esc(w.status || "pending")}</strong></div>
+    <div class="detail"><small>Requested</small><strong>${esc(fmt(w.createdAt))}</strong></div>
+    ${w.playerNote ? `<div class="detail full"><small>Player Note</small><strong>${esc(w.playerNote)}</strong></div>` : ""}
+  </div>`;
+  $("withdrawalAdminNote").value = w.adminNote || "";
+  openModal("withdrawalModal");
+}
+
+$("payWithdrawalBtn").onclick = async () => {
+  if (!selectedWithdrawal) return;
+  if (!confirm(`Mark PKR ${selectedWithdrawal.amount} as PAID to ${selectedWithdrawal.ign}?`)) return;
+  try {
+    await updateDoc(doc(db, "withdrawalRequests", selectedWithdrawal.id), {
+      status: "paid",
+      adminNote: $("withdrawalAdminNote").value.trim(),
+      paidBy: currentUser.uid,
+      paidAt: serverTimestamp()
+    });
+    const walletRef = doc(db, "wallets", selectedWithdrawal.uid);
+    const walletSnap = await getDoc(walletRef);
+    const prev = walletSnap.exists() ? (walletSnap.data().totalPaidOut || 0) : 0;
+    await setDoc(walletRef, {totalPaidOut: prev + Number(selectedWithdrawal.amount), uid: selectedWithdrawal.uid}, {merge: true});
+    showToast("Marked as paid. Wallet updated.");
+    closeModal("withdrawalModal");
+    loadWithdrawals();
+  } catch(e) { showToast(e.message); }
+};
+
+$("rejectWithdrawalBtn").onclick = async () => {
+  if (!selectedWithdrawal) return;
+  try {
+    await updateDoc(doc(db, "withdrawalRequests", selectedWithdrawal.id), {
+      status: "rejected",
+      adminNote: $("withdrawalAdminNote").value.trim(),
+      rejectedBy: currentUser.uid,
+      rejectedAt: serverTimestamp()
+    });
+    showToast("Withdrawal rejected.");
+    closeModal("withdrawalModal");
+    loadWithdrawals();
+  } catch(e) { showToast(e.message); }
+};
+
+$("refreshWithdrawals").onclick = loadWithdrawals;
+$("withdrawalStatusFilter").addEventListener("input", renderWithdrawals);
+
+// ── Earn Settings ──
+
+async function loadEarnSettings() {
+  const snap = await getDoc(doc(db, "earnSettings", "global"));
+  const s = snap.exists() ? snap.data() : {};
+  $("earnCurrency").value = s.currency || "PKR";
+  $("earnMinWithdraw").value = s.minWithdraw || 100;
+  $("earnMaxWeekly").value = s.maxWeekly || 5000;
+  $("earnNotice").value = s.notice || "";
+  $("earnEnabled").checked = s.enabled !== false;
+}
+
+$("saveEarnSettings").onclick = async () => {
+  try {
+    await setDoc(doc(db, "earnSettings", "global"), {
+      currency: $("earnCurrency").value.trim() || "PKR",
+      minWithdraw: parseFloat($("earnMinWithdraw").value) || 100,
+      maxWeekly: parseFloat($("earnMaxWeekly").value) || 5000,
+      notice: $("earnNotice").value.trim(),
+      enabled: $("earnEnabled").checked,
+      updatedAt: serverTimestamp(),
+      updatedBy: currentUser.uid
+    });
+    showToast("Earn settings saved.");
+  } catch(e) { showToast(e.message); }
+};
+
+document.querySelector('[data-close="withdrawalModal"]')?.addEventListener("click", () => closeModal("withdrawalModal"));
+
+function loadEarnAdmin() {
+  loadPartnerServers();
+  loadWithdrawals();
+  loadEarnSettings();
+}

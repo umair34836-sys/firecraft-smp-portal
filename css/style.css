@@ -436,3 +436,40 @@
 .profile-stat-value{font-size:17px;font-weight:700}
 .profile-stat-muted{font-size:13px;font-weight:400;color:var(--muted)}
 @media(max-width:480px){.profile-grid{grid-template-columns:1fr}}
+
+/* ===== Earn / Partner Servers ===== */
+.partner-server-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:32px}
+.partner-server-card{border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,#161214,#0e0c0d);padding:20px;display:flex;flex-direction:column;gap:12px;transition:border-color .2s,box-shadow .2s}
+.partner-server-card:hover{border-color:#ff7b4488;box-shadow:0 0 18px #ff7b4420}
+.ps-logo{width:56px;height:56px;object-fit:contain;border-radius:10px;border:1px solid var(--line);background:#ffffff08;padding:4px}
+.ps-logo-placeholder{width:56px;height:56px;border-radius:10px;background:#ff7b4420;border:1px solid #ff7b4440;display:flex;align-items:center;justify-content:center;font-size:28px}
+.ps-body{flex:1;display:flex;flex-direction:column;gap:6px}
+.ps-name{font-size:16px;font-weight:700;color:#fff}
+.ps-ip{font-size:11px;color:var(--muted);font-family:monospace;background:#ffffff08;padding:3px 8px;border-radius:6px;display:inline-block}
+.ps-desc{font-size:13px;color:var(--muted);margin:4px 0}
+.ps-rate{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.ps-rate-amount{background:linear-gradient(135deg,#ff7b44,#ffb26b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:15px;font-weight:800}
+.ps-min-hours{font-size:11px;color:var(--muted);border:1px solid var(--line);padding:2px 8px;border-radius:20px}
+.ps-empty,.ps-loading{grid-column:1/-1;text-align:center;padding:48px 20px;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+.earn-how{background:#161214;border:1px solid var(--line);border-radius:14px;padding:24px 28px;margin-top:8px}
+.earn-how h3{font-size:16px;margin-bottom:14px;color:#ff9278}
+.earn-how ol{padding-left:20px;color:var(--muted);display:flex;flex-direction:column;gap:10px;line-height:1.55}
+.earn-how ol strong{color:#fff}
+.earn-notice{border-left:3px solid #ff7b44;background:#ff7b4410;border-radius:0 10px 10px 0;padding:12px 16px;font-size:14px;margin-bottom:16px}
+.earn-disabled{display:flex;align-items:center;gap:16px;padding:24px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);font-size:15px}
+.earn-disabled span{font-size:32px}
+
+/* ===== Wallet ===== */
+.wallet-box{background:linear-gradient(145deg,#1a0e00,#120e10);border:1px solid #ff7b4440;border-radius:14px;padding:18px 20px;margin-top:16px}
+.wallet-head{display:flex;align-items:center;gap:16px}
+.wallet-icon{font-size:32px}
+.wallet-label{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted)}
+.wallet-amount{font-size:22px;font-weight:800;background:linear-gradient(135deg,#ff7b44,#ffb26b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.wallet-head .btn{margin-left:auto}
+.wallet-history{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+.wallet-log-row{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;font-size:12px;padding:8px 12px;background:#ffffff06;border-radius:8px;align-items:center}
+.wallet-log-date{color:var(--muted)}
+.wallet-empty{font-size:13px;color:var(--muted);text-align:center;padding:12px}
+
+/* ===== Withdraw Modal ===== */
+#withdrawModal .btn.full{margin-top:8px}

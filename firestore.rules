@@ -16,23 +16,31 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    function isServerAccount() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/serverAccounts/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/serverAccounts/$(request.auth.uid)).data.active == true;
+    }
+
+    function serverOwnsId(serverId) {
+      return isServerAccount() &&
+        get(/databases/$(database)/documents/serverAccounts/$(request.auth.uid)).data.serverId == serverId;
+    }
+
     match /users/{uid} {
       allow read: if isSelf(uid) || isAdmin();
-
       allow create: if isSelf(uid)
         && request.resource.data.uid == uid
         && request.resource.data.role == "player";
-
       allow update: if isAdmin()
         || (isSelf(uid)
             && request.resource.data.uid == resource.data.uid
             && request.resource.data.role == resource.data.role);
-
       allow delete: if isAdmin();
     }
 
     match /usernames/{username} {
-      allow read: if true;  // needed for login email lookup before auth
+      allow read: if true;
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid;
       allow update, delete: if isAdmin();
@@ -42,10 +50,8 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.status == "pending";
-
       allow read: if isAdmin()
         || (signedIn() && resource.data.uid == request.auth.uid);
-
       allow update, delete: if isAdmin();
     }
 
@@ -53,10 +59,8 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.status == "open";
-
       allow read: if isAdmin()
         || (signedIn() && resource.data.uid == request.auth.uid);
-
       allow update, delete: if isAdmin();
     }
 
@@ -64,7 +68,6 @@ service cloud.firestore {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }
-
 
     match /sponsoredPlacements/{placementId} {
       allow read: if true;
@@ -98,6 +101,62 @@ service cloud.firestore {
     match /staff/{uid} {
       allow read: if isAdmin();
       allow create, update, delete: if isAdmin();
+    }
+
+    // ── Earn System ─────────────────────────────────────────────────────────
+
+    // Partner server listings (public read)
+    match /partnerServers/{serverId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Server accounts — maps each server's Firebase UID to its serverId
+    match /serverAccounts/{uid} {
+      allow read: if isAdmin() || isSelf(uid);
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Earn system global settings (min withdrawal, currency, etc.)
+    match /earnSettings/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Active sessions — only server accounts can write; players can read own
+    match /activeSessions/{playerUid} {
+      allow read: if isAdmin() || isSelf(playerUid);
+      allow create, update: if isServerAccount();
+      allow delete: if isAdmin() || isServerAccount();
+    }
+
+    // Playtime logs — only server accounts can create for their own serverId
+    match /playtimeLogs/{logId} {
+      allow create: if isServerAccount()
+        && serverOwnsId(request.resource.data.serverId)
+        && request.resource.data.uid != null
+        && request.resource.data.minutesPlayed is number;
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // Wallets — players read own; only admin writes (balance is server-authoritative)
+    match /wallets/{uid} {
+      allow read: if isAdmin() || isSelf(uid);
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Withdrawal requests — players create own pending requests; admin manages
+    match /withdrawalRequests/{reqId} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == "pending"
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0;
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update, delete: if isAdmin();
     }
   }
 }

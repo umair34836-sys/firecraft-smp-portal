@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, deleteUser, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, orderBy, onSnapshot, updateDoc, serverTimestamp, runTransaction,
-  getDocs,} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+  getDocs, limit,} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { firebaseConfig, ADMIN_UID } from "./firebase-config.js";
 
 const app = initializeApp(firebaseConfig);
@@ -208,6 +208,7 @@ async function loadUser(user){
   renderProfile(profile);
   await loadStatus(user.uid);
   await loadTickets(user.uid);
+  await loadWallet(user.uid, profile.ign);
   if(profile.role==="admin" || user.uid===ADMIN_UID){ $("adminPanel").classList.remove("hidden"); loadAdmin(); }
 }
 function renderProfile(profile){
@@ -353,3 +354,150 @@ async function loadGallery(){
   }catch(e){ console.warn("Gallery load error:",e); }
 }
 loadGallery();
+
+// ── EARN SYSTEM ─────────────────────────────────────────────────────────────
+
+let _earnSettings = {currency:"PKR", minWithdraw:100, enabled:true};
+let _walletData = {totalPaidOut:0};
+let _earnedTotal = 0;
+
+async function loadEarnSystem() {
+  // Load global earn settings (public)
+  try {
+    const snap = await getDoc(doc(db, "earnSettings", "global"));
+    if (snap.exists()) _earnSettings = {..._earnSettings, ...snap.data()};
+  } catch(e) { console.warn("Earn settings:", e); }
+
+  // Render partner servers (public)
+  await loadPartnerServersPublic();
+
+  // Show notice if set
+  const noticeEl = $("earnSystemNotice");
+  if (noticeEl && _earnSettings.notice) {
+    noticeEl.textContent = _earnSettings.notice;
+    noticeEl.classList.remove("hidden");
+  }
+  if (!_earnSettings.enabled) {
+    $("earnDisabledMsg")?.classList.remove("hidden");
+    $("partnerServerGrid").innerHTML = "";
+  }
+}
+
+async function loadPartnerServersPublic() {
+  const grid = $("partnerServerGrid");
+  if (!grid) return;
+  try {
+    const snap = await getDocs(collection(db, "partnerServers"));
+    const servers = snap.docs.map(d => ({id: d.id, ...d.data()})).filter(s => s.enabled !== false);
+    if (!servers.length) {
+      grid.innerHTML = '<p class="ps-empty">No partner servers available right now. Check back soon!</p>';
+      return;
+    }
+    grid.innerHTML = servers.map(s => `
+      <div class="partner-server-card">
+        ${s.logo ? `<img class="ps-logo" src="${escapeHtml(s.logo)}" alt="${escapeHtml(s.name)} logo">` : `<div class="ps-logo-placeholder">🎮</div>`}
+        <div class="ps-body">
+          <div class="ps-name">${escapeHtml(s.name)}</div>
+          <div class="ps-ip">${escapeHtml(s.ip)}${s.port ? ":"+escapeHtml(s.port) : ""}</div>
+          <p class="ps-desc">${escapeHtml(s.description || "")}</p>
+          <div class="ps-rate">
+            <span class="ps-rate-amount">${escapeHtml(_earnSettings.currency || "PKR")} ${escapeHtml(String(s.ratePerHour || 0))}/hr</span>
+            <span class="ps-min-hours">Min ${escapeHtml(String(s.minHoursToEarn || 1))}h to start earning</span>
+          </div>
+        </div>
+        <button class="btn btn-small btn-primary copy-btn" data-copy="${escapeHtml(s.ip)}${s.port ? ":"+escapeHtml(s.port) : ""}">Copy IP</button>
+      </div>`).join("");
+    // Re-bind copy buttons
+    grid.querySelectorAll(".copy-btn[data-copy]").forEach(b => {
+      b.onclick = () => { navigator.clipboard?.writeText(b.dataset.copy); b.textContent = "Copied!"; setTimeout(()=>b.textContent="Copy IP",1500); };
+    });
+  } catch(e) { console.warn("Partner servers:", e); grid.innerHTML = '<p class="ps-empty">Could not load servers.</p>'; }
+}
+
+async function loadWallet(uid, ign) {
+  const walletBox = $("walletBox");
+  if (!walletBox) return;
+  if (!_earnSettings.enabled) return;
+  try {
+    // Load wallet doc (paid out amount)
+    const walletSnap = await getDoc(doc(db, "wallets", uid));
+    _walletData = walletSnap.exists() ? walletSnap.data() : {totalPaidOut: 0};
+
+    // Sum earnings from playtime logs
+    const logsSnap = await getDocs(query(collection(db, "playtimeLogs"), where("uid","==",uid)));
+    _earnedTotal = 0;
+    const recentLogs = [];
+    logsSnap.docs.forEach(d => {
+      const log = d.data();
+      if (log.earned) _earnedTotal += Number(log.earned);
+      recentLogs.push(log);
+    });
+    recentLogs.sort((a,b) => (b.sessionEnd?.seconds||0) - (a.sessionEnd?.seconds||0));
+
+    const available = Math.max(0, _earnedTotal - (_walletData.totalPaidOut || 0));
+    $("walletBalance").textContent = `${_earnSettings.currency || "PKR"} ${available.toFixed(2)}`;
+
+    // Recent history (last 5 sessions)
+    const histEl = $("walletHistory");
+    if (histEl) {
+      histEl.innerHTML = recentLogs.slice(0,5).map(log => {
+        const serverName = log.serverName || log.serverId || "Unknown";
+        const mins = log.minutesPlayed || 0;
+        const earned = (log.earned || 0).toFixed(2);
+        const date = log.sessionEnd?.toDate?.().toLocaleDateString() || "—";
+        return `<div class="wallet-log-row"><span>${escapeHtml(serverName)}</span><span>${escapeHtml(String(Math.floor(mins/60)))+'h '+escapeHtml(String(mins%60))+'m'}</span><span>+${_earnSettings.currency} ${escapeHtml(earned)}</span><span class="wallet-log-date">${escapeHtml(date)}</span></div>`;
+      }).join("") || '<p class="wallet-empty">No earnings yet. Play on a partner server to start earning!</p>';
+    }
+
+    walletBox.classList.remove("hidden");
+
+    // Set available amount hint on withdraw modal
+    $("withdrawAvailableHint").textContent = `Available: ${_earnSettings.currency} ${available.toFixed(2)}`;
+    $("withdrawAmount").max = available.toFixed(2);
+  } catch(e) { console.warn("Wallet load:", e); }
+}
+
+// Withdraw button
+$("withdrawBtn")?.addEventListener("click", () => {
+  if (!auth.currentUser) return openAuth();
+  $("withdrawModal").classList.remove("hidden");
+});
+$("closeWithdrawModal")?.addEventListener("click", () => $("withdrawModal").classList.add("hidden"));
+
+let _withdrawBusy = false;
+$("withdrawForm")?.addEventListener("submit", async e => {
+  e.preventDefault();
+  if (_withdrawBusy) return;
+  const u = auth.currentUser;
+  if (!u) return openAuth();
+  const amount = parseFloat($("withdrawAmount").value);
+  const method = $("withdrawMethod").value;
+  const account = $("withdrawAccount").value.trim();
+  const note = $("withdrawNote").value.trim();
+  const available = Math.max(0, _earnedTotal - (_walletData.totalPaidOut || 0));
+  if (!amount || amount <= 0) return setMsg("withdrawMsg", "Enter a valid amount.");
+  if (amount > available) return setMsg("withdrawMsg", `Maximum available is ${_earnSettings.currency} ${available.toFixed(2)}.`);
+  if (amount < (_earnSettings.minWithdraw || 100)) return setMsg("withdrawMsg", `Minimum withdrawal is ${_earnSettings.currency} ${_earnSettings.minWithdraw || 100}.`);
+  if (!method) return setMsg("withdrawMsg", "Choose a payment method.");
+  if (!account) return setMsg("withdrawMsg", "Enter your account number.");
+  _withdrawBusy = true;
+  try {
+    const profile = (await getDoc(doc(db,"users",u.uid))).data();
+    await addDoc(collection(db,"withdrawalRequests"), {
+      uid: u.uid,
+      ign: profile?.ign || "Unknown",
+      amount,
+      paymentMethod: method,
+      accountNumber: account,
+      playerNote: note,
+      status: "pending",
+      createdAt: serverTimestamp()
+    });
+    setMsg("withdrawMsg", "Withdrawal request submitted! Admin will contact you on Discord.", false);
+    setTimeout(() => $("withdrawModal").classList.add("hidden"), 2500);
+    $("withdrawForm").reset();
+  } catch(err) { setMsg("withdrawMsg", "Could not submit: " + err.message); }
+  finally { _withdrawBusy = false; }
+});
+
+loadEarnSystem();
