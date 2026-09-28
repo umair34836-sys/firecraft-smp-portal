@@ -146,7 +146,7 @@ $("signupForm").onsubmit=async e=>{
         tx.set(doc(db,"users",user.uid),{uid:user.uid,ign,ignLower:normIgn(ign),email,role:"player",createdAt:serverTimestamp()});
       });
       setMsg("signupMsg","Account created. Welcome to FireCraft!","success");
-      setTimeout(closeAuth,700);
+      setTimeout(async()=>{ closeAuth(); await loadUser(auth.currentUser); },700);
     }catch(err){ await deleteUser(user); if(err.message==="IGN_TAKEN") throw new Error("That IGN is already registered."); throw err; }
   }catch(err){ setMsg("signupMsg",friendlyAuth(err)); }
 };
@@ -156,10 +156,11 @@ $("loginForm").onsubmit=async e=>{
   const ign=$("loginIgn").value.trim();
   const pass=$("loginPassword").value;
   try{
-    const usernameSnap=await getDoc(doc(db,"usernames",normIgn(ign)));
-    const authEmail=usernameSnap.exists()&&usernameSnap.data().email
-      ? usernameSnap.data().email
-      : pseudoEmail(ign);
+    let authEmail=pseudoEmail(ign);
+    try{
+      const usernameSnap=await getDoc(doc(db,"usernames",normIgn(ign)));
+      if(usernameSnap.exists()&&usernameSnap.data().email) authEmail=usernameSnap.data().email;
+    }catch{ /* rules not deployed yet — fall back to pseudoEmail */ }
     await signInWithEmailAndPassword(auth,authEmail,pass);
     setMsg("loginMsg","Login successful.","success");
     setTimeout(closeAuth,400);
