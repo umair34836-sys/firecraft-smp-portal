@@ -14,7 +14,9 @@ async function loadFireCraftPublicSettings() {
     if (serverSnap.exists()) {
       const s = serverSnap.data();
       const ipCandidates = document.querySelectorAll("[data-server-java-ip]");
-      ipCandidates.forEach(el => el.textContent = `${s.javaIp || ""}${s.javaPort ? ":" + s.javaPort : ""}`);
+      const resolvedIp = `${s.javaIp || "play.firecraft.fun"}${s.javaPort ? ":" + s.javaPort : ""}`;
+      ipCandidates.forEach(el => el.textContent = resolvedIp);
+      document.querySelectorAll(".copy-btn[data-copy]").forEach(btn => { if (btn.dataset.copy && btn.dataset.copy.includes("firecraft")) btn.dataset.copy = resolvedIp; });
       document.querySelectorAll("[data-server-name]").forEach(el => el.textContent = s.name || "FireCraft SMP");
       document.querySelectorAll("[data-server-message]").forEach(el => el.textContent = s.message || "");
       document.querySelectorAll("[data-server-bedrock-ip]").forEach(el => el.textContent = `${s.bedrockIp || ""}${s.bedrockPort ? ":" + s.bedrockPort : ""}`);
