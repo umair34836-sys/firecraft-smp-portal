@@ -305,8 +305,8 @@ async function setApplicationStatus(status){
       const email = userSnap.exists() ? userSnap.data().email : null;
       if(email && window.emailjs){
         await window.emailjs.send(
-          "YOUR_SERVICE_ID",   // replace with EmailJS service ID
-          "YOUR_TEMPLATE_ID",  // replace with EmailJS template ID
+          "service_cacpon8",
+          "template_0cfrwpb",
           { to_email: email, ign: selectedApplication.ign, site_url: "https://www.firecraft.fun" }
         );
         showToast("Approval email sent to " + selectedApplication.ign);
