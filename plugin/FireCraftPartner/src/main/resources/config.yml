@@ -1,0 +1,86 @@
+# ╔══════════════════════════════════════════════╗
+# ║   FireCraftPartner — Configuration           ║
+# ║   Get values from admin panel → Partner Servers ║
+# ╚══════════════════════════════════════════════╝
+
+# ── Firebase credentials ─────────────────────────────────────────────────────
+# Found in Firebase Console → Project Settings → General → Web API Key
+firebase-api-key: "YOUR_FIREBASE_API_KEY"
+
+# Firebase Console → Project Settings → General → Project ID
+firebase-project-id: "YOUR_FIREBASE_PROJECT_ID"
+
+# Create in Firebase Console → Authentication → Add user
+# Then register in admin panel → Partner Servers → Server Accounts
+firebase-email: "server-YOURID@firecraft.server"
+firebase-password: "YOUR_SERVER_ACCOUNT_PASSWORD"
+
+# Must match the partnerServers document ID you created in admin panel
+server-id: "YOUR_SERVER_ID"
+
+# ── Playtime Tracking ────────────────────────────────────────────────────────
+tracking:
+  # Minimum minutes a session must last to be recorded (prevents AFK abuse)
+  min-session-minutes: 5
+  # How often (seconds) to send a heartbeat to Firebase (min 60)
+  heartbeat-interval: 300
+
+# ── Website Promotion ────────────────────────────────────────────────────────
+website-url: "https://www.firecraft.fun"
+discord-url: "https://discord.gg/k3wmWeBsmD"
+
+promotion:
+  # Send a message to each player when they join
+  join-message-enabled: true
+  # How many seconds after join to show the message (0 = immediately)
+  join-message-delay: 3
+
+  # Broadcast promo message to all players every X seconds
+  broadcast-enabled: true
+  broadcast-interval: 600
+
+  # Update tab-list header and footer with FireCraft branding
+  tab-list-enabled: true
+
+  # Show earn balance reminder when player quits
+  quit-reminder-enabled: true
+
+# ── Messages ─────────────────────────────────────────────────────────────────
+# Use & for color codes. {player} = player name, {url} = website URL
+# {server} = this server's name, {discord} = discord URL
+
+messages:
+  join:
+    - "&6&lFireCraft Earn &8● &fYou can earn real money playing here!"
+    - "&7Register at &6{url} &7and start tracking your playtime."
+    - "&8Type &7/firecraft &8for more info."
+
+  broadcasts:
+    - "&6&l[FireCraft] &fDid you know? Every minute you play earns you real PKR!"
+    - "&6&l[FireCraft] &7Track your wallet at &6{url}"
+    - "&6&l[FireCraft] &fJoin our community: &9{discord}"
+    - "&6&l[FireCraft] &7Your playtime on this server is being tracked. Withdraw anytime!"
+
+  quit-reminder: "&7Your session has been saved. Check your wallet at &6{url}"
+
+  info-command:
+    - "&6&m                                          "
+    - " &6&lFireCraft SMP &8| &fOfficial Partner Server"
+    - " &7Play here and earn real money!"
+    - " "
+    - " &fWebsite: &6{url}"
+    - " &fDiscord: &9{discord}"
+    - " "
+    - " &7Your playtime is tracked automatically."
+    - " &7Register on the website to see your wallet."
+    - "&6&m                                          "
+
+  tab-header:
+    - "&6&lFireCraft SMP"
+    - "&7Earn real money while you play!"
+  tab-footer:
+    - "&6{url}"
+    - "&8Powered by FireCraft Earn System"
+
+# ── Debug ────────────────────────────────────────────────────────────────────
+debug: false
