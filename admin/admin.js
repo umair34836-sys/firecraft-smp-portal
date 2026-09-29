@@ -303,17 +303,22 @@ async function setApplicationStatus(status){
     }catch(e){
       console.warn("approvedPlayers write failed (rules not deployed yet?):", e.message);
     }
-    // Email notification — requires EmailJS (see README for setup)
+    // Email notification — sent after 5 min delay so player is already whitelisted when they read it
     try{
       const userSnap = await getDoc(doc(db,"users",selectedApplication.uid));
       const email = userSnap.exists() ? userSnap.data().email : null;
       if(email && window.emailjs){
-        await window.emailjs.send(
-          "service_cacpon8",
-          "template_0cfrwpb",
-          { to_email: email, ign: selectedApplication.ign, site_url: "https://www.firecraft.fun" }
-        );
-        showToast("Approval email sent to " + selectedApplication.ign);
+        setTimeout(async () => {
+          try{
+            await window.emailjs.send(
+              "service_cacpon8",
+              "template_0cfrwpb",
+              { to_email: email, ign: selectedApplication.ign, site_url: "https://www.firecraft.fun" }
+            );
+            console.log("Approval email sent to " + selectedApplication.ign);
+          }catch(e2){ console.warn("Email notification failed:", e2.message); }
+        }, 5 * 60 * 1000); // 5 minute delay
+        showToast("Approval email will be sent to " + selectedApplication.ign + " in 5 minutes.");
       }
     }catch(e){
       console.warn("Email notification failed:", e.message);

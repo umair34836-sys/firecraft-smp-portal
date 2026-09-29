@@ -67,18 +67,18 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
 
         getServer().getPluginManager().registerEvents(this, this);
 
-        // Fetch announcements once on startup, then every 5 minutes (async)
+        // Fetch announcements once on startup, then every 10 minutes (async)
         Bukkit.getScheduler().runTaskTimerAsynchronously(this,
-                this::fetchAnnouncements, 40L, 20L * 60 * 5);
+                this::fetchAnnouncements, 40L, 20L * 60 * 10);
 
         // Send random reminder at configured interval (async trigger, sync send)
         long intervalTicks = reminderIntervalMinutes * 60 * 20;
         Bukkit.getScheduler().runTaskTimerAsynchronously(this,
                 this::triggerReminder, intervalTicks, intervalTicks);
 
-        // Poll approvedPlayers every 30 seconds for auto-whitelist
+        // Poll approvedPlayers every 2 minutes for auto-whitelist
         Bukkit.getScheduler().runTaskTimerAsynchronously(this,
-                this::pollApprovedPlayers, 200L, 20L * 30);
+                this::pollApprovedPlayers, 200L, 20L * 120);
 
         getLogger().info("[FireCraftNotifier] Enabled — reminders every " + reminderIntervalMinutes + " min.");
     }
