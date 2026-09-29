@@ -14,7 +14,7 @@ reminder-interval-minutes: 10
 show-join-title: true
 
 # Direct link shown in the whitelist-kick message
-apply-url: "https://www.firecraft.fun/#apply"
+apply-url: "https://www.firecraft.fun"
 
 # Discord invite link shown in the whitelist-kick message
-discord-url: "https://discord.gg/k3wmWeBsmD"
+discord-url: "https://discord.firecraft.fun"

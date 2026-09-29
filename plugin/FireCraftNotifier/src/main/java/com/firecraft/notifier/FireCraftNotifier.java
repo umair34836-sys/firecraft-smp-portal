@@ -302,8 +302,8 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
     public void onLogin(PlayerLoginEvent event) {
         if (event.getResult() != PlayerLoginEvent.Result.KICK_WHITELIST) return;
 
-        String applyUrl = getConfig().getString("apply-url", websiteUrl + "/#apply");
-        String discord  = getConfig().getString("discord-url", "https://discord.gg/k3wmWeBsmD");
+        String applyUrl = getConfig().getString("apply-url", "https://www.firecraft.fun");
+        String discord  = getConfig().getString("discord-url", "https://discord.firecraft.fun");
 
         String msg =
             "\n" +
