@@ -310,8 +310,11 @@
   <div id="authModal" class="modal hidden">
     <div class="modal-card">
       <button class="modal-close" id="closeAuth">×</button>
+
       <div id="loginView">
-        <span class="eyebrow">FIRECRAFT ACCOUNT</span><h2>Login</h2><p class="muted">Use your Minecraft IGN and FireCraft password.</p>
+        <span class="eyebrow">FIRECRAFT ACCOUNT</span>
+        <h2>Login</h2>
+        <p class="muted">Use your Minecraft IGN and FireCraft password.</p>
         <form id="loginForm">
           <div class="field">
             <label>Minecraft IGN</label>
@@ -322,24 +325,93 @@
             <label>Password</label>
             <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Your FireCraft password" required>
           </div>
-          <button class="btn full">Login</button><div id="loginMsg" class="msg"></div>
+          <button class="btn full">Login</button>
+          <div id="loginMsg" class="msg"></div>
         </form>
         <button class="link-btn" id="showReset">Forgot password?</button>
         <button class="link-btn" id="showSignup">New here? Create FireCraft account</button>
+
+        <!-- How it works guide — shown on login view for new visitors -->
+        <div class="how-guide">
+          <div class="how-guide-title">New here? Here's how to join:</div>
+          <div class="how-steps">
+            <div class="how-step">
+              <div class="how-step-icon">1</div>
+              <div class="how-step-body">
+                <strong>Create Account</strong>
+                <span>Register with your Minecraft IGN</span>
+              </div>
+            </div>
+            <div class="how-step-arrow">→</div>
+            <div class="how-step">
+              <div class="how-step-icon">2</div>
+              <div class="how-step-body">
+                <strong>Apply</strong>
+                <span>Fill the whitelist application</span>
+              </div>
+            </div>
+            <div class="how-step-arrow">→</div>
+            <div class="how-step">
+              <div class="how-step-icon">3</div>
+              <div class="how-step-body">
+                <strong>Get Approved</strong>
+                <span>Admin reviews your application</span>
+              </div>
+            </div>
+            <div class="how-step-arrow">→</div>
+            <div class="how-step">
+              <div class="how-step-icon">🎮</div>
+              <div class="how-step-body">
+                <strong>Play &amp; Earn</strong>
+                <span>Join the server &amp; earn PKR!</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
       <div id="resetView" class="hidden">
-        <span class="eyebrow">ACCOUNT RECOVERY</span><h2>Reset Password</h2><p class="muted">Enter your Minecraft IGN — a reset link will be sent to your registered email.</p>
+        <span class="eyebrow">ACCOUNT RECOVERY</span>
+        <h2>Reset Password</h2>
+        <p class="muted">Enter your Minecraft IGN — a reset link will be sent to your registered email.</p>
         <form id="resetForm">
           <div class="field">
             <label>Minecraft IGN</label>
             <input id="resetIgn" placeholder="e.g. Steve123" required>
           </div>
-          <button class="btn full">Send Reset Link</button><div id="resetMsg" class="msg"></div>
+          <button class="btn full">Send Reset Link</button>
+          <div id="resetMsg" class="msg"></div>
         </form>
         <button class="link-btn" id="backToLogin">← Back to Login</button>
       </div>
+
       <div id="signupView" class="hidden">
-        <span class="eyebrow">JOIN THE COMMUNITY</span><h2>Create Account</h2><p class="muted">Your IGN is your FireCraft username. Use a strong password.</p>
+        <!-- Step progress bar -->
+        <div class="signup-progress">
+          <div class="sp-step sp-active">
+            <div class="sp-dot">1</div>
+            <div class="sp-label">Create Account</div>
+          </div>
+          <div class="sp-line"></div>
+          <div class="sp-step">
+            <div class="sp-dot">2</div>
+            <div class="sp-label">Apply</div>
+          </div>
+          <div class="sp-line"></div>
+          <div class="sp-step">
+            <div class="sp-dot">3</div>
+            <div class="sp-label">Get Approved</div>
+          </div>
+          <div class="sp-line"></div>
+          <div class="sp-step">
+            <div class="sp-dot">🎮</div>
+            <div class="sp-label">Play!</div>
+          </div>
+        </div>
+
+        <span class="eyebrow">STEP 1 OF 3</span>
+        <h2>Create Account</h2>
+        <p class="muted">Your IGN is your FireCraft username. Use a strong password.</p>
         <form id="signupForm">
           <div class="field">
             <label>Minecraft IGN <span class="req">*</span></label>
@@ -360,8 +432,18 @@
             <label>Confirm Password <span class="req">*</span></label>
             <input id="signupPassword2" type="password" minlength="6" placeholder="Re-enter your password" required>
           </div>
-          <button class="btn full">Create Account</button><div id="signupMsg" class="msg"></div>
+          <button class="btn full">Create Account</button>
+          <div id="signupMsg" class="msg"></div>
         </form>
+
+        <!-- What happens next -->
+        <div class="next-steps-info">
+          <div class="nsi-title">After creating your account:</div>
+          <div class="nsi-item"><span class="nsi-num">2</span> Go to <strong>Apply</strong> in the menu and fill the whitelist form</div>
+          <div class="nsi-item"><span class="nsi-num">3</span> Wait for admin approval (usually within 24 hours)</div>
+          <div class="nsi-item"><span class="nsi-num">🎮</span> Join the server with IP shown on website!</div>
+        </div>
+
         <button class="link-btn" id="showLogin">Already have an account? Login</button>
       </div>
     </div>

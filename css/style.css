@@ -473,3 +473,165 @@
 
 /* ===== Withdraw Modal ===== */
 #withdrawModal .btn.full{margin-top:8px}
+
+/* ===== Auth How-it-works Guide (login view) ===== */
+.how-guide{
+  margin-top:20px;
+  padding:16px;
+  background:linear-gradient(135deg,#1a0e00 0%,#110d14 100%);
+  border:1px solid #ff7b4430;
+  border-radius:14px;
+}
+.how-guide-title{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1.2px;
+  color:#ff9278;
+  margin-bottom:14px;
+  font-weight:700;
+}
+.how-steps{
+  display:flex;
+  align-items:flex-start;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.how-step{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  flex:1;
+  min-width:80px;
+}
+.how-step-icon{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#ff7b44,#ff9e6b);
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  box-shadow:0 2px 8px #ff7b4440;
+}
+.how-step-body{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.how-step-body strong{
+  font-size:12px;
+  color:#fff;
+  line-height:1.2;
+}
+.how-step-body span{
+  font-size:10px;
+  color:var(--muted);
+  line-height:1.3;
+}
+.how-step-arrow{
+  color:#ff7b4460;
+  font-size:14px;
+  padding-top:6px;
+  flex-shrink:0;
+}
+@media(max-width:480px){
+  .how-steps{flex-direction:column;gap:10px}
+  .how-step-arrow{display:none}
+}
+
+/* ===== Signup Step Progress Bar ===== */
+.signup-progress{
+  display:flex;
+  align-items:center;
+  margin-bottom:20px;
+  gap:0;
+}
+.sp-step{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+  flex:1;
+}
+.sp-dot{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  background:#ffffff10;
+  border:2px solid #ffffff20;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all .3s;
+}
+.sp-label{
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:.7px;
+  color:var(--muted);
+  text-align:center;
+  line-height:1.2;
+}
+.sp-active .sp-dot{
+  background:linear-gradient(135deg,#ff7b44,#ff9e6b);
+  border-color:transparent;
+  color:#fff;
+  box-shadow:0 2px 10px #ff7b4450;
+}
+.sp-active .sp-label{color:#ff9278;font-weight:600}
+.sp-line{
+  height:2px;
+  flex:1;
+  background:#ffffff10;
+  margin-bottom:18px;
+  max-width:24px;
+}
+
+/* ===== What happens next info box ===== */
+.next-steps-info{
+  margin-top:18px;
+  padding:14px 16px;
+  background:#0e1410;
+  border:1px solid #4caf5030;
+  border-radius:12px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.nsi-title{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  color:#4caf50;
+  font-weight:700;
+}
+.nsi-item{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.4;
+}
+.nsi-item strong{color:#ddd}
+.nsi-num{
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:#4caf5020;
+  border:1px solid #4caf5040;
+  color:#4caf50;
+  font-size:11px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+}
