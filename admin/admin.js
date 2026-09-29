@@ -317,8 +317,8 @@ async function setApplicationStatus(status){
             );
             console.log("Approval email sent to " + selectedApplication.ign);
           }catch(e2){ console.warn("Email notification failed:", e2.message); }
-        }, 5 * 60 * 1000); // 5 minute delay
-        showToast("Approval email will be sent to " + selectedApplication.ign + " in 5 minutes.");
+        }, 2 * 60 * 1000); // 2 minute delay — matches plugin whitelist poll interval
+        showToast("Approval email will be sent to " + selectedApplication.ign + " in 2 minutes.");
       }
     }catch(e){
       console.warn("Email notification failed:", e.message);
