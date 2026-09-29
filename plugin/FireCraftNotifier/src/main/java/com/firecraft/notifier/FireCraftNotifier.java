@@ -10,8 +10,10 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -292,6 +294,36 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
                         Duration.ofMillis(600)
                 )
         ));
+    }
+
+    // ─── Whitelist kick message ───────────────────────────────────────────────
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onLogin(PlayerLoginEvent event) {
+        if (event.getResult() != PlayerLoginEvent.Result.KICK_WHITELIST) return;
+
+        String applyUrl = getConfig().getString("apply-url", websiteUrl + "/#apply");
+        String discord  = getConfig().getString("discord-url", "https://discord.gg/k3wmWeBsmD");
+
+        String msg =
+            "\n" +
+            "<gold><bold>⚠ You are not whitelisted on FireCraft SMP!</bold></gold>" +
+            "\n\n" +
+            "<white>To join, you must first apply for whitelist.</white>" +
+            "\n\n" +
+            "<yellow>📋 How to apply:</yellow>" +
+            "\n<gray>  1. Register on the website: <gold><underlined>" + applyUrl + "</underlined></gold></gray>" +
+            "\n<gray>  2. Click <white>Apply</white> in the menu & fill the form</gray>" +
+            "\n<gray>  3. Wait for admin approval <dark_gray>(usually within 24 hours)</dark_gray></gray>" +
+            "\n<gray>  4. You will be whitelisted automatically!</gray>" +
+            "\n\n" +
+            "<aqua>🔗 Apply now: <underlined>" + applyUrl + "</underlined></aqua>" +
+            "\n" +
+            "<dark_gray>Need help? Discord: " + discord + "</dark_gray>" +
+            "\n";
+
+        event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST,
+                MiniMessage.miniMessage().deserialize(msg));
     }
 
     // ─── Join event ───────────────────────────────────────────────────────────

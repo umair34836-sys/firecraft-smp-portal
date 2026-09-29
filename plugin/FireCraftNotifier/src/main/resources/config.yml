@@ -12,3 +12,9 @@ reminder-interval-minutes: 10
 
 # Show a welcome title to players when they join the server
 show-join-title: true
+
+# Direct link shown in the whitelist-kick message
+apply-url: "https://www.firecraft.fun/#apply"
+
+# Discord invite link shown in the whitelist-kick message
+discord-url: "https://discord.gg/k3wmWeBsmD"
