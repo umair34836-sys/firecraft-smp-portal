@@ -1,18 +1,11 @@
 package fun.firecraft.partner;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -84,43 +77,6 @@ public class FireCraftPartner extends JavaPlugin implements Listener {
     }
 
     // ── Events ───────────────────────────────────────────────────────────────
-
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onLogin(PlayerLoginEvent event) {
-        if (!getConfig().getBoolean("whitelist-kick.enabled", true)) return;
-        if (event.getResult() != PlayerLoginEvent.Result.KICK_WHITELIST) return;
-
-        String websiteUrl = getConfig().getString("website-url", "https://www.firecraft.fun");
-        String discordUrl = getConfig().getString("discord-url", "https://discord.gg/k3wmWeBsmD");
-        String applyUrl   = getConfig().getString("whitelist-kick.apply-url", websiteUrl + "/#apply");
-
-        // Build rich kick message using Adventure MiniMessage
-        String template = getConfig().getString("whitelist-kick.message",
-                "<newline>" +
-                "<gold><bold>⚠ You are not whitelisted on FireCraft SMP!</bold></gold>" +
-                "<newline><newline>" +
-                "<white>To join, you must first apply for the whitelist.</white>" +
-                "<newline><newline>" +
-                "<yellow>📋 How to apply:</yellow>" +
-                "<newline><gray>  1. Register at <gold><underlined><url></underlined></gold></gray>" +
-                "<newline><gray>  2. Click <white>Apply</white> in the menu</gray>" +
-                "<newline><gray>  3. Fill the application form</gray>" +
-                "<newline><gray>  4. Wait for admin approval (usually within 24 hours)</gray>" +
-                "<newline><newline>" +
-                "<aqua>🔗 <underlined><apply></underlined></aqua>" +
-                "<newline>" +
-                "<dark_gray>Need help? Join our Discord: <discord></dark_gray>" +
-                "<newline>"
-        );
-
-        String msg = template
-                .replace("<url>", websiteUrl)
-                .replace("<apply>", applyUrl)
-                .replace("<discord>", discordUrl);
-
-        Component kickMsg = MiniMessage.miniMessage().deserialize(msg);
-        event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, kickMsg);
-    }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {

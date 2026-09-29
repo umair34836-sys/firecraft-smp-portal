@@ -29,31 +29,6 @@ tracking:
 website-url: "https://www.firecraft.fun"
 discord-url: "https://discord.gg/k3wmWeBsmD"
 
-# ── Whitelist Kick Message ────────────────────────────────────────────────────
-# Shown to players who try to join but are NOT whitelisted
-whitelist-kick:
-  enabled: true
-  # Direct link to the Apply page on your website
-  apply-url: "https://www.firecraft.fun/#apply"
-  # Customize the message (uses MiniMessage format: https://docs.advntr.dev/minimessage)
-  # Placeholders: <url> = website-url, <apply> = apply-url, <discord> = discord-url
-  message: |
-    <newline>
-    <gold><bold>⚠ You are not whitelisted on FireCraft SMP!</bold></gold>
-    <newline><newline>
-    <white>To join, you must first apply for the whitelist.</white>
-    <newline><newline>
-    <yellow>📋 How to apply:</yellow>
-    <newline><gray>  1. Register at </gray><gold><underlined><url></underlined></gold>
-    <newline><gray>  2. Click </gray><white>Apply</white><gray> in the menu</gray>
-    <newline><gray>  3. Fill the whitelist application form</gray>
-    <newline><gray>  4. Wait for admin approval </gray><dark_gray>(usually within 24 hours)</dark_gray>
-    <newline><newline>
-    <aqua>🔗 Click to open: <underlined><apply></underlined></aqua>
-    <newline>
-    <dark_gray>Need help? Discord: <discord></dark_gray>
-    <newline>
-
 promotion:
   # Send a message to each player when they join
   join-message-enabled: true
