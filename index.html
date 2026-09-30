@@ -19,17 +19,30 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
   <link rel="apple-touch-icon" sizes="192x192" href="images/logo-192.png">
   <link rel="stylesheet" href="css/style.css">
+  <!-- Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXXX with your Publisher ID -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="#home"><img src="images/logo-192.png" alt="FireCraft SMP" class="brand-logo"> FIRECRAFT <small>SMP</small></a>
     <nav id="nav">
-      <a href="#home">Home</a><a href="#apply">Apply</a><a href="#earn">Earn</a><a href="#status">My Status</a><a href="#support">Support</a><a href="#rules">Rules</a><a href="#faq">FAQ</a>
+      <a href="#home">Home</a><a href="#apply">Apply</a><a href="#status">My Status</a><a href="#support">Support</a><a href="#rules">Rules</a><a href="#faq">FAQ</a>
       <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="btn btn-small btn-discord">Discord</a>
       <button id="authBtn" class="btn btn-small">Login</button>
     </nav>
     <button class="menu" id="menuBtn">☰</button>
   </header>
+
+  <!-- AdSense — Top Banner Ad (below header) -->
+  <div style="text-align:center;padding:8px 0;background:var(--surface,#111);">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
+         data-ad-slot="XXXXXXXXXX"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
 
   <main>
 <section id="home" class="hero section">
@@ -142,7 +155,8 @@
       <div class="section-head"><div><span class="eyebrow">YOUR ACCOUNT</span><h2>My Profile</h2></div></div>
       <div id="profileBox" class="panel auth-required hidden">
         <div id="profileGrid" class="profile-grid"></div>
-        <div id="walletBox" class="wallet-box hidden">
+        <!-- WALLET BOX HIDDEN — remove display:none below to re-enable -->
+        <div id="walletBox" class="wallet-box hidden" style="display:none!important">
           <div class="wallet-head">
             <span class="wallet-icon">💰</span>
             <div>
@@ -237,32 +251,8 @@
       </div>
     </section>
 
-    <section id="earn" class="section panel-section">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow">PLAY & EARN</span>
-          <h2>Partner Servers</h2>
-          <p>Play on partner servers and earn real money. Withdraw via Easypaisa, JazzCash or bank anytime.</p>
-        </div>
-      </div>
-      <div id="earnSystemNotice" class="earn-notice hidden"></div>
-      <div id="earnDisabledMsg" class="earn-disabled hidden">
-        <span>🔧</span><p>The earn system is currently offline. Check back soon.</p>
-      </div>
-      <div id="partnerServerGrid" class="partner-server-grid">
-        <div class="ps-loading">Loading partner servers…</div>
-      </div>
-      <div class="earn-how">
-        <h3>How it works</h3>
-        <ol>
-          <li><strong>Register</strong> on this website and create your account.</li>
-          <li><strong>Join</strong> any partner server listed above using your Minecraft IGN.</li>
-          <li><strong>Play</strong> — our plugin tracks your time automatically.</li>
-          <li><strong>Earn</strong> — PKR accumulates in your wallet as you play.</li>
-          <li><strong>Withdraw</strong> — request a payout anytime via your wallet. Admin pays on Discord.</li>
-        </ol>
-      </div>
-    </section>
+    <!-- EARN SECTION HIDDEN — re-enable by removing the "hidden" class below -->
+    <section id="earn" class="section panel-section hidden">
 
     <section id="gallery" class="section panel-section">
       <div class="section-head"><div><span class="eyebrow">SCREENSHOTS</span><h2>Gallery</h2><p>A look inside the world of FireCraft SMP.</p></div></div>
@@ -271,6 +261,18 @@
       </div>
     </section>
   </main>
+
+  <!-- AdSense — Bottom Banner Ad -->
+  <div style="text-align:center;padding:12px 0;background:var(--surface,#111);">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
+         data-ad-slot="XXXXXXXXXX"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
 <footer><span>🔥 FireCraft SMP</span><span>Private Lifesteal • Custom Plugins</span><a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="footer-discord">Discord</a><span>© <span id="year"></span> FireCraft</span></footer>
 
   <div id="withdrawModal" class="modal hidden">
@@ -362,8 +364,8 @@
             <div class="how-step">
               <div class="how-step-icon">🎮</div>
               <div class="how-step-body">
-                <strong>Play &amp; Earn</strong>
-                <span>Join the server &amp; earn PKR!</span>
+                <strong>Start Playing!</strong>
+                <span>Join &amp; enjoy FireCraft SMP</span>
               </div>
             </div>
           </div>
