@@ -24,23 +24,30 @@
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4837345120897086" crossorigin="anonymous"></script>
   <!-- Adsterra Native Banner -->
   <script async="async" data-cfasync="false" src="https://pl31587497.profitableratecpmnetwork.com/5f1cddf7156b0b5e06a990c8df97857d/invoke.js"></script>
-  <!-- Adsterra Popunder — fires on 2nd click, then once per hour -->
+  <!-- Adsterra Popunder — 2 times per hour, fires on every 2nd click -->
   <script>
   (function(){
-    var key='fc_pop_last', gap=60*60*1000;
-    var clicks=0, loaded=false;
+    var HOUR=60*60*1000, MAX=2;
+    var clicks=0;
+    function getState(){
+      try{ return JSON.parse(localStorage.getItem('fc_pop'))||{start:0,count:0}; }
+      catch(e){ return {start:0,count:0}; }
+    }
+    function fire(){
+      var s=document.createElement('script');
+      s.src='https://pl31587494.profitableratecpmnetwork.com/6f/b7/a3/6fb7a307c002a1620a628c5e748614ae.js';
+      document.head.appendChild(s);
+    }
     document.addEventListener('click',function(){
-      if(loaded) return;
       clicks++;
       if(clicks<2) return;
-      var last=+localStorage.getItem(key)||0;
-      if(Date.now()-last>gap){
-        loaded=true;
-        var s=document.createElement('script');
-        s.src='https://pl31587494.profitableratecpmnetwork.com/6f/b7/a3/6fb7a307c002a1620a628c5e748614ae.js';
-        document.head.appendChild(s);
-        localStorage.setItem(key,Date.now());
-      }
+      clicks=0;
+      var now=Date.now(), st=getState();
+      if(now-st.start>HOUR) st={start:now,count:0};
+      if(st.count>=MAX) return;
+      st.count++;
+      try{ localStorage.setItem('fc_pop',JSON.stringify(st)); }catch(e){}
+      fire();
     });
   })();
   </script>
