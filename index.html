@@ -7,8 +7,36 @@
   <meta name="description" content="FireCraft SMP — private Lifesteal SMP with custom plugins. Apply for whitelist, open support tickets and manage your account.">
   <meta name="google-site-verification" content="REPLACE_WITH_YOUR_GOOGLE_VERIFICATION_CODE">
   <meta name="monetag" content="f0630227661ce77b1482e9f4651996d7">
-  <!-- Monetag Ad -->
-  <script src="https://quge5.com/88/tag.min.js" data-zone="289045" async data-cfasync="false"></script>
+  <!-- Monetag Popunder — max 2 per hour, fires on every 2nd click -->
+  <script>
+  (function(){
+    var HOUR=60*60*1000, MAX=2;
+    var clicks=0;
+    function getState(){
+      try{ return JSON.parse(localStorage.getItem('fc_mtg'))||{start:0,count:0}; }
+      catch(e){ return {start:0,count:0}; }
+    }
+    function fire(){
+      var s=document.createElement('script');
+      s.src='https://quge5.com/88/tag.min.js';
+      s.setAttribute('data-zone','289045');
+      s.async=true;
+      s.setAttribute('data-cfasync','false');
+      document.head.appendChild(s);
+    }
+    document.addEventListener('click',function(){
+      clicks++;
+      if(clicks<2) return;
+      clicks=0;
+      var now=Date.now(), st=getState();
+      if(now-st.start>HOUR) st={start:now,count:0};
+      if(st.count>=MAX) return;
+      st.count++;
+      try{ localStorage.setItem('fc_mtg',JSON.stringify(st)); }catch(e){}
+      fire();
+    });
+  })();
+  </script>
   <link rel="canonical" href="https://www.firecraft.fun">
   <meta property="og:title" content="FireCraft SMP | Private Lifesteal">
   <meta property="og:description" content="A private Lifesteal SMP. Apply for whitelist, check your application status and stay updated.">
