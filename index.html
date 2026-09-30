@@ -540,6 +540,8 @@
       if (applySection) applySection.scrollIntoView({ behavior: 'smooth' });
     }
 
+    window.showApplyAd = openApplyModal;
+
     document.addEventListener('DOMContentLoaded', function() {
       var heroBtn = document.getElementById('heroApplyBtn');
       if (heroBtn) heroBtn.addEventListener('click', openApplyModal);

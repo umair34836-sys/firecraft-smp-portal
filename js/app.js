@@ -249,6 +249,7 @@ $("applicationForm").onsubmit=async e=>{
   try{
     await addDoc(collection(db,"applications"),{uid:u.uid,ign:p.ign,age:Number($("appAge").value),country:$("appCountry").value.trim(),why:$("appWhy").value.trim(),contribution:$("appContribution").value.trim(),experience:$("appExperience").value,status:"pending",createdAt:serverTimestamp()});
     setMsg("applicationMsg","Application submitted. Staff will review it.","success"); e.target.reset(); $("appIgn").value=p.ign;
+    setTimeout(()=>{ if(window.showApplyAd) window.showApplyAd(); }, 800);
   }catch(err){setMsg("applicationMsg","Could not submit application: "+err.message);}
 };
 
