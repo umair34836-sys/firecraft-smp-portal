@@ -27,7 +27,7 @@
   <!-- Adsterra Popunder — once per 24h -->
   <script>
   (function(){
-    var key='fc_pop_last', gap=24*60*60*1000;
+    var key='fc_pop_last', gap=60*60*1000;
     var last=+localStorage.getItem(key)||0;
     if(Date.now()-last>gap){
       var s=document.createElement('script');
