@@ -49,6 +49,13 @@
     <button class="menu" id="menuBtn">☰</button>
   </header>
 
+  <!-- Ads notice bar — shown once per session -->
+  <div id="adsNoticeBar" style="display:none;background:linear-gradient(90deg,#1a0a00,#150d18);border-bottom:1px solid #ff8a0030;padding:10px 16px;text-align:center;font-size:13px;color:#bbb;position:relative;">
+    ❤️ <strong style="color:#fff;">FireCraft is 100% free</strong> — ads help us cover server costs. We appreciate your support!
+    <button onclick="document.getElementById('adsNoticeBar').style.display='none';localStorage.setItem('fc_notice','1');" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#666;font-size:18px;cursor:pointer;line-height:1;">×</button>
+  </div>
+  <script>if(!localStorage.getItem('fc_notice'))document.getElementById('adsNoticeBar').style.display='block';</script>
+
   <main>
 <section id="home" class="hero section">
       <div class="hero-glow"></div>
@@ -481,9 +488,15 @@
   <!-- Apply Interstitial Ad Modal -->
   <div id="applyAdModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.93);align-items:center;justify-content:center;flex-direction:column;">
     <div style="background:#111317;border:1px solid #ff3b3035;border-radius:20px;padding:28px 24px;max-width:460px;width:92%;text-align:center;box-shadow:0 0 60px #ff3b3020;position:relative;">
-      <div style="font-size:11px;color:#ff8a00;font-weight:700;letter-spacing:2.5px;margin-bottom:6px;opacity:0.7;">SPONSORED</div>
-      <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;">🔥 FireCraft SMP</div>
-      <div style="font-size:13px;color:#aaa;margin-bottom:18px;">Supported by our sponsors — keeping the server free!</div>
+      <div style="font-size:11px;color:#ff8a00;font-weight:700;letter-spacing:2.5px;margin-bottom:10px;opacity:0.7;">A MESSAGE FROM US</div>
+      <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:10px;">🔥 We Appreciate Your Support</div>
+      <div style="background:#1a1018;border-left:3px solid #ff8a00;border-radius:10px;padding:14px 16px;text-align:left;margin-bottom:16px;">
+        <p style="font-size:13px;color:#ccc;line-height:1.7;margin:0;">
+          We know ads aren't the most enjoyable experience — and we genuinely apologize for that.<br><br>
+          <strong style="color:#fff;">FireCraft SMP is completely free.</strong> We never charge for whitelist, ranks, or anything else. Running a Minecraft server costs real money — hosting, plugins, and maintenance — all of which comes out of our own pockets.<br><br>
+          These ads help us <strong style="color:#ff8a00;">keep the server alive and running for you</strong>, without ever asking you to pay a single rupee. Your patience means the world to us. ❤️
+        </p>
+      </div>
       <!-- Ad unit (shows when AdSense approved) -->
       <div style="min-height:90px;background:#0d0d0f;border-radius:12px;overflow:hidden;border:1px solid #ffffff08;margin-bottom:18px;display:flex;align-items:center;justify-content:center;">
         <ins class="adsbygoogle fc-interstitial-ad"
