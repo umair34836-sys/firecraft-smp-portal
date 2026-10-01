@@ -1,4 +1,7 @@
 (function () {
+  /* Skip canvas on mobile or low-end devices to save battery and CPU */
+  if (window.innerWidth < 768 || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2)) return;
+
   var canvas = document.createElement('canvas');
   canvas.id = 'bg-canvas';
   canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
@@ -8,7 +11,7 @@
   var W, H, particles = [];
 
   var COLORS = ['#ff8fe3', '#ffa827', '#c8ff9a', '#35d07f', '#ffb3f0', '#ffd580'];
-  var N = 60;
+  var N = 35;
 
   function rand(a, b) { return a + Math.random() * (b - a); }
 
@@ -59,7 +62,7 @@
       ctx.save();
       ctx.globalAlpha = p.alpha;
       ctx.shadowColor = p.color;
-      ctx.shadowBlur = p.r * 7;
+      ctx.shadowBlur = p.r * 4;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, 6.2832);
       ctx.fillStyle = p.color;
