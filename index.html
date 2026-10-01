@@ -9,43 +9,6 @@
   <meta name="monetag" content="f0630227661ce77b1482e9f4651996d7">
   <!-- Monetag Vignette (Interstitial) -->
   <script>(function(s){s.dataset.zone='11927742',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-  <!-- Monetag Popunder — max 2 per hour per IP, fires on every 2nd click -->
-  <script>
-  (function(){
-    var HOUR=60*60*1000, MAX=2;
-    var clicks=0, userIP=null;
-
-    fetch('https://api.ipify.org?format=json')
-      .then(function(r){return r.json();})
-      .then(function(d){userIP=d.ip;})
-      .catch(function(){userIP='fallback';});
-
-    function key(){ return 'fc_mtg_'+(userIP||'fallback'); }
-    function getState(){
-      try{ return JSON.parse(localStorage.getItem(key()))||{start:0,count:0}; }
-      catch(e){ return {start:0,count:0}; }
-    }
-    function fire(){
-      var s=document.createElement('script');
-      s.src='https://quge5.com/88/tag.min.js';
-      s.setAttribute('data-zone','289045');
-      s.async=true;
-      s.setAttribute('data-cfasync','false');
-      document.head.appendChild(s);
-    }
-    document.addEventListener('click',function(){
-      clicks++;
-      if(clicks<2) return;
-      clicks=0;
-      var now=Date.now(), st=getState();
-      if(now-st.start>HOUR) st={start:now,count:0};
-      if(st.count>=MAX) return;
-      st.count++;
-      try{ localStorage.setItem(key(),JSON.stringify(st)); }catch(e){}
-      fire();
-    });
-  })();
-  </script>
   <link rel="canonical" href="https://www.firecraft.fun">
   <meta property="og:title" content="FireCraft SMP | Private Lifesteal">
   <meta property="og:description" content="A private Lifesteal SMP. Apply for whitelist, check your application status and stay updated.">
