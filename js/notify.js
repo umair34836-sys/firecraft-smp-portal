@@ -1,39 +1,106 @@
-/* FireCraft SMP — PWA Install + Push Notification Manager */
+/* FireCraft SMP — PWA Install + OneSignal Push Notifications */
 (function () {
 
-  /* ── Register service worker ── */
+  /* ── Register service worker (for offline caching) ── */
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/sw.js').catch(function (e) {
-        console.warn('SW registration failed:', e);
+      navigator.serviceWorker.register('/sw.js').catch(function () {});
+    });
+  }
+
+  /* ── OneSignal push notifications ── */
+  var OS_APP_ID = 'REPLACE_WITH_YOUR_ONESIGNAL_APP_ID';
+
+  if (!OS_APP_ID.startsWith('REPLACE')) {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+    var script = document.createElement('script');
+    script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
+    script.defer = true;
+    document.head.appendChild(script);
+
+    OneSignalDeferred.push(function (OneSignal) {
+      OneSignal.init({
+        appId: OS_APP_ID,
+        notifyButton: { enable: false },
+        welcomeNotification: {
+          title: 'FireCraft SMP 🌿',
+          message: 'Thanks for subscribing! You\'ll get server updates & announcements.',
+        },
+        promptOptions: { slidedown: { enabled: false } },
+      }).then(function () {
+        /* Show our custom bar after init */
+        setTimeout(showNotifBar, 4000);
       });
     });
   }
 
-  /* ── Install prompt (Add to Home Screen) ── */
+  /* ── Custom "Enable Notifications" banner ── */
+  function showNotifBar() {
+    if (document.getElementById('fc-notif-bar')) return;
+    try { if (localStorage.getItem('fc_notif_dismissed')) return; } catch (e) {}
+
+    if (!window.OneSignal) return;
+
+    window.OneSignal.Notifications.permission.then(function (granted) {
+      if (granted) return; /* already subscribed */
+
+      var bar = document.createElement('div');
+      bar.id = 'fc-notif-bar';
+      bar.innerHTML = [
+        '<span style="font-size:22px;flex-shrink:0;">🔔</span>',
+        '<div style="flex:1;min-width:0;">',
+          '<strong style="display:block;font-size:14px;color:#f0ffe8;">Get Server Notifications</strong>',
+          '<span style="font-size:12px;color:#8ab899;">Announcements, whitelist updates & events</span>',
+        '</div>',
+        '<button id="fc-notif-allow" style="padding:8px 14px;border-radius:8px;background:linear-gradient(135deg,#ff8fe3,#ffa827);border:0;color:#fff;font-weight:800;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0;">Enable</button>',
+        '<button id="fc-notif-x" style="background:none;border:0;color:#8ab899;font-size:22px;cursor:pointer;padding:0 4px;flex-shrink:0;line-height:1;">&times;</button>',
+      ].join('');
+      bar.style.cssText = [
+        'position:fixed;top:70px;left:50%;transform:translateX(-50%);',
+        'display:flex;align-items:center;gap:12px;',
+        'background:#0e1f10;border:1px solid #ff8fe340;border-radius:14px;',
+        'padding:14px 16px;box-shadow:0 8px 30px rgba(255,143,227,.15);',
+        'z-index:999;width:min(420px,92vw);',
+        'animation:fcSlideDown .35s ease;',
+      ].join('');
+      document.body.appendChild(bar);
+
+      document.getElementById('fc-notif-allow').onclick = function () {
+        bar.remove();
+        window.OneSignal.Slidedown.promptPush();
+      };
+      document.getElementById('fc-notif-x').onclick = function () {
+        bar.remove();
+        try { localStorage.setItem('fc_notif_dismissed', '1'); } catch (e) {}
+      };
+    });
+  }
+
+  /* ── PWA Install prompt (Add to Home Screen) ── */
   var deferredPrompt = null;
-  var installBanner = null;
 
   window.addEventListener('beforeinstallprompt', function (e) {
     e.preventDefault();
     deferredPrompt = e;
-    showInstallBanner();
+    try { if (localStorage.getItem('fc_install_dismissed')) return; } catch (e) {}
+    setTimeout(showInstallBanner, 8000);
   });
 
   function showInstallBanner() {
     if (document.getElementById('fc-install-banner')) return;
-    installBanner = document.createElement('div');
-    installBanner.id = 'fc-install-banner';
-    installBanner.innerHTML = [
-      '<img src="/images/logo-192.png" alt="" style="width:36px;height:36px;border-radius:8px;flex-shrink:0;">',
+    var bar = document.createElement('div');
+    bar.id = 'fc-install-banner';
+    bar.innerHTML = [
+      '<img src="/images/logo-192.png" alt="" style="width:34px;height:34px;border-radius:8px;flex-shrink:0;">',
       '<div style="flex:1;min-width:0;">',
         '<strong style="display:block;font-size:14px;color:#f0ffe8;">Install FireCraft App</strong>',
         '<span style="font-size:12px;color:#8ab899;">Add to home screen for quick access</span>',
       '</div>',
       '<button id="fc-install-btn" style="padding:8px 14px;border-radius:8px;background:linear-gradient(135deg,#ff8fe3,#ffa827);border:0;color:#fff;font-weight:800;font-size:12px;cursor:pointer;flex-shrink:0;">Install</button>',
-      '<button id="fc-install-x" style="background:none;border:0;color:#8ab899;font-size:20px;cursor:pointer;padding:0 4px;flex-shrink:0;line-height:1;">&times;</button>',
+      '<button id="fc-install-x" style="background:none;border:0;color:#8ab899;font-size:22px;cursor:pointer;padding:0 4px;flex-shrink:0;line-height:1;">&times;</button>',
     ].join('');
-    installBanner.style.cssText = [
+    bar.style.cssText = [
       'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);',
       'display:flex;align-items:center;gap:12px;',
       'background:#0e1f10;border:1px solid #1a4a1a;border-radius:16px;',
@@ -41,118 +108,26 @@
       'z-index:999;width:min(380px,92vw);',
       'animation:fcSlideUp .35s ease;',
     ].join('');
-    document.body.appendChild(installBanner);
+    document.body.appendChild(bar);
 
     document.getElementById('fc-install-btn').onclick = function () {
       if (!deferredPrompt) return;
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then(function () {
         deferredPrompt = null;
-        if (installBanner) installBanner.remove();
+        bar.remove();
       });
     };
     document.getElementById('fc-install-x').onclick = function () {
-      if (installBanner) installBanner.remove();
+      bar.remove();
       try { localStorage.setItem('fc_install_dismissed', '1'); } catch (e) {}
     };
   }
 
-  /* ── Push notification permission UI ── */
-  function canPush() {
-    return 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
-  }
-
-  function showNotifBar() {
-    if (!canPush()) return;
-    if (Notification.permission !== 'default') return;
-    try { if (localStorage.getItem('fc_notif_dismissed')) return; } catch (e) {}
-
-    var bar = document.createElement('div');
-    bar.id = 'fc-notif-bar';
-    bar.innerHTML = [
-      '<span style="font-size:22px;">🌿</span>',
-      '<div style="flex:1;min-width:0;">',
-        '<strong style="display:block;font-size:14px;color:#f0ffe8;">Stay Updated</strong>',
-        '<span style="font-size:12px;color:#8ab899;">Get notified for server events, announcements & whitelist updates</span>',
-      '</div>',
-      '<button id="fc-notif-allow" style="padding:8px 14px;border-radius:8px;background:linear-gradient(135deg,#ff8fe3,#ffa827);border:0;color:#fff;font-weight:800;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0;">Enable 🔔</button>',
-      '<button id="fc-notif-x" style="background:none;border:0;color:#8ab899;font-size:20px;cursor:pointer;padding:0 4px;flex-shrink:0;line-height:1;">&times;</button>',
-    ].join('');
-    bar.style.cssText = [
-      'position:fixed;top:70px;left:50%;transform:translateX(-50%);',
-      'display:flex;align-items:center;gap:12px;',
-      'background:#0e1f10;border:1px solid #ff8fe340;border-radius:14px;',
-      'padding:14px 16px;box-shadow:0 8px 30px rgba(255,143,227,.12);',
-      'z-index:999;width:min(440px,92vw);',
-      'animation:fcSlideDown .35s ease;',
-    ].join('');
-    document.body.appendChild(bar);
-
-    document.getElementById('fc-notif-allow').onclick = function () {
-      requestPush(bar);
-    };
-    document.getElementById('fc-notif-x').onclick = function () {
-      bar.remove();
-      try { localStorage.setItem('fc_notif_dismissed', '1'); } catch (e) {}
-    };
-  }
-
-  function requestPush(bar) {
-    Notification.requestPermission().then(function (perm) {
-      if (bar) bar.remove();
-      if (perm === 'granted') {
-        showToast('🔔 Notifications enabled! You\'ll hear from us soon.');
-        subscribeUser();
-      }
-    });
-  }
-
-  function subscribeUser() {
-    navigator.serviceWorker.ready.then(function (reg) {
-      /* VAPID public key — replace with your own from web-push or OneSignal */
-      var VAPID_PUBLIC = 'REPLACE_WITH_YOUR_VAPID_PUBLIC_KEY';
-      if (VAPID_PUBLIC.startsWith('REPLACE')) return;
-      reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC),
-      }).then(function (sub) {
-        console.log('Push subscription:', JSON.stringify(sub));
-        /* Send `sub` to your server / Firebase function to store */
-      }).catch(function (e) {
-        console.warn('Push subscribe failed:', e);
-      });
-    });
-  }
-
-  function urlBase64ToUint8Array(base64String) {
-    var padding = '='.repeat((4 - base64String.length % 4) % 4);
-    var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    var raw = atob(base64);
-    var out = new Uint8Array(raw.length);
-    for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
-    return out;
-  }
-
-  /* ── Toast helper ── */
-  function showToast(msg) {
-    var t = document.getElementById('toast');
-    if (!t) return;
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(function () { t.classList.remove('show'); }, 3000);
-  }
-
-  /* ── CSS animations ── */
-  var style = document.createElement('style');
-  style.textContent = [
-    '@keyframes fcSlideUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}',
-    '@keyframes fcSlideDown{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}',
-  ].join('');
-  document.head.appendChild(style);
-
-  /* ── Delay bars so page loads first ── */
-  window.addEventListener('load', function () {
-    setTimeout(showNotifBar, 4000);
-  });
+  /* ── Animations ── */
+  var s = document.createElement('style');
+  s.textContent = '@keyframes fcSlideUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}'
+    + '@keyframes fcSlideDown{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
+  document.head.appendChild(s);
 
 })();
