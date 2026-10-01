@@ -9,7 +9,7 @@
   }
 
   /* ── OneSignal push notifications ── */
-  var OS_APP_ID = 'REPLACE_WITH_YOUR_ONESIGNAL_APP_ID';
+  var OS_APP_ID = '078370fd-ffa0-4727-8137-063ed6e18d18';
 
   if (!OS_APP_ID.startsWith('REPLACE')) {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
