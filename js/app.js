@@ -4,6 +4,24 @@ import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, or
   getDocs, limit,} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { firebaseConfig, ADMIN_UID } from "./firebase-config.js";
 
+/* ── EmailJS Admin Notifications ─────────────────────────────────── */
+const EJS_PUBLIC_KEY      = 'REPLACE_EMAILJS_PUBLIC_KEY';
+const EJS_SERVICE_ID      = 'REPLACE_SERVICE_ID';
+const EJS_TPL_APPLICATION = 'REPLACE_TEMPLATE_APPLICATION';
+const EJS_TPL_TICKET      = 'REPLACE_TEMPLATE_TICKET';
+
+(function initEJS() {
+  if (window.emailjs && !EJS_PUBLIC_KEY.startsWith('REPLACE')) {
+    window.emailjs.init({ publicKey: EJS_PUBLIC_KEY });
+  }
+})();
+
+function adminMail(templateId, params) {
+  if (!window.emailjs || EJS_SERVICE_ID.startsWith('REPLACE')) return;
+  window.emailjs.send(EJS_SERVICE_ID, templateId, params).catch(() => {});
+}
+/* ─────────────────────────────────────────────────────────────────── */
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -248,6 +266,7 @@ $("applicationForm").onsubmit=async e=>{
   const p=existing.data();
   try{
     await addDoc(collection(db,"applications"),{uid:u.uid,ign:p.ign,age:Number($("appAge").value),country:$("appCountry").value.trim(),why:$("appWhy").value.trim(),contribution:$("appContribution").value.trim(),experience:$("appExperience").value,status:"pending",createdAt:serverTimestamp()});
+    adminMail(EJS_TPL_APPLICATION,{ign:p.ign,age:$("appAge").value,country:$("appCountry").value.trim(),why:$("appWhy").value.trim(),contribution:$("appContribution").value.trim(),experience:$("appExperience").value,review_url:"https://www.firecraft.fun/admin/"});
     setMsg("applicationMsg","Application submitted. Staff will review it.","success"); e.target.reset(); $("appIgn").value=p.ign;
     setTimeout(()=>{ if(window.showApplyAd) window.showApplyAd(); }, 800);
   }catch(err){setMsg("applicationMsg","Could not submit application: "+err.message);}
@@ -256,7 +275,9 @@ $("applicationForm").onsubmit=async e=>{
 $("ticketForm").onsubmit=async e=>{
   e.preventDefault(); const u=auth.currentUser;if(!u){openAuth();return;}
   const p=(await getDoc(doc(db,"users",u.uid))).data();
-  try{await addDoc(collection(db,"tickets"),{uid:u.uid,ign:p.ign,category:$("ticketCategory").value,subject:$("ticketSubject").value.trim(),message:$("ticketMessage").value.trim(),status:"open",createdAt:serverTimestamp(),staffReply:""});setMsg("ticketMsg","Ticket opened.","success");e.target.reset();}catch(err){setMsg("ticketMsg","Could not open ticket: "+err.message);}
+  try{await addDoc(collection(db,"tickets"),{uid:u.uid,ign:p.ign,category:$("ticketCategory").value,subject:$("ticketSubject").value.trim(),message:$("ticketMessage").value.trim(),status:"open",createdAt:serverTimestamp(),staffReply:""});
+    adminMail(EJS_TPL_TICKET,{ign:p.ign,category:$("ticketCategory").value,subject:$("ticketSubject").value.trim(),message:$("ticketMessage").value.trim(),review_url:"https://www.firecraft.fun/admin/"});
+    setMsg("ticketMsg","Ticket opened.","success");e.target.reset();}catch(err){setMsg("ticketMsg","Could not open ticket: "+err.message);}
 };
 
 async function loadTickets(uid){
