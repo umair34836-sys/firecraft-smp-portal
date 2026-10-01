@@ -7,7 +7,7 @@ import { firebaseConfig, ADMIN_UID } from "./firebase-config.js";
 /* ── EmailJS Admin Notifications ─────────────────────────────────── */
 const EJS_PUBLIC_KEY      = '325XI1qvpgynRSErT';
 const EJS_SERVICE_ID      = 'service_cacpon8';
-const EJS_TPL_APPLICATION = 'REPLACE_TEMPLATE_APPLICATION';
+const EJS_TPL_APPLICATION = 'template_tzgqo7a';
 const EJS_TPL_TICKET      = 'REPLACE_TEMPLATE_TICKET';
 
 (function initEJS() {
