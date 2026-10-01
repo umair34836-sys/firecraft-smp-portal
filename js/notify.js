@@ -22,6 +22,7 @@
     OneSignalDeferred.push(function (OneSignal) {
       OneSignal.init({
         appId: OS_APP_ID,
+        safari_web_id: 'web.onesignal.auto.34975c41-96f8-43c9-89c6-048b8e5234aa',
         notifyButton: { enable: false },
         welcomeNotification: {
           title: 'FireCraft SMP 🌿',
