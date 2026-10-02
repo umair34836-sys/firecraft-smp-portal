@@ -51,7 +51,8 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.status == "pending";
       allow read: if isAdmin()
-        || (signedIn() && resource.data.uid == request.auth.uid);
+        || (signedIn() && resource.data.uid == request.auth.uid)
+        || resource.data.status == "approved";
       allow update, delete: if isAdmin();
     }
 
