@@ -8,6 +8,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -26,13 +30,16 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
-public class FireCraftNotifier extends JavaPlugin implements Listener {
+public class FireCraftNotifier extends JavaPlugin implements Listener, CommandExecutor, TabCompleter {
 
     private final CopyOnWriteArrayList<String> cachedTitles = new CopyOnWriteArrayList<>();
     private final Random random = new Random();
@@ -44,20 +51,17 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
     private long reminderIntervalMinutes;
     private boolean showJoinTitle;
 
-    // Tracks IGNs already whitelisted so we never process them twice
     private final Set<String> processedIgns = new HashSet<>();
     private File processedIgnsFile;
 
     private static final String[] DISPLAY_TYPES = {"CHAT", "ACTIONBAR", "TITLE"};
+    private static final String PERM = "firecraftnotifier.admin";
+    private static final String PREFIX = "<gradient:#ff3b30:#ff8a00><bold>[FCN]</bold></gradient> ";
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
-
-        projectId               = getConfig().getString("firebase-project-id", "firecraft-smp-portal");
-        websiteUrl              = getConfig().getString("website-url", "https://firecraft-smp-portal.web.app");
-        reminderIntervalMinutes = getConfig().getLong("reminder-interval-minutes", 10);
-        showJoinTitle           = getConfig().getBoolean("show-join-title", true);
+        loadConfigValues();
 
         httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(8))
@@ -67,16 +71,19 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
 
         getServer().getPluginManager().registerEvents(this, this);
 
-        // Fetch announcements once on startup, then every 10 minutes (async)
+        var cmd = getCommand("fcn");
+        if (cmd != null) {
+            cmd.setExecutor(this);
+            cmd.setTabCompleter(this);
+        }
+
         Bukkit.getScheduler().runTaskTimerAsynchronously(this,
                 this::fetchAnnouncements, 40L, 20L * 60 * 10);
 
-        // Send random reminder at configured interval (async trigger, sync send)
         long intervalTicks = reminderIntervalMinutes * 60 * 20;
         Bukkit.getScheduler().runTaskTimerAsynchronously(this,
                 this::triggerReminder, intervalTicks, intervalTicks);
 
-        // Poll approvedPlayers every 2 minutes for auto-whitelist
         Bukkit.getScheduler().runTaskTimerAsynchronously(this,
                 this::pollApprovedPlayers, 200L, 20L * 120);
 
@@ -86,6 +93,235 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         getLogger().info("[FireCraftNotifier] Disabled.");
+    }
+
+    private void loadConfigValues() {
+        projectId               = getConfig().getString("firebase-project-id", "firecraft-smp-portal");
+        websiteUrl              = getConfig().getString("website-url", "https://firecraft-smp-portal.web.app");
+        reminderIntervalMinutes = getConfig().getLong("reminder-interval-minutes", 10);
+        showJoinTitle           = getConfig().getBoolean("show-join-title", true);
+    }
+
+    // ─── Admin command ────────────────────────────────────────────────────────
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!sender.hasPermission(PERM)) {
+            sender.sendMessage(mm.deserialize(PREFIX + "<red>You don't have permission to use this command."));
+            return true;
+        }
+
+        if (args.length == 0) {
+            sendHelp(sender);
+            return true;
+        }
+
+        switch (args[0].toLowerCase()) {
+
+            case "help" -> sendHelp(sender);
+
+            case "info" -> {
+                sender.sendMessage(mm.deserialize(PREFIX + "<yellow>Plugin Info:"));
+                sender.sendMessage(mm.deserialize("<gray>  Project ID: <white>" + projectId));
+                sender.sendMessage(mm.deserialize("<gray>  Website URL: <white>" + websiteUrl));
+                sender.sendMessage(mm.deserialize("<gray>  Reminder Interval: <white>" + reminderIntervalMinutes + " min"));
+                sender.sendMessage(mm.deserialize("<gray>  Show Join Title: <white>" + showJoinTitle));
+                sender.sendMessage(mm.deserialize("<gray>  Cached Announcements: <white>" + cachedTitles.size()));
+                sender.sendMessage(mm.deserialize("<gray>  Whitelisted IGNs Tracked: <white>" + processedIgns.size()));
+                sender.sendMessage(mm.deserialize("<gray>  Online Players: <white>" + Bukkit.getOnlinePlayers().size()));
+            }
+
+            case "reload" -> {
+                reloadConfig();
+                loadConfigValues();
+                sender.sendMessage(mm.deserialize(PREFIX + "<green>Config reloaded."));
+                getLogger().info("[FireCraftNotifier] Config reloaded by " + sender.getName());
+            }
+
+            case "fetch" -> {
+                sender.sendMessage(mm.deserialize(PREFIX + "<yellow>Fetching announcements..."));
+                Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+                    fetchAnnouncements();
+                    sender.sendMessage(mm.deserialize(PREFIX + "<green>Done. Cached <white>" + cachedTitles.size() + "<green> announcement(s)."));
+                });
+            }
+
+            case "poll" -> {
+                sender.sendMessage(mm.deserialize(PREFIX + "<yellow>Polling approvedPlayers..."));
+                Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+                    pollApprovedPlayers();
+                    sender.sendMessage(mm.deserialize(PREFIX + "<green>Poll complete."));
+                });
+            }
+
+            case "list" -> {
+                if (cachedTitles.isEmpty()) {
+                    sender.sendMessage(mm.deserialize(PREFIX + "<gray>No cached announcements. Use <white>/fcn fetch</white> to load them."));
+                } else {
+                    sender.sendMessage(mm.deserialize(PREFIX + "<yellow>Cached Announcements <gray>(" + cachedTitles.size() + "):"));
+                    for (int i = 0; i < cachedTitles.size(); i++) {
+                        sender.sendMessage(mm.deserialize("<gray>  " + (i + 1) + ". <white>" + escapeForMM(cachedTitles.get(i))));
+                    }
+                }
+            }
+
+            case "remind" -> {
+                if (args.length >= 2) {
+                    // remind a specific player
+                    Player target = Bukkit.getPlayerExact(args[1]);
+                    if (target == null) {
+                        sender.sendMessage(mm.deserialize(PREFIX + "<red>Player <white>" + args[1] + "<red> is not online."));
+                    } else {
+                        String snippet = cachedTitles.isEmpty() ? "" : cachedTitles.get(random.nextInt(cachedTitles.size()));
+                        String type = DISPLAY_TYPES[random.nextInt(DISPLAY_TYPES.length)];
+                        Bukkit.getScheduler().runTask(this, () -> {
+                            switch (type) {
+                                case "CHAT"      -> sendChat(target, snippet);
+                                case "ACTIONBAR" -> sendActionBar(target, snippet);
+                                case "TITLE"     -> sendTitleReminder(target, snippet);
+                            }
+                        });
+                        sender.sendMessage(mm.deserialize(PREFIX + "<green>Reminder sent to <white>" + target.getName() + "<green>."));
+                    }
+                } else {
+                    // remind all online players
+                    if (Bukkit.getOnlinePlayers().isEmpty()) {
+                        sender.sendMessage(mm.deserialize(PREFIX + "<gray>No players online."));
+                    } else {
+                        triggerReminder();
+                        sender.sendMessage(mm.deserialize(PREFIX + "<green>Reminder sent to all <white>"
+                                + Bukkit.getOnlinePlayers().size() + "<green> online player(s)."));
+                    }
+                }
+            }
+
+            case "announce" -> {
+                if (args.length < 2) {
+                    sender.sendMessage(mm.deserialize(PREFIX + "<red>Usage: /fcn announce <message>"));
+                    return true;
+                }
+                String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+                Component formatted = mm.deserialize(
+                        "<gradient:#ff3b30:#ff8a00><bold>[🔥 FIRECRAFT]</bold></gradient> <white>" + escapeForMM(message) + "</white>"
+                );
+                Bukkit.getScheduler().runTask(this, () -> {
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        p.sendMessage(formatted);
+                    }
+                });
+                sender.sendMessage(mm.deserialize(PREFIX + "<green>Announcement sent to <white>"
+                        + Bukkit.getOnlinePlayers().size() + "<green> player(s)."));
+                getLogger().info("[FireCraftNotifier] Manual announce by " + sender.getName() + ": " + message);
+            }
+
+            case "whitelist" -> {
+                if (args.length < 3) {
+                    sender.sendMessage(mm.deserialize(PREFIX + "<red>Usage: /fcn whitelist <add|reset|list> [ign]"));
+                    return true;
+                }
+                String sub = args[1].toLowerCase();
+                String ign = args[2].trim();
+
+                switch (sub) {
+                    case "add" -> {
+                        if (ign.isEmpty()) {
+                            sender.sendMessage(mm.deserialize(PREFIX + "<red>Please specify an IGN."));
+                            return true;
+                        }
+                        final String ignFinal = ign;
+                        Bukkit.getScheduler().runTask(this, () -> {
+                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "whitelist add " + ignFinal);
+                            processedIgns.add(ignFinal.toLowerCase());
+                            saveProcessedIgn(ignFinal.toLowerCase());
+                            sender.sendMessage(mm.deserialize(PREFIX + "<green>Whitelisted <white>" + ignFinal + "<green> and added to tracking."));
+                            getLogger().info("[FireCraftNotifier] Manual whitelist add: " + ignFinal + " by " + sender.getName());
+                        });
+                    }
+                    case "reset" -> {
+                        boolean removed = processedIgns.remove(ign.toLowerCase());
+                        if (removed) {
+                            sender.sendMessage(mm.deserialize(PREFIX + "<green>Removed <white>" + ign + "<green> from tracking. Next poll will re-process them."));
+                        } else {
+                            sender.sendMessage(mm.deserialize(PREFIX + "<yellow>" + ign + " was not in the tracking list."));
+                        }
+                    }
+                    case "list" -> {
+                        // reuse the "list" subcommand logic for whitelist tracking
+                        if (processedIgns.isEmpty()) {
+                            sender.sendMessage(mm.deserialize(PREFIX + "<gray>No IGNs in tracking list."));
+                        } else {
+                            sender.sendMessage(mm.deserialize(PREFIX + "<yellow>Tracked Whitelisted IGNs <gray>(" + processedIgns.size() + "):"));
+                            List<String> sorted = new ArrayList<>(processedIgns);
+                            Collections.sort(sorted);
+                            for (String entry : sorted) {
+                                sender.sendMessage(mm.deserialize("<gray>  • <white>" + entry));
+                            }
+                        }
+                    }
+                    default -> sender.sendMessage(mm.deserialize(PREFIX + "<red>Unknown sub-command. Use: add, reset, list"));
+                }
+            }
+
+            default -> {
+                sender.sendMessage(mm.deserialize(PREFIX + "<red>Unknown sub-command. Use <white>/fcn help</white> for a list."));
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (!sender.hasPermission(PERM)) return Collections.emptyList();
+
+        if (args.length == 1) {
+            List<String> subs = Arrays.asList("help", "info", "reload", "fetch", "poll", "list", "remind", "announce", "whitelist");
+            return subs.stream()
+                    .filter(s -> s.startsWith(args[0].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        if (args.length == 2) {
+            switch (args[0].toLowerCase()) {
+                case "remind" -> {
+                    return Bukkit.getOnlinePlayers().stream()
+                            .map(Player::getName)
+                            .filter(n -> n.toLowerCase().startsWith(args[1].toLowerCase()))
+                            .collect(Collectors.toList());
+                }
+                case "whitelist" -> {
+                    return Arrays.asList("add", "reset", "list").stream()
+                            .filter(s -> s.startsWith(args[1].toLowerCase()))
+                            .collect(Collectors.toList());
+                }
+            }
+        }
+
+        if (args.length == 3 && args[0].equalsIgnoreCase("whitelist")) {
+            String sub = args[1].toLowerCase();
+            if (sub.equals("add") || sub.equals("reset")) {
+                return Bukkit.getOnlinePlayers().stream()
+                        .map(Player::getName)
+                        .filter(n -> n.toLowerCase().startsWith(args[2].toLowerCase()))
+                        .collect(Collectors.toList());
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    private void sendHelp(CommandSender sender) {
+        sender.sendMessage(mm.deserialize(PREFIX + "<yellow>Admin Commands:"));
+        sender.sendMessage(mm.deserialize("<gray>  <white>/fcn info</white> — Plugin status & config values"));
+        sender.sendMessage(mm.deserialize("<gray>  <white>/fcn reload</white> — Reload config.yml"));
+        sender.sendMessage(mm.deserialize("<gray>  <white>/fcn fetch</white> — Re-fetch announcements from Firestore"));
+        sender.sendMessage(mm.deserialize("<gray>  <white>/fcn poll</white> — Poll approvedPlayers & auto-whitelist"));
+        sender.sendMessage(mm.deserialize("<gray>  <white>/fcn list</white> — List cached announcements"));
+        sender.sendMessage(mm.deserialize("<gray>  <white>/fcn remind [player]</white> — Send reminder to all or one player"));
+        sender.sendMessage(mm.deserialize("<gray>  <white>/fcn announce <message></white> — Broadcast a custom message"));
+        sender.sendMessage(mm.deserialize("<gray>  <white>/fcn whitelist add <ign></white> — Manually whitelist a player"));
+        sender.sendMessage(mm.deserialize("<gray>  <white>/fcn whitelist reset <ign></white> — Remove IGN from tracking"));
+        sender.sendMessage(mm.deserialize("<gray>  <white>/fcn whitelist list</white> — List all tracked whitelisted IGNs"));
     }
 
     // ─── Announcement fetch ───────────────────────────────────────────────────
@@ -219,7 +455,6 @@ public class FireCraftNotifier extends JavaPlugin implements Listener {
             }
 
             if (!toWhitelist.isEmpty()) {
-                // whitelist commands must run on the main thread
                 Bukkit.getScheduler().runTask(this, () -> {
                     for (String ign : toWhitelist) {
                         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "whitelist add " + ign);
