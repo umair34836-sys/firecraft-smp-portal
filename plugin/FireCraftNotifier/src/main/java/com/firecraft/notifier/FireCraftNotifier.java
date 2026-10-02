@@ -227,29 +227,67 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
             }
 
             case "whitelist" -> {
-                if (args.length < 3) {
-                    sender.sendMessage(mm.deserialize(PREFIX + "<red>Usage: /fcn whitelist <add|reset|list> [ign]"));
+                if (args.length < 2) {
+                    sender.sendMessage(mm.deserialize(PREFIX + "<red>Usage: /fcn whitelist <add|reset|list|sync> [ign]"));
                     return true;
                 }
                 String sub = args[1].toLowerCase();
-                String ign = args[2].trim();
 
                 switch (sub) {
+                    case "sync" -> {
+                        // Scan whitelisted.txt and run whitelist add for any IGN not yet on the Minecraft whitelist
+                        Set<String> currentWhitelist = getServer().getWhitelistedPlayers()
+                                .stream()
+                                .map(p -> p.getName().toLowerCase())
+                                .collect(Collectors.toSet());
+
+                        List<String> toAdd = new ArrayList<>();
+                        int alreadyCount = 0;
+
+                        for (String trackedIgn : processedIgns) {
+                            if (currentWhitelist.contains(trackedIgn.toLowerCase())) {
+                                alreadyCount++;
+                            } else {
+                                toAdd.add(trackedIgn);
+                            }
+                        }
+
+                        if (toAdd.isEmpty()) {
+                            sender.sendMessage(mm.deserialize(PREFIX + "<green>All <white>" + alreadyCount
+                                    + "<green> tracked players are already whitelisted. Nothing to sync."));
+                        } else {
+                            final int already = alreadyCount;
+                            Bukkit.getScheduler().runTask(this, () -> {
+                                for (String ign : toAdd) {
+                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "whitelist add " + ign);
+                                    getLogger().info("[FireCraftNotifier] Sync whitelist add: " + ign);
+                                }
+                                sender.sendMessage(mm.deserialize(PREFIX + "<green>Sync complete! Added <white>" + toAdd.size()
+                                        + "<green>, already whitelisted: <white>" + already
+                                        + "<green>, total tracked: <white>" + processedIgns.size() + "<green>."));
+                            });
+                        }
+                    }
                     case "add" -> {
-                        if (ign.isEmpty()) {
-                            sender.sendMessage(mm.deserialize(PREFIX + "<red>Please specify an IGN."));
+                        if (args.length < 3 || args[2].trim().isEmpty()) {
+                            sender.sendMessage(mm.deserialize(PREFIX + "<red>Usage: /fcn whitelist add <ign>"));
                             return true;
                         }
-                        final String ignFinal = ign;
+                        String ign = args[2].trim();
                         Bukkit.getScheduler().runTask(this, () -> {
-                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "whitelist add " + ignFinal);
-                            processedIgns.add(ignFinal.toLowerCase());
-                            saveProcessedIgn(ignFinal.toLowerCase());
-                            sender.sendMessage(mm.deserialize(PREFIX + "<green>Whitelisted <white>" + ignFinal + "<green> and added to tracking."));
-                            getLogger().info("[FireCraftNotifier] Manual whitelist add: " + ignFinal + " by " + sender.getName());
+                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "whitelist add " + ign);
+                            processedIgns.add(ign.toLowerCase());
+                            saveProcessedIgn(ign.toLowerCase());
+                            sender.sendMessage(mm.deserialize(PREFIX + "<green>Whitelisted <white>" + ign + "<green> and added to tracking."));
+                            getLogger().info("[FireCraftNotifier] Manual whitelist add: " + ign + " by " + sender.getName());
                         });
                     }
                     case "reset" -> {
+                        if (args.length < 3 || args[2].trim().isEmpty()) {
+                            sender.sendMessage(mm.deserialize(PREFIX + "<red>Usage: /fcn whitelist reset <ign>"));
+                            return true;
+                        }
+                        String ign = args[2].trim();
                         boolean removed = processedIgns.remove(ign.toLowerCase());
                         if (removed) {
                             sender.sendMessage(mm.deserialize(PREFIX + "<green>Removed <white>" + ign + "<green> from tracking. Next poll will re-process them."));
@@ -258,7 +296,6 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
                         }
                     }
                     case "list" -> {
-                        // reuse the "list" subcommand logic for whitelist tracking
                         if (processedIgns.isEmpty()) {
                             sender.sendMessage(mm.deserialize(PREFIX + "<gray>No IGNs in tracking list."));
                         } else {
@@ -270,7 +307,7 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
                             }
                         }
                     }
-                    default -> sender.sendMessage(mm.deserialize(PREFIX + "<red>Unknown sub-command. Use: add, reset, list"));
+                    default -> sender.sendMessage(mm.deserialize(PREFIX + "<red>Unknown sub-command. Use: add, reset, list, sync"));
                 }
             }
 
@@ -302,7 +339,7 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
                             .collect(Collectors.toList());
                 }
                 case "whitelist" -> {
-                    return Arrays.asList("add", "reset", "list").stream()
+                    return Arrays.asList("add", "reset", "list", "sync").stream()
                             .filter(s -> s.startsWith(args[1].toLowerCase()))
                             .collect(Collectors.toList());
                 }
@@ -334,6 +371,7 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
         sender.sendMessage(mm.deserialize("<gray>  <white>/fcn whitelist add <ign></white> — Manually whitelist a player"));
         sender.sendMessage(mm.deserialize("<gray>  <white>/fcn whitelist reset <ign></white> — Remove IGN from tracking"));
         sender.sendMessage(mm.deserialize("<gray>  <white>/fcn whitelist list</white> — List all tracked whitelisted IGNs"));
+        sender.sendMessage(mm.deserialize("<gray>  <white>/fcn whitelist sync</white> — Whitelist all tracked IGNs missing from server whitelist"));
     }
 
     // ─── Announcement fetch ───────────────────────────────────────────────────

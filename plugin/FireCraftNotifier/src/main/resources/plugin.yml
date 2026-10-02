@@ -8,7 +8,7 @@ author: FireCraft
 commands:
   fcn:
     description: FireCraftNotifier admin commands.
-    usage: /fcn <help|info|reload|fetch|poll|list|remind|announce|whitelist>
+    usage: /fcn <help|info|reload|fetch|poll|list|remind|announce|whitelist|whitelist sync>
     permission: firecraftnotifier.admin
     aliases: [firecraftnotifier]
 
