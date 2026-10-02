@@ -36,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
@@ -546,6 +547,17 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
     @EventHandler(priority = EventPriority.HIGH)
     public void onLogin(PlayerLoginEvent event) {
         if (event.getResult() != PlayerLoginEvent.Result.KICK_WHITELIST) return;
+
+        // Only replace the kick message when the Minecraft whitelist is the actual cause.
+        // Other plugins (LifeStealZ, Maintenance, etc.) also use KICK_WHITELIST for their
+        // own purposes — if the player IS whitelisted, another plugin is kicking them and
+        // we must not overwrite their message with a misleading "apply for whitelist" prompt.
+        if (getServer().hasWhitelist()) {
+            UUID uid = event.getPlayer().getUniqueId();
+            boolean onWhitelist = getServer().getWhitelistedPlayers()
+                    .stream().anyMatch(p -> uid.equals(p.getUniqueId()));
+            if (onWhitelist) return;
+        }
 
         String applyUrl = getConfig().getString("apply-url", "https://www.firecraft.fun");
         String discord  = getConfig().getString("discord-url", "https://discord.firecraft.fun");
