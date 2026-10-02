@@ -117,7 +117,10 @@ $("refreshSponsors")?.addEventListener("click", loadSponsoredPlacements);
 
 
 document.querySelectorAll(".nav-btn").forEach(btn => {
-  btn.addEventListener("click", () => navigate(btn.dataset.section));
+  btn.addEventListener("click", () => {
+    navigate(btn.dataset.section);
+    if (btn.dataset.section === "whitelist") loadWhitelist();
+  });
 });
 document.querySelectorAll("[data-close]").forEach(btn => {
   btn.addEventListener("click", () => closeModal(btn.dataset.close));
@@ -148,6 +151,7 @@ onAuthStateChanged(auth, async user => {
   loadServerSettings();
   loadWebsiteSettings();
   loadSponsoredPlacements();
+  loadEarnAdmin();
 
   const hash = location.hash.replace("#","");
   if(hash && $(hash)) navigate(hash);
@@ -286,7 +290,40 @@ async function setApplicationStatus(status){
     });
     showToast(`Application marked ${status}.`);
     closeModal("applicationModal");
-  }catch(e){showToast(e.message);}
+  }catch(e){showToast(e.message); return;}
+  if(status === "approved" && selectedApplication.ign){
+    try{
+      const ignKey = selectedApplication.ign.toLowerCase();
+      await setDoc(doc(db,"approvedPlayers",ignKey), {
+        ign: selectedApplication.ign,
+        approvedAt: new Date(),
+        approvedBy: currentUser.uid,
+        applicationId: selectedApplication.id
+      });
+    }catch(e){
+      console.warn("approvedPlayers write failed (rules not deployed yet?):", e.message);
+    }
+    // Email notification — sent after 5 min delay so player is already whitelisted when they read it
+    try{
+      const userSnap = await getDoc(doc(db,"users",selectedApplication.uid));
+      const email = userSnap.exists() ? userSnap.data().email : null;
+      if(email && window.emailjs){
+        setTimeout(async () => {
+          try{
+            await window.emailjs.send(
+              "service_cacpon8",
+              "template_0cfrwpb",
+              { to_email: email, ign: selectedApplication.ign, site_url: "https://www.firecraft.fun" }
+            );
+            console.log("Approval email sent to " + selectedApplication.ign);
+          }catch(e2){ console.warn("Email notification failed:", e2.message); }
+        }, 2 * 60 * 1000); // 2 minute delay — matches plugin whitelist poll interval
+        showToast("Approval email will be sent to " + selectedApplication.ign + " in 2 minutes.");
+      }
+    }catch(e){
+      console.warn("Email notification failed:", e.message);
+    }
+  }
 }
 $("approveApplicationBtn").onclick = () => setApplicationStatus("approved");
 $("pendingApplicationBtn").onclick = () => setApplicationStatus("pending");
@@ -569,3 +606,357 @@ document.getElementById("announcementCancel")?.addEventListener("click",()=>{
   form.querySelector("#announcementEnabled").checked=true;
 });
 loadAnnouncements();
+
+// ── EARN SYSTEM ADMIN ────────────────────────────────────────────────────────
+
+let partnerServers = [], withdrawals = [];
+let selectedWithdrawal = null;
+
+// ── Partner Servers ──
+
+async function loadPartnerServers() {
+  const snap = await getDocs(collection(db, "partnerServers"));
+  partnerServers = snap.docs.map(d => ({id: d.id, ...d.data()}));
+  renderPartnerServers();
+}
+
+function renderPartnerServers() {
+  $("partnerServersList").innerHTML = partnerServers.length ? partnerServers.map(s => `
+    <tr>
+      <td><strong>${esc(s.name || "—")}</strong></td>
+      <td>${esc(s.ip || "—")}${s.port ? ":"+esc(s.port) : ""}</td>
+      <td>${esc(String(s.ratePerHour || 0))} PKR</td>
+      <td>${statusPill(s.enabled ? "active" : "disabled")}</td>
+      <td>
+        <button class="btn btn-primary ps-edit" data-id="${esc(s.id)}">Edit</button>
+        <button class="btn btn-danger ps-delete" data-id="${esc(s.id)}">Delete</button>
+      </td>
+    </tr>`).join("") : emptyRow(5, "No partner servers added yet.");
+  document.querySelectorAll(".ps-edit").forEach(b => b.onclick = () => editPartnerServer(b.dataset.id));
+  document.querySelectorAll(".ps-delete").forEach(b => b.onclick = () => deletePartnerServer(b.dataset.id));
+}
+
+function editPartnerServer(id) {
+  const s = partnerServers.find(x => x.id === id);
+  if (!s) return;
+  $("psEditId").value = s.id;
+  $("psName").value = s.name || "";
+  $("psIp").value = s.ip || "";
+  $("psPort").value = s.port || "";
+  $("psDesc").value = s.description || "";
+  $("psLogo").value = s.logo || "";
+  $("psRate").value = s.ratePerHour || "";
+  $("psMinHours").value = s.minHoursToEarn || "";
+  $("psFirebaseEmail").value = s.firebaseEmail || "";
+  $("psServerId").value = s.id || "";
+  $("psEnabled").checked = s.enabled !== false;
+}
+
+async function deletePartnerServer(id) {
+  if (!confirm("Delete this partner server?")) return;
+  try {
+    await deleteDoc(doc(db, "partnerServers", id));
+    showToast("Partner server deleted.");
+    loadPartnerServers();
+  } catch(e) { showToast(e.message); }
+}
+
+$("savePsBtn").onclick = async () => {
+  const name = $("psName").value.trim();
+  const ip   = $("psIp").value.trim();
+  if (!name || !ip) return showToast("Server name and IP are required.");
+  const editId = $("psEditId").value.trim();
+  const serverId = $("psServerId").value.trim() || crypto.randomUUID().slice(0,8);
+  const data = {
+    name, ip,
+    port: $("psPort").value.trim(),
+    description: $("psDesc").value.trim(),
+    logo: $("psLogo").value.trim(),
+    ratePerHour: parseFloat($("psRate").value) || 0,
+    minHoursToEarn: parseFloat($("psMinHours").value) || 1,
+    firebaseEmail: $("psFirebaseEmail").value.trim(),
+    enabled: $("psEnabled").checked,
+    updatedAt: serverTimestamp(),
+    updatedBy: currentUser.uid
+  };
+  try {
+    const docId = editId || serverId;
+    await setDoc(doc(db, "partnerServers", docId), data, {merge: true});
+    showToast("Partner server saved. ID: " + docId);
+    $("psEditId").value = "";
+    ["psName","psIp","psPort","psDesc","psLogo","psRate","psMinHours","psFirebaseEmail","psServerId"]
+      .forEach(id => $(id).value = "");
+    $("psEnabled").checked = true;
+    loadPartnerServers();
+  } catch(e) { showToast(e.message); }
+};
+$("clearPsBtn").onclick = () => {
+  $("psEditId").value = "";
+  ["psName","psIp","psPort","psDesc","psLogo","psRate","psMinHours","psFirebaseEmail","psServerId"]
+    .forEach(id => $(id).value = "");
+  $("psEnabled").checked = true;
+};
+$("refreshPartnerServers").onclick = loadPartnerServers;
+
+// Server Accounts (maps Firebase UID → serverId)
+$("saveServerAccountBtn").onclick = async () => {
+  const uid = $("saUid").value.trim();
+  const serverId = $("saServerId").value.trim();
+  if (!uid || !serverId) return showToast("UID and Server ID are required.");
+  try {
+    await setDoc(doc(db, "serverAccounts", uid), {uid, serverId, active: true, createdAt: serverTimestamp()}, {merge: true});
+    showToast("Server account saved.");
+    $("saUid").value = "";
+    $("saServerId").value = "";
+  } catch(e) { showToast(e.message); }
+};
+
+// ── Withdrawals ──
+
+async function loadWithdrawals() {
+  const snap = await getDocs(query(collection(db, "withdrawalRequests"), orderBy("createdAt", "desc")));
+  withdrawals = snap.docs.map(d => ({id: d.id, ...d.data()}));
+  renderWithdrawals();
+}
+
+function renderWithdrawals() {
+  const statusFilter = $("withdrawalStatusFilter").value;
+  const list = withdrawals.filter(w => !statusFilter || w.status === statusFilter);
+  $("withdrawalsList").innerHTML = list.length ? list.map(w => `
+    <tr>
+      <td><strong>${esc(w.ign || "—")}</strong></td>
+      <td><strong>${esc(String(w.amount || 0))} PKR</strong></td>
+      <td>${esc(w.paymentMethod || "—")}</td>
+      <td>${statusPill(w.status || "pending")}</td>
+      <td>${fmt(w.createdAt)}</td>
+      <td><button class="btn btn-primary wd-view" data-id="${esc(w.id)}">View</button></td>
+    </tr>`).join("") : emptyRow(6, "No withdrawal requests.");
+  document.querySelectorAll(".wd-view").forEach(b => b.onclick = () => openWithdrawal(b.dataset.id));
+}
+
+function openWithdrawal(id) {
+  selectedWithdrawal = withdrawals.find(x => x.id === id);
+  if (!selectedWithdrawal) return;
+  const w = selectedWithdrawal;
+  $("withdrawalDetails").innerHTML = `<div class="detail-grid">
+    <div class="detail"><small>IGN</small><strong>${esc(w.ign || "—")}</strong></div>
+    <div class="detail"><small>Amount</small><strong>${esc(String(w.amount))} PKR</strong></div>
+    <div class="detail"><small>Method</small><strong>${esc(w.paymentMethod || "—")}</strong></div>
+    <div class="detail"><small>Account</small><strong>${esc(w.accountNumber || "—")}</strong></div>
+    <div class="detail"><small>Status</small><strong>${esc(w.status || "pending")}</strong></div>
+    <div class="detail"><small>Requested</small><strong>${esc(fmt(w.createdAt))}</strong></div>
+    ${w.playerNote ? `<div class="detail full"><small>Player Note</small><strong>${esc(w.playerNote)}</strong></div>` : ""}
+  </div>`;
+  $("withdrawalAdminNote").value = w.adminNote || "";
+  openModal("withdrawalModal");
+}
+
+$("payWithdrawalBtn").onclick = async () => {
+  if (!selectedWithdrawal) return;
+  if (!confirm(`Mark PKR ${selectedWithdrawal.amount} as PAID to ${selectedWithdrawal.ign}?`)) return;
+  try {
+    await updateDoc(doc(db, "withdrawalRequests", selectedWithdrawal.id), {
+      status: "paid",
+      adminNote: $("withdrawalAdminNote").value.trim(),
+      paidBy: currentUser.uid,
+      paidAt: serverTimestamp()
+    });
+    const walletRef = doc(db, "wallets", selectedWithdrawal.uid);
+    const walletSnap = await getDoc(walletRef);
+    const prev = walletSnap.exists() ? (walletSnap.data().totalPaidOut || 0) : 0;
+    await setDoc(walletRef, {totalPaidOut: prev + Number(selectedWithdrawal.amount), uid: selectedWithdrawal.uid}, {merge: true});
+    showToast("Marked as paid. Wallet updated.");
+    closeModal("withdrawalModal");
+    loadWithdrawals();
+  } catch(e) { showToast(e.message); }
+};
+
+$("rejectWithdrawalBtn").onclick = async () => {
+  if (!selectedWithdrawal) return;
+  try {
+    await updateDoc(doc(db, "withdrawalRequests", selectedWithdrawal.id), {
+      status: "rejected",
+      adminNote: $("withdrawalAdminNote").value.trim(),
+      rejectedBy: currentUser.uid,
+      rejectedAt: serverTimestamp()
+    });
+    showToast("Withdrawal rejected.");
+    closeModal("withdrawalModal");
+    loadWithdrawals();
+  } catch(e) { showToast(e.message); }
+};
+
+$("refreshWithdrawals").onclick = loadWithdrawals;
+$("withdrawalStatusFilter").addEventListener("input", renderWithdrawals);
+
+// ── Earn Settings ──
+
+async function loadEarnSettings() {
+  const snap = await getDoc(doc(db, "earnSettings", "global"));
+  const s = snap.exists() ? snap.data() : {};
+  $("earnCurrency").value = s.currency || "PKR";
+  $("earnMinWithdraw").value = s.minWithdraw || 100;
+  $("earnMaxWeekly").value = s.maxWeekly || 5000;
+  $("earnNotice").value = s.notice || "";
+  $("earnEnabled").checked = s.enabled !== false;
+}
+
+$("saveEarnSettings").onclick = async () => {
+  try {
+    await setDoc(doc(db, "earnSettings", "global"), {
+      currency: $("earnCurrency").value.trim() || "PKR",
+      minWithdraw: parseFloat($("earnMinWithdraw").value) || 100,
+      maxWeekly: parseFloat($("earnMaxWeekly").value) || 5000,
+      notice: $("earnNotice").value.trim(),
+      enabled: $("earnEnabled").checked,
+      updatedAt: serverTimestamp(),
+      updatedBy: currentUser.uid
+    });
+    showToast("Earn settings saved.");
+  } catch(e) { showToast(e.message); }
+};
+
+document.querySelector('[data-close="withdrawalModal"]')?.addEventListener("click", () => closeModal("withdrawalModal"));
+
+function loadEarnAdmin() {
+  loadPartnerServers();
+  loadWithdrawals();
+  loadEarnSettings();
+}
+
+// ── Whitelist Manager ──────────────────────────────────────────────────────
+
+let allApprovedPlayers = [];
+
+async function loadWhitelist() {
+  // Pull from both approvedPlayers collection AND applications with status=approved
+  // so we never miss anyone approved before approvedPlayers was created
+  const [apSnap, appSnap] = await Promise.all([
+    getDocs(collection(db, "approvedPlayers")),
+    getDocs(query(collection(db, "applications"), where("status", "==", "approved")))
+  ]);
+
+  const map = {};
+
+  // Seed from applications first (has all historical data)
+  appSnap.docs.forEach(d => {
+    const data = d.data();
+    const ign = data.ign?.trim();
+    if (!ign) return;
+    const key = ign.toLowerCase();
+    if (!map[key]) {
+      map[key] = { id: key, ign, approvedAt: data.approvedAt || data.createdAt || null };
+    }
+  });
+
+  // Overlay with approvedPlayers (may have more precise approvedAt)
+  apSnap.docs.forEach(d => {
+    const data = d.data();
+    const ign = data.ign?.trim();
+    if (!ign) return;
+    const key = ign.toLowerCase();
+    map[key] = { id: key, ign, approvedAt: data.approvedAt || map[key]?.approvedAt || null };
+  });
+
+  allApprovedPlayers = Object.values(map)
+    .sort((a, b) => String(a.ign).localeCompare(String(b.ign)));
+  renderWhitelist();
+}
+
+async function syncApprovedToWhitelist() {
+  const btn = $("syncWhitelistBtn");
+  btn.disabled = true;
+  btn.textContent = "Syncing...";
+  try {
+    const appSnap = await getDocs(
+      query(collection(db, "applications"), where("status", "==", "approved"))
+    );
+    let count = 0;
+    const writes = [];
+    const seen = new Set();
+    appSnap.docs.forEach(d => {
+      const data = d.data();
+      const ign = data.ign?.trim();
+      if (!ign) return;
+      const key = ign.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      writes.push(setDoc(doc(db, "approvedPlayers", key), {
+        ign,
+        approvedAt: data.approvedAt || data.createdAt || new Date(),
+        approvedBy: data.reviewedBy || "sync",
+        syncedAt: new Date()
+      }, { merge: true }));
+      count++;
+    });
+    await Promise.all(writes);
+    showToast(`Synced ${count} unique approved players to whitelist.`);
+    await loadWhitelist();
+  } catch(e) {
+    showToast("Sync error: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Sync from Applications";
+  }
+}
+
+function renderWhitelist() {
+  const q = ($("whitelistSearch")?.value || "").toLowerCase();
+  const list = allApprovedPlayers.filter(p =>
+    !q || String(p.ign || "").toLowerCase().includes(q)
+  );
+
+  $("whitelistTotal").textContent = allApprovedPlayers.length;
+  $("whitelistCount").textContent = allApprovedPlayers.length + " approved player(s)";
+
+  const cmds = allApprovedPlayers.map(p => `whitelist add ${p.ign}`).join("\n");
+  $("whitelistCmdPreview").value = cmds;
+
+  $("whitelistList").innerHTML = list.length ? list.map((p, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><strong>${esc(p.ign)}</strong></td>
+      <td style="font-size:.8rem;color:var(--muted)">${p.approvedAt?.toDate ? p.approvedAt.toDate().toLocaleDateString() : "—"}</td>
+      <td><button class="btn btn-small btn-danger" onclick="removeFromWhitelist('${esc(p.id)}','${esc(p.ign)}')">Remove</button></td>
+    </tr>`).join("") :
+    `<tr><td colspan="4" class="empty">No approved players found.</td></tr>`;
+}
+
+window.removeFromWhitelist = async (id, ign) => {
+  if (!confirm(`Remove ${ign} from approved players list?`)) return;
+  try {
+    await deleteDoc(doc(db, "approvedPlayers", id));
+    allApprovedPlayers = allApprovedPlayers.filter(p => p.id !== id);
+    renderWhitelist();
+    showToast(`${ign} removed.`);
+  } catch(e) { showToast(e.message); }
+};
+
+$("copyWhitelistCmdsBtn").onclick = () => {
+  const cmds = $("whitelistCmdPreview").value;
+  if (!cmds) { showToast("No approved players found."); return; }
+  navigator.clipboard.writeText(cmds).then(() =>
+    showToast("Commands copied! Paste into server console.")
+  ).catch(() => {
+    $("whitelistCmdPreview").select();
+    document.execCommand("copy");
+    showToast("Commands copied!");
+  });
+};
+
+$("downloadWhitelistBtn").onclick = () => {
+  if (!allApprovedPlayers.length) { showToast("No approved players."); return; }
+  const json = JSON.stringify(
+    allApprovedPlayers.map(p => ({ uuid: "", name: p.ign })),
+    null, 2
+  );
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+  a.download = "whitelist.json";
+  a.click();
+  showToast("whitelist.json downloaded. Note: UUIDs are blank — server will fill them when players join.");
+};
+
+$("refreshWhitelist").onclick = loadWhitelist;
+$("syncWhitelistBtn").onclick = syncApprovedToWhitelist;
+$("whitelistSearch").addEventListener("input", renderWhitelist);

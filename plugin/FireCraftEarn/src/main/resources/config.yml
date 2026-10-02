@@ -1,0 +1,24 @@
+# FireCraftEarn Plugin Configuration
+# Get these values from the FireCraft admin panel under Partner Servers.
+
+# Firebase project settings
+firebase-api-key: "YOUR_FIREBASE_API_KEY"
+firebase-project-id: "YOUR_FIREBASE_PROJECT_ID"
+
+# Server account — create a Firebase Auth user in Firebase Console
+# Authentication → Add user → email: server-YOURID@firecraft.server
+# Then add this UID to admin panel → Partner Servers → Server Accounts
+firebase-email: "server-YOURID@firecraft.server"
+firebase-password: "YOUR_SERVER_ACCOUNT_PASSWORD"
+
+# This server's ID — must match the partnerServers document ID in Firestore
+server-id: "YOUR_SERVER_ID"
+
+# How often (in seconds) to send a heartbeat while a player is online (min 60)
+heartbeat-interval: 300
+
+# Minimum playtime (in minutes) before a session is recorded
+min-session-minutes: 5
+
+# Debug logging
+debug: false

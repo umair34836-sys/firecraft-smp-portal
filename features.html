@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Custom Features | FireCraft SMP</title>
+  <meta name="description" content="FireCraft SMP custom plugins — unique powers, super weapons, and 63 tameable mob companions.">
+  <link rel="canonical" href="https://www.firecraft.fun/features.html">
+  <meta property="og:title" content="Custom Features | FireCraft SMP">
+  <meta property="og:description" content="Unique powers, super weapons, and 63 tameable mob companions on FireCraft SMP.">
+  <meta property="og:url" content="https://www.firecraft.fun/features.html">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://www.firecraft.fun/images/logo-512.png">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="images/logo-192.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff8fe3">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FireCraft SMP">
+  <link rel="stylesheet" href="css/style.css?v=4">
+  <style>
+    /* ── Features page extras ── */
+    .feat-hero{
+      text-align:center;
+      padding:80px 5% 56px;
+      position:relative;
+      overflow:hidden;
+    }
+    .feat-hero::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:radial-gradient(ellipse 70% 60% at 50% 0%, #ff8fe328, transparent 70%),radial-gradient(ellipse 40% 40% at 80% 80%, #ffa82720, transparent 60%);
+      pointer-events:none;
+    }
+    .feat-hero .pill{ margin-bottom:14px; display:inline-block; }
+    .feat-hero h1{
+      font-size:clamp(38px,6vw,72px);
+      line-height:1;
+      margin:0 0 16px;
+    }
+    .feat-hero h1 span{
+      display:block;
+      background:linear-gradient(90deg,#fff,#ff8fe3,#ffa827);
+      -webkit-background-clip:text;
+      color:transparent;
+    }
+    .feat-hero p{
+      font-size:17px;
+      color:var(--muted);
+      max-width:600px;
+      margin:0 auto 32px;
+    }
+    .plugin-tabs{
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:48px;
+    }
+    .plugin-tab{
+      padding:10px 22px;
+      border-radius:10px;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      border:1px solid var(--line);
+      background:#ffffff06;
+      color:var(--muted);
+      text-decoration:none;
+      transition:.18s;
+    }
+    .plugin-tab:hover{ color:#fff; border-color:#ffa82760; }
+    .plugin-tab.active{
+      background:linear-gradient(135deg,#ff8fe3,#ffa827);
+      border-color:transparent;
+      color:#fff;
+    }
+
+    /* ── Section dividers ── */
+    .feat-section{
+      max-width:1120px;
+      margin:0 auto;
+      padding:0 5% 72px;
+    }
+    .feat-section-head{
+      margin-bottom:32px;
+    }
+    .feat-section-head .eyebrow{ display:block; margin-bottom:6px; }
+    .feat-section-head h2{ font-size:clamp(28px,4vw,44px); margin:0 0 8px; }
+    .feat-section-head p{ color:var(--muted); max-width:680px; margin:0; font-size:15px; }
+
+    /* ── Stats strip ── */
+    .stats-strip{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin-bottom:48px;
+    }
+    .stat-card{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:linear-gradient(145deg,#0e1f10,#0a1408);
+      padding:20px;
+      text-align:center;
+    }
+    .stat-num{
+      font-size:36px;
+      font-weight:900;
+      background:linear-gradient(135deg,#ff8fe3,#ffa827);
+      -webkit-background-clip:text;
+      color:transparent;
+      line-height:1;
+      margin-bottom:6px;
+    }
+    .stat-label{ font-size:12px; color:var(--muted); letter-spacing:.5px; }
+
+    /* ── Powers grid ── */
+    .powers-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+      gap:14px;
+    }
+    .power-card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:linear-gradient(145deg,#0e1f10,#0a1408);
+      padding:20px 22px;
+      transition:.2s;
+      position:relative;
+      overflow:hidden;
+    }
+    .power-card::before{
+      content:"";
+      position:absolute;
+      top:0; left:0; right:0;
+      height:2px;
+      background:var(--power-color,linear-gradient(90deg,#ff8fe3,#ffa827));
+    }
+    .power-card:hover{
+      transform:translateY(-3px);
+      border-color:#ff7b4450;
+      box-shadow:0 12px 30px #ff8fe315;
+    }
+    .power-icon{ font-size:34px; margin-bottom:10px; display:block; }
+    .power-card h3{ margin:0 0 4px; font-size:17px; }
+    .power-item-label{ font-size:11px; color:#ffa827; font-weight:700; letter-spacing:1px; display:block; margin-bottom:10px; }
+    .power-abilities{ display:flex; flex-direction:column; gap:7px; margin-top:8px; }
+    .ability-row{ display:flex; gap:8px; align-items:flex-start; }
+    .ability-badge{
+      flex-shrink:0;
+      font-size:9px;
+      font-weight:800;
+      letter-spacing:.8px;
+      padding:3px 7px;
+      border-radius:5px;
+      margin-top:1px;
+    }
+    .badge-active{
+      background:#ff8fe320;
+      border:1px solid #ff8fe360;
+      color:#ff8fe3;
+    }
+    .badge-passive{
+      background:#ffa82718;
+      border:1px solid #ffa82750;
+      color:#ffc9f0;
+    }
+    .ability-text{ font-size:13px; color:var(--muted); line-height:1.45; }
+
+    /* ── Shard / crafting note ── */
+    .info-box{
+      border:1px solid #ffa82730;
+      background:linear-gradient(135deg,#0a1a08,#080e0a);
+      border-radius:14px;
+      padding:20px 24px;
+      margin-bottom:32px;
+      display:flex;
+      gap:16px;
+      align-items:flex-start;
+    }
+    .info-box-icon{ font-size:28px; flex-shrink:0; margin-top:2px; }
+    .info-box h4{ margin:0 0 6px; color:#ffc9f0; font-size:15px; }
+    .info-box p{ margin:0; color:var(--muted); font-size:13.5px; line-height:1.6; }
+
+    /* ── Super weapons ── */
+    .weapons-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+      margin-bottom:48px;
+    }
+    .weapon-card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:linear-gradient(145deg,#0e1f10,#0a1408);
+      padding:22px;
+      position:relative;
+      overflow:hidden;
+    }
+    .weapon-card::before{
+      content:"";
+      position:absolute;
+      top:0; left:0; right:0;
+      height:2px;
+      background:linear-gradient(90deg,#7c3cff,#5865F2);
+    }
+    .weapon-card:hover{ transform:translateY(-3px); box-shadow:0 12px 30px #7c3cff18; border-color:#7c3cff40; transition:.2s; }
+    .weapon-icon{ font-size:32px; margin-bottom:10px; display:block; }
+    .weapon-card h3{ margin:0 0 2px; font-size:16px; }
+    .weapon-subtitle{ font-size:11px; color:#9b8fff; font-weight:700; letter-spacing:.8px; margin-bottom:12px; display:block; }
+
+    /* ── Companion section ── */
+    .mob-categories{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+      gap:14px;
+      margin-bottom:36px;
+    }
+    .mob-cat-card{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:linear-gradient(145deg,#0e1f10,#0a1408);
+      padding:18px 20px;
+    }
+    .mob-cat-header{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+    .mob-cat-icon{ font-size:24px; }
+    .mob-cat-header h4{ margin:0; font-size:15px; }
+    .mob-cat-count{
+      margin-left:auto;
+      font-size:11px;
+      font-weight:800;
+      padding:3px 8px;
+      border-radius:20px;
+      background:#ffa82720;
+      border:1px solid #ffa82740;
+      color:#ffa827;
+    }
+    .mob-tags{ display:flex; flex-wrap:wrap; gap:5px; }
+    .mob-tag{
+      font-size:11px;
+      padding:3px 8px;
+      border-radius:6px;
+      background:#ffffff08;
+      border:1px solid #ffffff12;
+      color:#bbb;
+    }
+
+    /* ── Companion feature cards ── */
+    .companion-features{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+      gap:14px;
+      margin-bottom:36px;
+    }
+    .comp-feat{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:linear-gradient(145deg,#0e1f10,#0a1408);
+      padding:18px 20px;
+    }
+    .comp-feat-icon{ font-size:28px; margin-bottom:10px; }
+    .comp-feat h4{ margin:0 0 6px; font-size:14px; }
+    .comp-feat p{ margin:0; font-size:12.5px; color:var(--muted); line-height:1.5; }
+
+    /* ── Modes strip ── */
+    .modes-strip{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+      margin-bottom:36px;
+    }
+    .mode-card{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:linear-gradient(145deg,#0e1f10,#0a1408);
+      padding:18px 20px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+    .mode-emoji{ font-size:28px; flex-shrink:0; }
+    .mode-card h4{ margin:0 0 4px; font-size:15px; }
+    .mode-card p{ margin:0; font-size:12.5px; color:var(--muted); line-height:1.45; }
+
+    /* ── Passive auras ── */
+    .auras-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+      gap:12px;
+      margin-bottom:36px;
+    }
+    .aura-card{
+      border:1px solid #35d07f30;
+      background:linear-gradient(145deg,#051a08,#081408);
+      border-radius:12px;
+      padding:14px 16px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .aura-mob{ font-size:24px; }
+    .aura-card strong{ display:block; font-size:13px; color:#fff; }
+    .aura-card span{ font-size:12px; color:#35d07f; }
+
+    /* ── Plugin compare table ── */
+    .compare-table{
+      width:100%;
+      border-collapse:collapse;
+      margin-bottom:12px;
+      font-size:14px;
+    }
+    .compare-table th{
+      padding:12px 16px;
+      text-align:left;
+      font-size:11px;
+      letter-spacing:1px;
+      color:var(--muted);
+      border-bottom:1px solid var(--line);
+      text-transform:uppercase;
+    }
+    .compare-table td{
+      padding:13px 16px;
+      border-bottom:1px solid var(--line);
+      vertical-align:top;
+    }
+    .compare-table td:first-child{ color:var(--muted); font-size:13px; }
+    .compare-table td:not(:first-child){ color:#fff; font-weight:600; }
+    .compare-table tr:last-child td{ border-bottom:0; }
+    .compare-wrap{
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow-x:auto;
+      background:linear-gradient(145deg,#0e1f10,#0a1408);
+      margin-bottom:48px;
+    }
+
+    /* ── Death / pvp callout ── */
+    .pvp-box{
+      border:1px solid #ff8fe340;
+      background:linear-gradient(135deg,#0a1a08,#080e0a);
+      border-radius:14px;
+      padding:20px 24px;
+      margin-bottom:36px;
+    }
+    .pvp-box h4{ margin:0 0 8px; color:#ff8fe3; font-size:16px; }
+    .pvp-box ul{ margin:0; padding-left:18px; color:var(--muted); font-size:13.5px; line-height:1.8; }
+    .pvp-box ul li strong{ color:#fff; }
+
+    /* ── Responsive ── */
+    @media(max-width:760px){
+      .stats-strip{ grid-template-columns:repeat(2,1fr); }
+      .weapons-grid{ grid-template-columns:1fr; }
+      .modes-strip{ grid-template-columns:1fr; }
+    }
+    @media(max-width:480px){
+      .stats-strip{ grid-template-columns:1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><img src="images/logo-192.png" alt="FireCraft SMP" class="brand-logo"> FIRECRAFT <small>SMP</small></a>
+    <nav id="nav">
+      <a href="index.html">Home</a>
+      <a href="index.html#apply">Apply</a>
+      <a href="index.html#status">My Status</a>
+      <a href="index.html#support">Support</a>
+      <a href="rules.html">Rules</a>
+      <a href="faq.html">FAQ</a>
+      <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="btn btn-small btn-discord">Discord</a>
+    </nav>
+    <button class="menu" id="menuBtn">☰</button>
+  </header>
+
+  <main>
+
+    <!-- ══════════════════════ HERO ══════════════════════ -->
+    <div class="feat-hero">
+      <span class="pill">CUSTOM PLUGINS</span>
+      <h1>Built Different.<br><span>Play Different.</span></h1>
+      <p>FireCraft SMP ships two hand-crafted Java plugins that transform PvP and survival into something no vanilla server can offer.</p>
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+        <a href="#powers" class="btn">⚡ Custom Powers</a>
+        <a href="#companions" class="btn btn-ghost">🐾 Companions</a>
+      </div>
+    </div>
+
+    <!-- ══════════════════════ SUMMARY STATS ══════════════════════ -->
+    <div class="feat-section" style="padding-bottom:48px;">
+      <div class="stats-strip">
+        <div class="stat-card">
+          <div class="stat-num">8</div>
+          <div class="stat-label">Unique Powers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">3</div>
+          <div class="stat-label">Super Weapons</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">63</div>
+          <div class="stat-label">Tameable Mobs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">100</div>
+          <div class="stat-label">Companion Max Level</div>
+        </div>
+      </div>
+
+      <!-- Plugin compare table -->
+      <div class="compare-wrap">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>⚡ CustomPowers</th>
+              <th>🐾 CustomMobs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Core concept</td><td>Unique elemental powers</td><td>Tame mob companions</td></tr>
+            <tr><td>Player gets</td><td>1 random power shard</td><td>Up to 3 companions</td></tr>
+            <tr><td>Progression</td><td>Steal shards via PvP</td><td>Level 1–100, Loyalty 0–100</td></tr>
+            <tr><td>PvP interaction</td><td>Kill to steal enemy's power</td><td>Fight mode + trust system</td></tr>
+            <tr><td>Persistence</td><td>PDC on item (no data loss)</td><td>YAML (server-restart safe)</td></tr>
+            <tr><td>Special feature</td><td>Spin wheel animation on join</td><td>Passive auras, death respawn</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════ PLUGIN 1 — POWERS ══════════════════════ -->
+    <div id="powers" class="feat-section">
+      <div class="feat-section-head">
+        <span class="eyebrow">PLUGIN 1</span>
+        <h2>⚡ Custom Powers</h2>
+        <p>Every player spins a wheel on first join and receives a unique power as a Shard item. Powers grant one active ability (SNEAK + RIGHT CLICK) and one permanent passive bonus. Kill someone in PvP and steal their Shard — and their power with it.</p>
+      </div>
+
+      <div class="info-box" style="margin-bottom:28px;">
+        <span class="info-box-icon">🎰</span>
+        <div>
+          <h4>Spinning Wheel on First Join</h4>
+          <p>A custom animation plays on first login — the wheel spins and lands on a random power. The Shard item appears in your inventory with an invisible PDC tag storing your power type and name. You cannot drop the Shard, but it drops to your killer on a PvP death (natural deaths return it to you on respawn).</p>
+        </div>
+      </div>
+
+      <!-- 8 Powers -->
+      <div class="powers-grid">
+
+        <div class="power-card" style="--power-color:linear-gradient(90deg,#ff4500,#ff8c00)">
+          <span class="power-icon">🔥</span>
+          <h3>Fire Power</h3>
+          <span class="power-item-label">SHARD: BLAZE ROD</span>
+          <div class="power-abilities">
+            <div class="ability-row">
+              <span class="ability-badge badge-active">ACTIVE</span>
+              <span class="ability-text">Shoot a fireball in the direction you're facing</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-passive">PASSIVE</span>
+              <span class="ability-text">Every melee hit sets the target on fire</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="power-card" style="--power-color:linear-gradient(90deg,#4a00a0,#8a2be2)">
+          <span class="power-icon">🌑</span>
+          <h3>Dark Power</h3>
+          <span class="power-item-label">SHARD: ECHO SHARD</span>
+          <div class="power-abilities">
+            <div class="ability-row">
+              <span class="ability-badge badge-active">ACTIVE</span>
+              <span class="ability-text">Spawn a Shadow Clone to confuse and distract enemies</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-passive">PASSIVE</span>
+              <span class="ability-text">Nearby hostile mobs ignore you — no aggro</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="power-card" style="--power-color:linear-gradient(90deg,#00c8ff,#89f0ff)">
+          <span class="power-icon">🌪</span>
+          <h3>Wind Power</h3>
+          <span class="power-item-label">SHARD: FEATHER</span>
+          <div class="power-abilities">
+            <div class="ability-row">
+              <span class="ability-badge badge-active">ACTIVE</span>
+              <span class="ability-text">Air Dash — burst forward at high speed</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-passive">PASSIVE</span>
+              <span class="ability-text">Slow Fall (zero fall damage) + mid-air control</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="power-card" style="--power-color:linear-gradient(90deg,#00cfff,#ffffff)">
+          <span class="power-icon">❄️</span>
+          <h3>Ice Power</h3>
+          <span class="power-item-label">SHARD: PRISMARINE SHARD</span>
+          <div class="power-abilities">
+            <div class="ability-row">
+              <span class="ability-badge badge-active">ACTIVE</span>
+              <span class="ability-text">Ice Ray — freeze and slow the targeted enemy</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-passive">PASSIVE</span>
+              <span class="ability-text">Enemies nearby are permanently weakened (less attack)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="power-card" style="--power-color:linear-gradient(90deg,#ffe200,#ffc800)">
+          <span class="power-icon">⚡</span>
+          <h3>Lightning Power</h3>
+          <span class="power-item-label">SHARD: GLOWSTONE DUST</span>
+          <div class="power-abilities">
+            <div class="ability-row">
+              <span class="ability-badge badge-active">ACTIVE</span>
+              <span class="ability-text">Chain Lightning — jumps from mob to mob in range</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-passive">PASSIVE</span>
+              <span class="ability-text">Haste I — faster mining speed and attack rate</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="power-card" style="--power-color:linear-gradient(90deg,#35d07f,#00e676)">
+          <span class="power-icon">🧳</span>
+          <h3>Trader Power</h3>
+          <span class="power-item-label">SHARD: EMERALD</span>
+          <div class="power-abilities">
+            <div class="ability-row">
+              <span class="ability-badge badge-active">ACTIVE</span>
+              <span class="ability-text">Toggle invisibility for a few seconds</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-passive">PASSIVE</span>
+              <span class="ability-text">Unlock exclusive 1-emerald villager trades</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="power-card" style="--power-color:linear-gradient(90deg,#ff79c6,#ffb3e6)">
+          <span class="power-icon">🐇</span>
+          <h3>Rift Power</h3>
+          <span class="power-item-label">SHARD: RABBIT FOOT</span>
+          <div class="power-abilities">
+            <div class="ability-row">
+              <span class="ability-badge badge-active">ACTIVE</span>
+              <span class="ability-text">Blink — instantly teleport 30 blocks in your look direction</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-passive">PASSIVE</span>
+              <span class="ability-text">Speed I — always slightly faster than others</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="power-card" style="--power-color:linear-gradient(90deg,#ff6b35,#ffa500)">
+          <span class="power-icon">🌀</span>
+          <h3>Gravity Power</h3>
+          <span class="power-item-label">SHARD: HEAVY CORE — CRAFT ONLY</span>
+          <div class="power-abilities">
+            <div class="ability-row">
+              <span class="ability-badge badge-active">ACTIVE</span>
+              <span class="ability-text">Summon 5 Meteors — rocks rain from the sky on enemies</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-passive">PASSIVE</span>
+              <span class="ability-text">3× melee damage + Slowness on hit (Credit: Zeref_A)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PvP Death System -->
+      <div class="pvp-box" style="margin-top:28px;">
+        <h4>⚔️ PvP Shard Mechanics</h4>
+        <ul>
+          <li><strong>Killed by a player?</strong> Your Shard drops — the killer picks it up and gains your power.</li>
+          <li><strong>Natural death</strong> (mobs, fall, fire, drowning)? Shard returns to you on respawn.</li>
+          <li><strong>Looting is possible</strong> — a skilled fighter can hold multiple enemy Shards and switch powers.</li>
+          <li><strong>Admin commands:</strong> <code>/powers give</code>, <code>/powers reset</code>, <code>/powers respin</code>, <code>/weapon give</code></li>
+        </ul>
+      </div>
+
+      <!-- Super Weapons -->
+      <div style="margin-top:40px;margin-bottom:20px;">
+        <span class="eyebrow" style="display:block;margin-bottom:6px;">CRAFTABLE SUPER WEAPONS</span>
+        <h3 style="margin:0 0 6px;font-size:26px;">3 Legendary Weapons</h3>
+        <p style="color:var(--muted);font-size:14px;margin:0 0 20px;">Netherite-tier weapons with custom active and passive abilities. Craft them to unlock game-changing effects.</p>
+      </div>
+
+      <div class="weapons-grid">
+        <div class="weapon-card">
+          <span class="weapon-icon">⚔️</span>
+          <h3>Void Blade</h3>
+          <span class="weapon-subtitle">NETHERITE SWORD</span>
+          <div class="power-abilities">
+            <div class="ability-row">
+              <span class="ability-badge badge-active">ACTIVE</span>
+              <span class="ability-text">Soul Slash — deals direct HP reduction bypassing armour</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-passive">PASSIVE</span>
+              <span class="ability-text">Void Damage + 2× XP from every kill</span>
+            </div>
+          </div>
+        </div>
+        <div class="weapon-card">
+          <span class="weapon-icon">🪓</span>
+          <h3>Thunder Axe</h3>
+          <span class="weapon-subtitle">NETHERITE AXE</span>
+          <div class="power-abilities">
+            <div class="ability-row">
+              <span class="ability-badge badge-active">ACTIVE</span>
+              <span class="ability-text">Ground Slam — area-of-effect damage around you</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-passive">PASSIVE</span>
+              <span class="ability-text">Lightning strike on every hit + trees auto-fell on chop</span>
+            </div>
+          </div>
+        </div>
+        <div class="weapon-card">
+          <span class="weapon-icon">⛏️</span>
+          <h3>Ancient Pickaxe</h3>
+          <span class="weapon-subtitle">NETHERITE PICKAXE</span>
+          <div class="power-abilities">
+            <div class="ability-row">
+              <span class="ability-badge badge-active">ACTIVE</span>
+              <span class="ability-text">Tunnel — mine a straight-line corridor in one go</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-passive">PASSIVE</span>
+              <span class="ability-text">Vein Mine connected ores + Auto Smelt on break</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════ PLUGIN 2 — COMPANIONS ══════════════════════ -->
+    <div id="companions" class="feat-section" style="padding-top:8px;">
+      <div class="feat-section-head">
+        <span class="eyebrow">PLUGIN 2</span>
+        <h2>🐾 Companion System</h2>
+        <p>Tame almost any Minecraft mob and turn it into a loyal companion. Companions level up, remember their owner, use special abilities, and persist across server restarts. Each player can have up to 3 companions at once.</p>
+      </div>
+
+      <div class="info-box" style="margin-bottom:32px;">
+        <span class="info-box-icon">🎯</span>
+        <div>
+          <h4>How to Tame</h4>
+          <p>Every mob has a specific Taming Item (e.g. Wolf = Bone). Hold the item, right-click the mob to start a taming session — a Boss Bar with a 30-second timer appears. Feed the mob the required number of times before the timer runs out. Success: the mob is named, loyal to you, and starts at Level 1.</p>
+        </div>
+      </div>
+
+      <!-- Companion feature highlights -->
+      <div class="companion-features">
+        <div class="comp-feat">
+          <div class="comp-feat-icon">📈</div>
+          <h4>Level 1 → 100</h4>
+          <p>Companions earn XP from every hit and kill. HP, attack, and speed grow by +3% per level. XP requirement caps after level 31 so grinding stays fun.</p>
+        </div>
+        <div class="comp-feat">
+          <div class="comp-feat-icon">❤️</div>
+          <h4>Loyalty System</h4>
+          <p>Loyalty ranges 0–100, earned through combat. It decays 1 point every 5 minutes of inactivity. Unlocks future advanced features.</p>
+        </div>
+        <div class="comp-feat">
+          <div class="comp-feat-icon">💾</div>
+          <h4>Restart-Safe Persistence</h4>
+          <p>All companion data (level, name, loyalty, mode) saves to <code>plugins/CustomMobs/companions.yml</code>. Companions re-spawn when you log back in.</p>
+        </div>
+        <div class="comp-feat">
+          <div class="comp-feat-icon">🔄</div>
+          <h4>Death & Respawn</h4>
+          <p>If your companion dies, it respawns 5 minutes later with full stats intact. If you're offline the respawn waits until you reconnect.</p>
+        </div>
+        <div class="comp-feat">
+          <div class="comp-feat-icon">🛡️</div>
+          <h4>Trust System</h4>
+          <p>Mark other players as trusted — companions won't attack them or their companions. Perfect for alliance play.</p>
+        </div>
+        <div class="comp-feat">
+          <div class="comp-feat-icon">⚔️</div>
+          <h4>Fight Mode</h4>
+          <p>Toggle <code>/companion fight on</code> to allow your companions to attack enemy players' companions in PvP — off by default.</p>
+        </div>
+      </div>
+
+      <!-- Companion Modes -->
+      <h3 style="margin:0 0 14px;font-size:20px;">3 Behaviour Modes</h3>
+      <div class="modes-strip">
+        <div class="mode-card">
+          <span class="mode-emoji">🏃</span>
+          <div>
+            <h4>Follow</h4>
+            <p>Companion walks alongside you. Teleports to you if it falls more than 30 blocks behind.</p>
+          </div>
+        </div>
+        <div class="mode-card">
+          <span class="mode-emoji">🛡️</span>
+          <div>
+            <h4>Guard</h4>
+            <p>Stays at a fixed position. Attacks any hostile mob or enemy entering a 20-block radius.</p>
+          </div>
+        </div>
+        <div class="mode-card">
+          <span class="mode-emoji">🪑</span>
+          <div>
+            <h4>Sit</h4>
+            <p>Companion stays in place and does nothing — for safe storage in your base.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Passive Auras -->
+      <h3 style="margin:0 0 14px;font-size:20px;">Passive Auras</h3>
+      <p style="color:var(--muted);font-size:13.5px;margin:0 0 16px;">These companions buff you just by being present — no commands needed.</p>
+      <div class="auras-grid">
+        <div class="aura-card">
+          <span class="aura-mob">🐝</span>
+          <div><strong>Bee</strong><span>Regeneration I (constant healing)</span></div>
+        </div>
+        <div class="aura-card">
+          <span class="aura-mob">🐢</span>
+          <div><strong>Turtle</strong><span>Resistance I (less damage taken)</span></div>
+        </div>
+        <div class="aura-card">
+          <span class="aura-mob">🐰</span>
+          <div><strong>Rabbit</strong><span>Jump Boost I</span></div>
+        </div>
+        <div class="aura-card">
+          <span class="aura-mob">⚡</span>
+          <div><strong>Zombified Piglin</strong><span>Fire Resistance</span></div>
+        </div>
+      </div>
+
+      <!-- 63 mobs categories -->
+      <h3 style="margin:8px 0 14px;font-size:20px;">63 Tameable Mobs — All Categories</h3>
+      <div class="mob-categories">
+
+        <div class="mob-cat-card">
+          <div class="mob-cat-header">
+            <span class="mob-cat-icon">⚔️</span>
+            <h4>Hostile</h4>
+            <span class="mob-cat-count">29</span>
+          </div>
+          <div class="mob-tags">
+            <span class="mob-tag">Zombie (Tank)</span>
+            <span class="mob-tag">Skeleton (Archer)</span>
+            <span class="mob-tag">Husk</span>
+            <span class="mob-tag">Stray</span>
+            <span class="mob-tag">Wither Skeleton</span>
+            <span class="mob-tag">Drowned</span>
+            <span class="mob-tag">Spider</span>
+            <span class="mob-tag">Cave Spider</span>
+            <span class="mob-tag">Creeper (Bomber)</span>
+            <span class="mob-tag">Blaze (Mage)</span>
+            <span class="mob-tag">Magma Cube</span>
+            <span class="mob-tag">Witch (Healer)</span>
+            <span class="mob-tag">Pillager</span>
+            <span class="mob-tag">Vindicator</span>
+            <span class="mob-tag">Evoker ★</span>
+            <span class="mob-tag">Phantom</span>
+            <span class="mob-tag">Ghast</span>
+            <span class="mob-tag">Enderman</span>
+            <span class="mob-tag">Piglin</span>
+            <span class="mob-tag">Ravager (Mount)</span>
+            <span class="mob-tag">Breeze</span>
+            <span class="mob-tag">+8 more…</span>
+          </div>
+        </div>
+
+        <div class="mob-cat-card">
+          <div class="mob-cat-header">
+            <span class="mob-cat-icon">🤝</span>
+            <h4>Neutral</h4>
+            <span class="mob-cat-count">9</span>
+          </div>
+          <div class="mob-tags">
+            <span class="mob-tag">Polar Bear (Tank)</span>
+            <span class="mob-tag">Panda</span>
+            <span class="mob-tag">Goat</span>
+            <span class="mob-tag">Bee (Healer)</span>
+            <span class="mob-tag">Dolphin (Mount)</span>
+            <span class="mob-tag">Fox</span>
+            <span class="mob-tag">Wolf</span>
+            <span class="mob-tag">Ocelot</span>
+            <span class="mob-tag">Zombified Piglin</span>
+          </div>
+        </div>
+
+        <div class="mob-cat-card">
+          <div class="mob-cat-header">
+            <span class="mob-cat-icon">🐾</span>
+            <h4>Passive</h4>
+            <span class="mob-cat-count">19</span>
+          </div>
+          <div class="mob-tags">
+            <span class="mob-tag">Cat</span>
+            <span class="mob-tag">Parrot (Spy)</span>
+            <span class="mob-tag">Turtle (Shield)</span>
+            <span class="mob-tag">Axolotl</span>
+            <span class="mob-tag">Frog</span>
+            <span class="mob-tag">Sniffer</span>
+            <span class="mob-tag">Camel (Mount)</span>
+            <span class="mob-tag">Strider (Lava Mt.)</span>
+            <span class="mob-tag">Horse (Mount)</span>
+            <span class="mob-tag">Llama</span>
+            <span class="mob-tag">Donkey</span>
+            <span class="mob-tag">Pig</span>
+            <span class="mob-tag">Cow</span>
+            <span class="mob-tag">+6 more…</span>
+          </div>
+        </div>
+
+        <div class="mob-cat-card">
+          <div class="mob-cat-header">
+            <span class="mob-cat-icon">🔧</span>
+            <h4>Utility</h4>
+            <span class="mob-cat-count">5</span>
+          </div>
+          <div class="mob-tags">
+            <span class="mob-tag">Iron Golem (Ultimate Tank)</span>
+            <span class="mob-tag">Snow Golem</span>
+            <span class="mob-tag">Slime</span>
+            <span class="mob-tag">Villager (Portable Shop!)</span>
+            <span class="mob-tag">Wandering Trader</span>
+          </div>
+        </div>
+
+        <div class="mob-cat-card" style="border-color:#ffc9f040;background:linear-gradient(145deg,#1a1000,#12090e);">
+          <div class="mob-cat-header">
+            <span class="mob-cat-icon">🌟</span>
+            <h4>Legendary</h4>
+            <span class="mob-cat-count" style="background:#ffc9f020;border-color:#ffc9f050;color:#ffc9f0;">2</span>
+          </div>
+          <div class="mob-tags">
+            <span class="mob-tag" style="border-color:#ffc9f040;color:#ffc9f0;">Elder Guardian — Mining Fatigue aura to enemies</span>
+            <span class="mob-tag" style="border-color:#ffc9f040;color:#ffc9f0;">Warden — Sonic Boom attack</span>
+          </div>
+          <p style="font-size:11px;color:var(--muted);margin:10px 0 0;">Hardest mobs to tame. Highest reward.</p>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════ CTA ══════════════════════ -->
+    <div style="text-align:center;padding:0 5% 80px;max-width:1120px;margin:auto;">
+      <span class="eyebrow" style="display:block;margin-bottom:8px;">READY TO PLAY?</span>
+      <h2 style="font-size:clamp(28px,4vw,48px);margin:0 0 12px;">Join FireCraft SMP</h2>
+      <p style="color:var(--muted);font-size:15px;max-width:520px;margin:0 auto 28px;">Apply for whitelist, spin the power wheel, and tame your first companion — all on the same day.</p>
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+        <a href="index.html#apply" class="btn">Apply for Whitelist</a>
+        <a href="rules.html" class="btn btn-ghost">Read the Rules</a>
+        <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="btn btn-discord">Join Discord</a>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <span>🔥 FireCraft SMP</span>
+    <span>Private Lifesteal • Custom Plugins</span>
+    <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="footer-discord">Discord</a>
+    <span>© <span id="year"></span> FireCraft</span>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+  <script src="js/bg.js"></script>
+  <script src="js/notify.js"></script>
+  <script src="js/nav.js"></script>
+</body>
+</html>

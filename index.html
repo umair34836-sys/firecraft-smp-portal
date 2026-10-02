@@ -5,13 +5,39 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>FireCraft SMP | Private Lifesteal</title>
   <meta name="description" content="FireCraft SMP — private Lifesteal SMP with custom plugins. Apply for whitelist, open support tickets and manage your account.">
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="google-site-verification" content="REPLACE_WITH_YOUR_GOOGLE_VERIFICATION_CODE">
+  <meta name="monetag" content="f0630227661ce77b1482e9f4651996d7">
+  <!-- Monetag Vignette (Interstitial) -->
+  <script>(function(s){s.dataset.zone='11927742',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+  <link rel="canonical" href="https://www.firecraft.fun">
+  <meta property="og:title" content="FireCraft SMP | Private Lifesteal">
+  <meta property="og:description" content="A private Lifesteal SMP. Apply for whitelist, check your application status and stay updated.">
+  <meta property="og:url" content="https://www.firecraft.fun">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://www.firecraft.fun/images/logo-512.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://www.firecraft.fun/images/logo-512.png">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="images/logo-192.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff8fe3">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FireCraft SMP">
+  <link rel="stylesheet" href="css/style.css?v=7">
+  <!-- Google AdSense -->
+  <meta name="google-adsense-account" content="ca-pub-4837345120897086">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4837345120897086" crossorigin="anonymous"></script>
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#home"><span class="brand-fire">🔥</span> FIRECRAFT <small>SMP</small></a>
+    <a class="brand" href="#home"><img src="images/logo-192.png" alt="FireCraft SMP" class="brand-logo"> FIRECRAFT <small>SMP</small></a>
     <nav id="nav">
-      <a href="#home">Home</a><a href="#apply">Apply</a><a href="#status">My Status</a><a href="#support">Support</a><a href="#rules">Rules</a>
+      <a href="#home">Home</a><a href="#apply">Apply</a><a href="#status">My Status</a><a href="#support">Support</a><a href="#reviews">Reviews</a><a href="features.html">Features</a><a href="rules.html">Rules</a><a href="faq.html">FAQ</a>
+      <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="btn btn-small btn-discord">Discord</a>
       <button id="authBtn" class="btn btn-small">Login</button>
     </nav>
     <button class="menu" id="menuBtn">☰</button>
@@ -21,16 +47,22 @@
 <section id="home" class="hero section">
       <div class="hero-glow"></div>
       <div class="hero-content">
+        <img src="images/logo-512.png" alt="FireCraft SMP Logo" class="hero-logo">
         <div class="pill">PRIVATE • WHITELISTED • LIFESTEAL</div>
         <h1>Welcome to <span>FireCraft SMP</span></h1>
         <p>A private Lifesteal SMP built around custom plugins, community events and a controlled whitelist.</p>
         <div class="hero-actions">
-          <a class="btn" href="#apply">Apply for Whitelist</a>
+          <a class="btn" href="#apply" id="heroApplyBtn">Apply for Whitelist</a>
           <a class="btn btn-ghost" href="#status">Check Application</a>
+          <a class="btn btn-discord" href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener">Join Discord</a>
+        </div>
+        <div id="serverStatusBadge" class="server-status-badge">
+          <span id="statusDot" class="dot dot-checking"></span>
+          <span id="statusText">Checking server…</span>
         </div>
         <div class="server-box">
-          <div><span class="dot"></span><b>Server Address</b><code><span data-server-java-ip>Not configured</span></code></div>
-          <button class="copy-btn" data-copy="<span data-server-java-ip>Not configured</span>">Copy</button>
+          <div><span class="dot"></span><b>Server Address</b><code><span data-server-java-ip>play.firecraft.fun:20011</span></code></div>
+          <button class="copy-btn" data-copy="play.firecraft.fun:20011">Copy</button>
         </div>
       </div>
     </section>
@@ -119,8 +151,23 @@
     </section>
 
     <section id="status" class="section panel-section">
-      <div class="section-head"><div><span class="eyebrow">YOUR ACCOUNT</span><h2>Application Status</h2></div></div>
-      <div id="statusBox" class="panel auth-required"><p>Login to view your whitelist/application status.</p></div>
+      <div class="section-head"><div><span class="eyebrow">YOUR ACCOUNT</span><h2>My Profile</h2></div></div>
+      <div id="profileBox" class="panel auth-required hidden">
+        <div id="profileGrid" class="profile-grid"></div>
+        <!-- WALLET BOX HIDDEN — remove display:none below to re-enable -->
+        <div id="walletBox" class="wallet-box hidden" style="display:none!important">
+          <div class="wallet-head">
+            <span class="wallet-icon">💰</span>
+            <div>
+              <div class="wallet-label">Earn Wallet</div>
+              <div id="walletBalance" class="wallet-amount">PKR 0.00</div>
+            </div>
+            <button id="withdrawBtn" class="btn btn-small btn-primary">Withdraw</button>
+          </div>
+          <div id="walletHistory" class="wallet-history"></div>
+        </div>
+      </div>
+      <div id="statusBox" class="panel auth-required"><p>Login to view your profile and application status.</p></div>
     </section>
 
     <section id="support" class="section panel-section">
@@ -155,23 +202,101 @@
       <div id="myTickets" class="ticket-list auth-required"></div>
     </section>
 
-    <section id="rules" class="section panel-section">
-      <div class="section-head"><div><span class="eyebrow">FIRECRAFT</span><h2>Rules</h2></div></div>
-      <div class="rules-grid">
-        <article><b>01</b><h3>Respect</h3><p>No harassment, hate speech or targeted abuse.</p></article>
-        <article><b>02</b><h3>Fair Play</h3><p>No cheats, exploits or unauthorized clients.</p></article>
-        <article><b>03</b><h3>Community</h3><p>Keep chat and gameplay suitable for the private SMP.</p></article>
-        <article><b>04</b><h3>Staff Decisions</h3><p>Use support tickets for appeals and complaints rather than public arguments.</p></article>
+    <!-- EARN SECTION HIDDEN — re-enable by removing the "hidden" class below -->
+    <section id="earn" class="section panel-section hidden">
+    </section>
+
+    <section id="reviews" class="section panel-section">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">PLAYER VOICES</span>
+          <h2>Community Reviews</h2>
+          <p>Real feedback from verified FireCraft players. No fake reviews — only members can post.</p>
+        </div>
+      </div>
+      <div id="reviewsList" class="reviews-list">
+        <p class="reviews-empty">Loading reviews…</p>
+      </div>
+      <div id="reviewFormWrap" class="review-form-wrap auth-required hidden">
+        <h3>Leave a Review</h3>
+        <form id="reviewForm" class="panel form-grid">
+          <div class="field full">
+            <label>Your Rating <span class="req">*</span></label>
+            <div class="star-picker" id="starPicker" role="group" aria-label="Star rating">
+              <button type="button" class="star" data-val="1" aria-label="1 star">★</button>
+              <button type="button" class="star" data-val="2" aria-label="2 stars">★</button>
+              <button type="button" class="star" data-val="3" aria-label="3 stars">★</button>
+              <button type="button" class="star" data-val="4" aria-label="4 stars">★</button>
+              <button type="button" class="star" data-val="5" aria-label="5 stars">★</button>
+            </div>
+            <input type="hidden" id="reviewRating" value="">
+          </div>
+          <div class="field full">
+            <label>Your Review <span class="req">*</span></label>
+            <textarea id="reviewText" rows="4" minlength="10" maxlength="500" placeholder="Share your experience on FireCraft SMP — what do you enjoy most?" required></textarea>
+            <small class="hint counter" data-for="reviewText">0 / 500 characters</small>
+          </div>
+          <button class="btn full" type="submit">Submit Review</button>
+          <div id="reviewMsg" class="msg full"></div>
+        </form>
+      </div>
+      <p id="reviewLoginPrompt" class="reviews-login-prompt hidden">
+        <a href="#" id="reviewLoginLink" class="link-btn">Login</a> to leave your review.
+      </p>
+    </section>
+
+    <section id="gallery" class="section panel-section">
+      <div class="section-head"><div><span class="eyebrow">SCREENSHOTS</span><h2>Gallery</h2><p>A look inside the world of FireCraft SMP.</p></div></div>
+      <div id="galleryGrid" class="gallery-grid">
+        <div class="gallery-empty"><span>📸</span><p>No screenshots yet — check back soon!</p></div>
       </div>
     </section>
   </main>
-<footer><span>🔥 FireCraft SMP</span><span>Private Lifesteal • Custom Plugins</span><span>© <span id="year"></span> FireCraft</span></footer>
+
+<footer><span>🔥 FireCraft SMP</span><span>Private Lifesteal • Custom Plugins</span><a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="footer-discord">Discord</a><span>© <span id="year"></span> FireCraft</span></footer>
+
+  <div id="withdrawModal" class="modal hidden">
+    <div class="modal-card">
+      <button class="modal-close" id="closeWithdrawModal">×</button>
+      <span class="eyebrow">YOUR WALLET</span><h2>Withdraw Earnings</h2>
+      <p class="muted">After submitting, an admin will contact you on Discord to process the payment.</p>
+      <form id="withdrawForm">
+        <div class="field">
+          <label>Amount (PKR) <span class="req">*</span></label>
+          <input id="withdrawAmount" type="number" min="1" step="0.01" placeholder="e.g. 500" required>
+          <small id="withdrawAvailableHint" class="hint">Available: calculating…</small>
+        </div>
+        <div class="field">
+          <label>Payment Method <span class="req">*</span></label>
+          <select id="withdrawMethod" required>
+            <option value="">— Choose —</option>
+            <option value="easypaisa">Easypaisa</option>
+            <option value="jazzcash">JazzCash</option>
+            <option value="bank">Bank Transfer</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Account Number / IBAN <span class="req">*</span></label>
+          <input id="withdrawAccount" placeholder="Your Easypaisa / JazzCash / IBAN number" required>
+        </div>
+        <div class="field">
+          <label>Note (optional)</label>
+          <input id="withdrawNote" placeholder="Any extra info for admin">
+        </div>
+        <button type="submit" class="btn full">Submit Withdrawal Request</button>
+        <div id="withdrawMsg" class="msg"></div>
+      </form>
+    </div>
+  </div>
 
   <div id="authModal" class="modal hidden">
     <div class="modal-card">
       <button class="modal-close" id="closeAuth">×</button>
+
       <div id="loginView">
-        <span class="eyebrow">FIRECRAFT ACCOUNT</span><h2>Login</h2><p class="muted">Use your Minecraft IGN and FireCraft password.</p>
+        <span class="eyebrow">FIRECRAFT ACCOUNT</span>
+        <h2>Login</h2>
+        <p class="muted">Use your Minecraft IGN and FireCraft password.</p>
         <form id="loginForm">
           <div class="field">
             <label>Minecraft IGN</label>
@@ -182,17 +307,103 @@
             <label>Password</label>
             <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Your FireCraft password" required>
           </div>
-          <button class="btn full">Login</button><div id="loginMsg" class="msg"></div>
+          <button class="btn full">Login</button>
+          <div id="loginMsg" class="msg"></div>
         </form>
+        <button class="link-btn" id="showReset">Forgot password?</button>
         <button class="link-btn" id="showSignup">New here? Create FireCraft account</button>
+
+        <!-- How it works guide — shown on login view for new visitors -->
+        <div class="how-guide">
+          <div class="how-guide-title">New here? Here's how to join:</div>
+          <div class="how-steps">
+            <div class="how-step">
+              <div class="how-step-icon">1</div>
+              <div class="how-step-body">
+                <strong>Create Account</strong>
+                <span>Register with your Minecraft IGN</span>
+              </div>
+            </div>
+            <div class="how-step-arrow">→</div>
+            <div class="how-step">
+              <div class="how-step-icon">2</div>
+              <div class="how-step-body">
+                <strong>Apply</strong>
+                <span>Fill the whitelist application</span>
+              </div>
+            </div>
+            <div class="how-step-arrow">→</div>
+            <div class="how-step">
+              <div class="how-step-icon">3</div>
+              <div class="how-step-body">
+                <strong>Get Approved</strong>
+                <span>Admin reviews your application</span>
+              </div>
+            </div>
+            <div class="how-step-arrow">→</div>
+            <div class="how-step">
+              <div class="how-step-icon">🎮</div>
+              <div class="how-step-body">
+                <strong>Start Playing!</strong>
+                <span>Join &amp; enjoy FireCraft SMP</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <div id="resetView" class="hidden">
+        <span class="eyebrow">ACCOUNT RECOVERY</span>
+        <h2>Reset Password</h2>
+        <p class="muted">Enter your Minecraft IGN — a reset link will be sent to your registered email.</p>
+        <form id="resetForm">
+          <div class="field">
+            <label>Minecraft IGN</label>
+            <input id="resetIgn" placeholder="e.g. Steve123" required>
+          </div>
+          <button class="btn full">Send Reset Link</button>
+          <div id="resetMsg" class="msg"></div>
+        </form>
+        <button class="link-btn" id="backToLogin">← Back to Login</button>
+      </div>
+
       <div id="signupView" class="hidden">
-        <span class="eyebrow">JOIN THE COMMUNITY</span><h2>Create Account</h2><p class="muted">Your IGN is your FireCraft username. Use a strong password.</p>
+        <!-- Step progress bar -->
+        <div class="signup-progress">
+          <div class="sp-step sp-active">
+            <div class="sp-dot">1</div>
+            <div class="sp-label">Create Account</div>
+          </div>
+          <div class="sp-line"></div>
+          <div class="sp-step">
+            <div class="sp-dot">2</div>
+            <div class="sp-label">Apply</div>
+          </div>
+          <div class="sp-line"></div>
+          <div class="sp-step">
+            <div class="sp-dot">3</div>
+            <div class="sp-label">Get Approved</div>
+          </div>
+          <div class="sp-line"></div>
+          <div class="sp-step">
+            <div class="sp-dot">🎮</div>
+            <div class="sp-label">Play!</div>
+          </div>
+        </div>
+
+        <span class="eyebrow">STEP 1 OF 3</span>
+        <h2>Create Account</h2>
+        <p class="muted">Your IGN is your FireCraft username. Use a strong password.</p>
         <form id="signupForm">
           <div class="field">
             <label>Minecraft IGN <span class="req">*</span></label>
             <input id="signupIgn" maxlength="16" pattern="[A-Za-z0-9_]{3,16}" placeholder="e.g. Steve123" required>
             <small class="hint">3–16 characters — letters, numbers and underscores only</small>
+          </div>
+          <div class="field">
+            <label>Email Address <span class="req">*</span></label>
+            <input id="signupEmail" type="email" autocomplete="email" placeholder="your@email.com" required>
+            <small class="hint">Used for account recovery — never shown publicly</small>
           </div>
           <div class="field">
             <label>Password <span class="req">*</span></label>
@@ -203,8 +414,18 @@
             <label>Confirm Password <span class="req">*</span></label>
             <input id="signupPassword2" type="password" minlength="6" placeholder="Re-enter your password" required>
           </div>
-          <button class="btn full">Create Account</button><div id="signupMsg" class="msg"></div>
+          <button class="btn full">Create Account</button>
+          <div id="signupMsg" class="msg"></div>
         </form>
+
+        <!-- What happens next -->
+        <div class="next-steps-info">
+          <div class="nsi-title">After creating your account:</div>
+          <div class="nsi-item"><span class="nsi-num">2</span> Go to <strong>Apply</strong> in the menu and fill the whitelist form</div>
+          <div class="nsi-item"><span class="nsi-num">3</span> Wait for admin approval (usually within 24 hours)</div>
+          <div class="nsi-item"><span class="nsi-num">🎮</span> Join the server with IP shown on website!</div>
+        </div>
+
         <button class="link-btn" id="showLogin">Already have an account? Login</button>
       </div>
     </div>
@@ -219,6 +440,12 @@
   </div>
 
   <div id="toast"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script type="module" src="js/app.js"></script>
+
+  <script src="js/ads.js"></script>
+  <script src="js/bg.js"></script>
+  <script src="js/notify.js"></script>
+  <script src="js/nav.js"></script>
 </body>
 </html>

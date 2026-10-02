@@ -1,0 +1,28 @@
+name: FireCraftPartner
+version: 1.0.0
+main: fun.firecraft.partner.FireCraftPartner
+api-version: '1.20'
+description: Official FireCraft partner plugin — earn tracking + website promotion.
+author: FireCraft SMP
+
+commands:
+  firecraft:
+    description: Show FireCraft website info
+    usage: /<command>
+    aliases: [fcinfo, fc]
+    permission: firecraft.partner.info
+  fcadmin:
+    description: FireCraftPartner admin commands
+    usage: /<command> [reload|status|broadcast]
+    permission: firecraft.partner.admin
+
+permissions:
+  firecraft.partner.info:
+    description: View FireCraft website info
+    default: true
+  firecraft.partner.admin:
+    description: Admin commands for FireCraftPartner
+    default: op
+  firecraft.partner.silent:
+    description: Suppress promo messages for this player (e.g. staff)
+    default: false

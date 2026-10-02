@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FAQ | FireCraft SMP</title>
+  <meta name="description" content="Frequently asked questions about FireCraft SMP — server IP, whitelist, Lifesteal, Bedrock support and more.">
+  <link rel="canonical" href="https://www.firecraft.fun/faq.html">
+  <meta property="og:title" content="FAQ | FireCraft SMP">
+  <meta property="og:description" content="Frequently asked questions about FireCraft SMP.">
+  <meta property="og:url" content="https://www.firecraft.fun/faq.html">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://www.firecraft.fun/images/logo-512.png">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="images/logo-192.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff8fe3">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FireCraft SMP">
+  <link rel="stylesheet" href="css/style.css?v=4">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><img src="images/logo-192.png" alt="FireCraft SMP" class="brand-logo"> FIRECRAFT <small>SMP</small></a>
+    <nav id="nav">
+      <a href="index.html">Home</a>
+      <a href="index.html#apply">Apply</a>
+      <a href="index.html#status">My Status</a>
+      <a href="index.html#support">Support</a>
+      <a href="features.html">Features</a>
+      <a href="rules.html">Rules</a>
+      <a href="faq.html" class="active">FAQ</a>
+      <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="btn btn-small btn-discord">Discord</a>
+    </nav>
+    <button class="menu" id="menuBtn">☰</button>
+  </header>
+
+  <main>
+    <section class="section panel-section">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">GOT QUESTIONS?</span>
+          <h2>FAQ</h2>
+          <p>Quick answers to the most common questions about FireCraft SMP.</p>
+        </div>
+      </div>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>What is the server IP address?</summary>
+          <p>The server address is <code>play.firecraft.fun:20011</code>. Java Edition only. You can copy it directly from the homepage.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How long does a whitelist application take?</summary>
+          <p>Staff typically review applications within 24–48 hours. Once reviewed you'll see your status update in the <a href="index.html#status">My Status</a> section after logging in.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Is Bedrock Edition supported?</summary>
+          <p>FireCraft SMP currently runs Java Edition only. Bedrock support may be introduced in a future update — stay tuned in <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener">Discord</a> for announcements.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What Minecraft version do I need?</summary>
+          <p>We run the latest stable Paper build. We recommend matching your client to the current server version for the best experience. Check the Discord for the exact version.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What is Lifesteal SMP?</summary>
+          <p>In a Lifesteal SMP, killing another player steals one of their hearts and adds it to your own. Lose all your hearts and you're out. It makes every fight carry real stakes.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How do I report a player or griefer?</summary>
+          <p>Login and use the <a href="index.html#support">Support</a> section to open a ticket. Select <em>Player Report</em> as the category and include the player name, time, and any screenshots or evidence.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can I appeal a ban or a rejected application?</summary>
+          <p>Yes. Open a support ticket with the <em>Whitelist / Application</em> category or reach out to staff directly on <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener">Discord</a>.</p>
+        </details>
+        <details class="faq-item">
+          <summary>I forgot my password — how do I reset it?</summary>
+          <p>Click <em>Login</em> in the navigation and then <em>Forgot password?</em>. Enter your Minecraft IGN and a reset link will be sent to the email address you registered with.</p>
+        </details>
+      </div>
+
+      <div style="margin-top:32px;text-align:center;">
+        <a href="index.html#apply" class="btn">Apply for Whitelist</a>
+        <a href="rules.html" class="btn btn-ghost" style="margin-left:12px;">View Rules</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>🔥 FireCraft SMP</span>
+    <span>Private Lifesteal • Custom Plugins</span>
+    <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="footer-discord">Discord</a>
+    <span>© <span id="year"></span> FireCraft</span>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+  <script src="js/bg.js"></script>
+  <script src="js/notify.js"></script>
+  <script src="js/nav.js"></script>
+</body>
+</html>
