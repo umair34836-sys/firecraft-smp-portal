@@ -419,28 +419,38 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
 
     private void pollApprovedPlayers() {
         try {
+            // Query applications collection where status == "approved" via Firestore runQuery
             String url = "https://firestore.googleapis.com/v1/projects/" + projectId
-                    + "/databases/(default)/documents/approvedPlayers?pageSize=100";
+                    + "/databases/(default)/documents:runQuery";
+
+            String body = "{\"structuredQuery\":{\"from\":[{\"collectionId\":\"applications\"}],"
+                    + "\"where\":{\"fieldFilter\":{\"field\":{\"fieldPath\":\"status\"},"
+                    + "\"op\":\"EQUAL\",\"value\":{\"stringValue\":\"approved\"}}}}}";
 
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .timeout(Duration.ofSeconds(8))
+                    .header("Content-Type", "application/json")
                     .header("Accept", "application/json")
-                    .GET()
+                    .POST(HttpRequest.BodyPublishers.ofString(body))
                     .build();
 
             HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
 
-            if (res.statusCode() != 200) return;
+            if (res.statusCode() != 200) {
+                getLogger().warning("[FireCraftNotifier] approvedPlayers poll HTTP " + res.statusCode());
+                return;
+            }
 
-            JsonObject root = JsonParser.parseString(res.body()).getAsJsonObject();
-            if (!root.has("documents")) return;
-
-            JsonArray docs = root.getAsJsonArray("documents");
+            // runQuery returns a JSON array; each element is a result row or an end-of-query marker
+            JsonArray results = JsonParser.parseString(res.body()).getAsJsonArray();
             List<String> toWhitelist = new ArrayList<>();
 
-            for (JsonElement el : docs) {
-                JsonObject fields = el.getAsJsonObject().getAsJsonObject("fields");
+            for (JsonElement el : results) {
+                JsonObject row = el.getAsJsonObject();
+                if (!row.has("document")) continue; // end-of-query marker has no "document" key
+
+                JsonObject fields = row.getAsJsonObject("document").getAsJsonObject("fields");
                 if (fields == null || !fields.has("ign")) continue;
 
                 String ign = fields.getAsJsonObject("ign").get("stringValue").getAsString().trim();
