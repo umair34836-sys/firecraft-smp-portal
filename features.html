@@ -21,7 +21,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="FireCraft SMP">
-  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/style.css?v=4">
   <style>
     /* ── Features page extras ── */
     .feat-hero{
@@ -334,7 +334,7 @@
     .compare-wrap{
       border:1px solid var(--line);
       border-radius:14px;
-      overflow:hidden;
+      overflow-x:auto;
       background:linear-gradient(145deg,#0e1f10,#0a1408);
       margin-bottom:48px;
     }
@@ -881,8 +881,6 @@
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
-    document.getElementById('menuBtn').onclick = () => document.getElementById('nav').classList.toggle('open');
-    document.querySelectorAll('nav a').forEach(a => a.onclick = () => document.getElementById('nav').classList.remove('open'));
   </script>
   <script src="js/bg.js"></script>
   <script src="js/notify.js"></script>

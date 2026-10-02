@@ -21,7 +21,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="FireCraft SMP">
-  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/style.css?v=4">
 </head>
 <body>
   <header class="topbar">
@@ -99,8 +99,6 @@
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
-    document.getElementById('menuBtn').onclick = () => document.getElementById('nav').classList.toggle('open');
-    document.querySelectorAll('nav a').forEach(a => a.onclick = () => document.getElementById('nav').classList.remove('open'));
   </script>
   <script src="js/bg.js"></script>
   <script src="js/notify.js"></script>

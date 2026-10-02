@@ -635,3 +635,32 @@
   justify-content:center;
   flex-shrink:0;
 }
+
+/* ===== Bug Fixes & Responsiveness ===== */
+
+/* Active nav link highlight (desktop) */
+.topbar nav a.active{color:#ff8fe3;font-weight:700}
+
+/* Modal: scrollable on small/short screens */
+.modal-card{max-height:90vh;overflow-y:auto}
+
+/* btn-primary variant used in partner server cards */
+.btn-primary{background:linear-gradient(135deg,#35d07f,#1db860);box-shadow:0 8px 30px #35d07f20}
+
+/* Announcements section: match other sections' max-width */
+.fc-announcements-section{max-width:min(1120px,90%);margin-left:auto;margin-right:auto;box-sizing:border-box}
+
+/* Server box: copy button left-aligned when stacked on mobile */
+@media(max-width:760px){
+  .server-box .copy-btn{align-self:flex-start}
+}
+
+/* Extra small screens: hero buttons full-width, reduce hero padding */
+@media(max-width:420px){
+  .hero-actions{flex-direction:column}
+  .hero-actions .btn{width:100%;justify-content:center;text-align:center}
+  .hero{padding-top:60px;padding-bottom:40px}
+}
+
+/* Prevent horizontal scroll from any overflowing element */
+html{overflow-x:hidden}
