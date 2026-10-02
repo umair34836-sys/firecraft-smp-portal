@@ -228,6 +228,7 @@ async function loadUser(user){
   await loadTickets(user.uid);
   await loadWallet(user.uid, profile.ign);
   if(profile.role==="admin" || user.uid===ADMIN_UID){ $("adminPanel").classList.remove("hidden"); loadAdmin(); }
+  initReviewForm(user);
 }
 function renderProfile(profile){
   const joined=profile.createdAt?.toDate?.().toLocaleDateString()||"Unknown";
@@ -247,6 +248,7 @@ function resetUI(){
   $("profileBox").classList.add("hidden");
   $("myTickets").innerHTML="";
   $("adminPanel").classList.add("hidden");
+  initReviewForm(null);
 }
 
 async function loadStatus(uid){
@@ -376,6 +378,125 @@ async function loadGallery(){
   }catch(e){ console.warn("Gallery load error:",e); }
 }
 loadGallery();
+
+// ── REVIEWS SYSTEM ──────────────────────────────────────────────────────────
+
+async function loadReviews() {
+  const list = document.getElementById("reviewsList");
+  if (!list) return;
+  try {
+    const snap = await getDocs(query(collection(db, "reviews"), orderBy("createdAt", "desc"), limit(50)));
+    if (snap.empty) {
+      list.innerHTML = '<p class="reviews-empty">No reviews yet — be the first to share your experience!</p>';
+      return;
+    }
+    const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+    list.innerHTML = snap.docs.map(d => {
+      const r = d.data();
+      const stars = "★".repeat(Math.max(1, Math.min(5, r.rating || 0))) + "☆".repeat(5 - Math.max(1, Math.min(5, r.rating || 0)));
+      const date = r.createdAt?.toDate?.().toLocaleDateString?.() || "";
+      return `<div class="review-card">
+        <div class="review-top">
+          <span class="review-ign">${esc(r.ign)}</span>
+          <span class="review-stars" title="${esc(r.rating)} out of 5">${stars}</span>
+        </div>
+        <p class="review-text">${esc(r.text).replace(/\n/g, "<br>")}</p>
+        ${date ? `<small class="review-date">${date}</small>` : ""}
+      </div>`;
+    }).join("");
+  } catch (e) {
+    console.warn("Reviews load error:", e);
+    list.innerHTML = '<p class="reviews-empty">Could not load reviews.</p>';
+  }
+}
+loadReviews();
+
+function initReviewForm(user) {
+  const wrap = document.getElementById("reviewFormWrap");
+  const prompt = document.getElementById("reviewLoginPrompt");
+  if (!wrap || !prompt) return;
+
+  if (!user) {
+    wrap.classList.add("hidden");
+    prompt.classList.remove("hidden");
+    return;
+  }
+
+  // Check if user already submitted
+  getDoc(doc(db, "reviews", user.uid)).then(snap => {
+    if (snap.exists()) {
+      wrap.innerHTML = '<p class="reviews-already">You have already submitted a review. Thank you!</p>';
+      wrap.classList.remove("hidden");
+    } else {
+      wrap.classList.remove("hidden");
+    }
+    prompt.classList.add("hidden");
+  });
+}
+
+// Star picker interactivity
+(function() {
+  const picker = document.getElementById("starPicker");
+  const ratingInput = document.getElementById("reviewRating");
+  if (!picker || !ratingInput) return;
+  let selected = 0;
+  const stars = picker.querySelectorAll(".star");
+
+  function paint(val) {
+    stars.forEach(s => s.classList.toggle("active", Number(s.dataset.val) <= val));
+  }
+
+  stars.forEach(s => {
+    s.addEventListener("click", () => {
+      selected = Number(s.dataset.val);
+      ratingInput.value = selected;
+      paint(selected);
+    });
+    s.addEventListener("mouseenter", () => paint(Number(s.dataset.val)));
+    s.addEventListener("mouseleave", () => paint(selected));
+  });
+})();
+
+document.getElementById("reviewForm")?.addEventListener("submit", async e => {
+  e.preventDefault();
+  const u = auth.currentUser;
+  if (!u) { openAuth(); return; }
+  const rating = Number(document.getElementById("reviewRating").value);
+  if (!rating || rating < 1 || rating > 5) {
+    setMsg("reviewMsg", "Please select a star rating.");
+    return;
+  }
+  const text = document.getElementById("reviewText").value.trim();
+  if (text.length < 10) {
+    setMsg("reviewMsg", "Review must be at least 10 characters.");
+    return;
+  }
+  try {
+    const userDoc = await getDoc(doc(db, "users", u.uid));
+    const ign = userDoc.data()?.ign || "Player";
+    // UID as doc ID enforces one review per user
+    await setDoc(doc(db, "reviews", u.uid), {
+      uid: u.uid,
+      ign,
+      rating,
+      text,
+      createdAt: serverTimestamp()
+    });
+    setMsg("reviewMsg", "Review submitted! Thank you.", "success");
+    e.target.reset();
+    document.getElementById("reviewRating").value = "";
+    document.querySelectorAll("#starPicker .star").forEach(s => s.classList.remove("active"));
+    const wrap = document.getElementById("reviewFormWrap");
+    if (wrap) wrap.innerHTML = '<p class="reviews-already">Thank you for your review!</p>';
+    loadReviews();
+  } catch (err) {
+    setMsg("reviewMsg", err.code === "permission-denied"
+      ? "You have already submitted a review."
+      : "Could not submit review: " + err.message);
+  }
+});
+
+document.getElementById("reviewLoginLink")?.addEventListener("click", e => { e.preventDefault(); openAuth(); });
 
 // ── EARN SYSTEM ─────────────────────────────────────────────────────────────
 

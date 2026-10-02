@@ -90,6 +90,21 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // Player reviews — one per user (UID is the document ID)
+    match /reviews/{uid} {
+      allow read: if true;
+      allow create: if isSelf(uid)
+        && !exists(/databases/$(database)/documents/reviews/$(uid))
+        && request.resource.data.uid == uid
+        && request.resource.data.rating is number
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 10
+        && request.resource.data.text.size() <= 500;
+      allow update, delete: if isAdmin();
+    }
+
     match /powerAssignments/{uid} {
       allow read: if isSelf(uid) || isAdmin();
       allow create: if isSelf(uid)

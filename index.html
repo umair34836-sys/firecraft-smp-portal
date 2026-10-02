@@ -27,7 +27,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="FireCraft SMP">
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=5">
   <!-- Google AdSense -->
   <meta name="google-adsense-account" content="ca-pub-4837345120897086">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4837345120897086" crossorigin="anonymous"></script>
@@ -36,7 +36,7 @@
   <header class="topbar">
     <a class="brand" href="#home"><img src="images/logo-192.png" alt="FireCraft SMP" class="brand-logo"> FIRECRAFT <small>SMP</small></a>
     <nav id="nav">
-      <a href="#home">Home</a><a href="#apply">Apply</a><a href="#status">My Status</a><a href="#support">Support</a><a href="features.html">Features</a><a href="rules.html">Rules</a><a href="faq.html">FAQ</a>
+      <a href="#home">Home</a><a href="#apply">Apply</a><a href="#status">My Status</a><a href="#support">Support</a><a href="#reviews">Reviews</a><a href="features.html">Features</a><a href="rules.html">Rules</a><a href="faq.html">FAQ</a>
       <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="btn btn-small btn-discord">Discord</a>
       <button id="authBtn" class="btn btn-small">Login</button>
     </nav>
@@ -204,6 +204,45 @@
 
     <!-- EARN SECTION HIDDEN — re-enable by removing the "hidden" class below -->
     <section id="earn" class="section panel-section hidden">
+    </section>
+
+    <section id="reviews" class="section panel-section">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">PLAYER VOICES</span>
+          <h2>Community Reviews</h2>
+          <p>Real feedback from verified FireCraft players. No fake reviews — only members can post.</p>
+        </div>
+      </div>
+      <div id="reviewsList" class="reviews-list">
+        <p class="reviews-empty">Loading reviews…</p>
+      </div>
+      <div id="reviewFormWrap" class="review-form-wrap auth-required hidden">
+        <h3>Leave a Review</h3>
+        <form id="reviewForm" class="panel form-grid">
+          <div class="field full">
+            <label>Your Rating <span class="req">*</span></label>
+            <div class="star-picker" id="starPicker" role="group" aria-label="Star rating">
+              <button type="button" class="star" data-val="1" aria-label="1 star">★</button>
+              <button type="button" class="star" data-val="2" aria-label="2 stars">★</button>
+              <button type="button" class="star" data-val="3" aria-label="3 stars">★</button>
+              <button type="button" class="star" data-val="4" aria-label="4 stars">★</button>
+              <button type="button" class="star" data-val="5" aria-label="5 stars">★</button>
+            </div>
+            <input type="hidden" id="reviewRating" value="">
+          </div>
+          <div class="field full">
+            <label>Your Review <span class="req">*</span></label>
+            <textarea id="reviewText" rows="4" minlength="10" maxlength="500" placeholder="Share your experience on FireCraft SMP — what do you enjoy most?" required></textarea>
+            <small class="hint counter" data-for="reviewText">0 / 500 characters</small>
+          </div>
+          <button class="btn full" type="submit">Submit Review</button>
+          <div id="reviewMsg" class="msg full"></div>
+        </form>
+      </div>
+      <p id="reviewLoginPrompt" class="reviews-login-prompt hidden">
+        <a href="#" id="reviewLoginLink" class="link-btn">Login</a> to leave your review.
+      </p>
     </section>
 
     <section id="gallery" class="section panel-section">
