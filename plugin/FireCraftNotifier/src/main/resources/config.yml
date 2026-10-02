@@ -10,6 +10,10 @@ website-url: "https://firecraft-smp-portal.web.app"
 # Recommended: 8-15 minutes so players are not annoyed
 reminder-interval-minutes: 10
 
+# How often (in minutes) to poll Firestore for newly approved players and auto-whitelist them
+# Keep this at 5 or higher to avoid Firestore rate limits (HTTP 429)
+poll-interval-minutes: 5
+
 # Show a welcome title to players when they join the server
 show-join-title: true
 

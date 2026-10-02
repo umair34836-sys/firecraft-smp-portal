@@ -50,7 +50,11 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
     private String projectId;
     private String websiteUrl;
     private long reminderIntervalMinutes;
+    private long pollIntervalMinutes;
     private boolean showJoinTitle;
+
+    // Tracks when a 429 was last received so we can back off
+    private volatile long rateLimitBackoffUntil = 0;
 
     private final Set<String> processedIgns = new HashSet<>();
     private File processedIgnsFile;
@@ -78,15 +82,21 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
             cmd.setTabCompleter(this);
         }
 
+        // Stagger startup: announcements after 30 s, poll after 90 s, reminders after interval
+        // This avoids hammering Firestore on every server restart and hitting 429 rate limits.
+        long announceTicks  = 20L * 30;
+        long announcePeriod = 20L * 60 * 10;
         Bukkit.getScheduler().runTaskTimerAsynchronously(this,
-                this::fetchAnnouncements, 40L, 20L * 60 * 10);
+                this::fetchAnnouncements, announceTicks, announcePeriod);
 
         long intervalTicks = reminderIntervalMinutes * 60 * 20;
         Bukkit.getScheduler().runTaskTimerAsynchronously(this,
                 this::triggerReminder, intervalTicks, intervalTicks);
 
+        long pollTicks = 20L * 90;
+        long pollPeriod = pollIntervalMinutes * 60 * 20;
         Bukkit.getScheduler().runTaskTimerAsynchronously(this,
-                this::pollApprovedPlayers, 200L, 20L * 120);
+                this::pollApprovedPlayers, pollTicks, pollPeriod);
 
         getLogger().info("[FireCraftNotifier] Enabled — reminders every " + reminderIntervalMinutes + " min.");
     }
@@ -100,6 +110,7 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
         projectId               = getConfig().getString("firebase-project-id", "firecraft-smp-portal");
         websiteUrl              = getConfig().getString("website-url", "https://firecraft-smp-portal.web.app");
         reminderIntervalMinutes = getConfig().getLong("reminder-interval-minutes", 10);
+        pollIntervalMinutes     = getConfig().getLong("poll-interval-minutes", 5);
         showJoinTitle           = getConfig().getBoolean("show-join-title", true);
     }
 
@@ -328,6 +339,7 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
     // ─── Announcement fetch ───────────────────────────────────────────────────
 
     private void fetchAnnouncements() {
+        if (System.currentTimeMillis() < rateLimitBackoffUntil) return;
         try {
             String url = "https://firestore.googleapis.com/v1/projects/" + projectId
                     + "/databases/(default)/documents/announcements?pageSize=20";
@@ -343,6 +355,9 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
 
             if (res.statusCode() == 200) {
                 parseAnnouncements(res.body());
+            } else if (res.statusCode() == 429) {
+                rateLimitBackoffUntil = System.currentTimeMillis() + 5 * 60 * 1000L;
+                getLogger().warning("[FireCraftNotifier] Firestore rate-limited (429). Backing off for 5 minutes.");
             } else {
                 getLogger().warning("[FireCraftNotifier] Firestore returned HTTP " + res.statusCode());
             }
@@ -419,6 +434,7 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
     }
 
     private void pollApprovedPlayers() {
+        if (System.currentTimeMillis() < rateLimitBackoffUntil) return;
         try {
             // Query applications collection where status == "approved" via Firestore runQuery
             String url = "https://firestore.googleapis.com/v1/projects/" + projectId
@@ -438,6 +454,11 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
 
             HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
 
+            if (res.statusCode() == 429) {
+                rateLimitBackoffUntil = System.currentTimeMillis() + 5 * 60 * 1000L;
+                getLogger().warning("[FireCraftNotifier] Firestore rate-limited (429). Backing off for 5 minutes.");
+                return;
+            }
             if (res.statusCode() != 200) {
                 getLogger().warning("[FireCraftNotifier] approvedPlayers poll HTTP " + res.statusCode());
                 return;
