@@ -21,7 +21,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="FireCraft SMP">
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=7">
   <style>
     /* ── Features page extras ── */
     .feat-hero{
@@ -351,6 +351,53 @@
     .pvp-box ul{ margin:0; padding-left:18px; color:var(--muted); font-size:13.5px; line-height:1.8; }
     .pvp-box ul li strong{ color:#fff; }
 
+    /* ── Custom Armors ── */
+    .armors-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+      gap:14px;
+      margin-bottom:36px;
+    }
+    .armor-card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:linear-gradient(145deg,#0e1f10,#0a1408);
+      padding:20px 22px;
+      position:relative;
+      overflow:hidden;
+      transition:.2s;
+    }
+    .armor-card::before{
+      content:"";
+      position:absolute;
+      top:0;left:0;right:0;
+      height:2px;
+      background:var(--armor-color,linear-gradient(90deg,#ff8fe3,#ffa827));
+    }
+    .armor-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px #00000030;}
+    .armor-tier{font-size:10px;font-weight:800;letter-spacing:1px;color:var(--muted);margin-bottom:4px;}
+    .armor-card h3{margin:0 0 2px;font-size:16px;}
+    .armor-base{font-size:11px;color:#ffa827;font-weight:700;letter-spacing:.8px;margin-bottom:12px;display:block;}
+    .armor-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:7px;}
+    .armor-label{flex-shrink:0;font-size:9px;font-weight:800;letter-spacing:.6px;padding:3px 7px;border-radius:5px;margin-top:1px;background:#ffffff10;border:1px solid #ffffff20;color:#aaa;}
+    .armor-val{font-size:13px;color:var(--muted);line-height:1.45;}
+    .armor-bonus{margin-top:10px;padding:8px 12px;border-radius:8px;background:#35d07f14;border:1px solid #35d07f30;font-size:12px;color:#35d07f;}
+    .pvp-meta-table{width:100%;border-collapse:collapse;font-size:13.5px;margin-bottom:16px;}
+    .pvp-meta-table th{padding:10px 14px;text-align:left;font-size:10px;letter-spacing:1px;color:var(--muted);border-bottom:1px solid var(--line);text-transform:uppercase;}
+    .pvp-meta-table td{padding:11px 14px;border-bottom:1px solid #1a4a1a40;vertical-align:middle;}
+    .pvp-meta-table tr:last-child td{border-bottom:0;}
+    .pvp-power-cell{font-weight:700;color:#fff;}
+    .pvp-armor-cell{color:#35d07f;font-weight:600;}
+    .pvp-pct{font-size:11px;font-weight:800;padding:3px 8px;border-radius:20px;background:#35d07f18;border:1px solid #35d07f40;color:#35d07f;white-space:nowrap;}
+
+    /* ── Progression Path ── */
+    .prog-path{display:flex;flex-direction:column;gap:0;position:relative;padding-left:28px;margin-bottom:36px;}
+    .prog-path::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,#ff8fe360,#ffa82760,#35d07f60);}
+    .prog-step{position:relative;padding:14px 0 14px 20px;}
+    .prog-step::before{content:"";position:absolute;left:-18px;top:20px;width:10px;height:10px;border-radius:50%;background:var(--dot-color,#ff8fe3);box-shadow:0 0 8px var(--dot-color,#ff8fe3);}
+    .prog-step h4{margin:0 0 4px;font-size:14px;color:#fff;}
+    .prog-step p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5;}
+
     /* ── Responsive ── */
     @media(max-width:760px){
       .stats-strip{ grid-template-columns:repeat(2,1fr); }
@@ -386,6 +433,7 @@
       <p>FireCraft SMP ships two hand-crafted Java plugins that transform PvP and survival into something no vanilla server can offer.</p>
       <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
         <a href="#powers" class="btn">⚡ Custom Powers</a>
+        <a href="#armors" class="btn btn-ghost">🛡️ Armor Sets</a>
         <a href="#companions" class="btn btn-ghost">🐾 Companions</a>
       </div>
     </div>
@@ -394,12 +442,12 @@
     <div class="feat-section" style="padding-bottom:48px;">
       <div class="stats-strip">
         <div class="stat-card">
-          <div class="stat-num">8</div>
+          <div class="stat-num">11</div>
           <div class="stat-label">Unique Powers</div>
         </div>
         <div class="stat-card">
-          <div class="stat-num">3</div>
-          <div class="stat-label">Super Weapons</div>
+          <div class="stat-num">5</div>
+          <div class="stat-label">Custom Armor Sets</div>
         </div>
         <div class="stat-card">
           <div class="stat-num">63</div>
@@ -418,16 +466,16 @@
             <tr>
               <th>Feature</th>
               <th>⚡ CustomPowers</th>
+              <th>🛡️ CustomArmors</th>
               <th>🐾 CustomMobs</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td>Core concept</td><td>Unique elemental powers</td><td>Tame mob companions</td></tr>
-            <tr><td>Player gets</td><td>1 random power shard</td><td>Up to 3 companions</td></tr>
-            <tr><td>Progression</td><td>Steal shards via PvP</td><td>Level 1–100, Loyalty 0–100</td></tr>
-            <tr><td>PvP interaction</td><td>Kill to steal enemy's power</td><td>Fight mode + trust system</td></tr>
-            <tr><td>Persistence</td><td>PDC on item (no data loss)</td><td>YAML (server-restart safe)</td></tr>
-            <tr><td>Special feature</td><td>Spin wheel animation on join</td><td>Passive auras, death respawn</td></tr>
+            <tr><td>Core concept</td><td>Unique elemental powers</td><td>Counter-build armor sets</td><td>Tame mob companions</td></tr>
+            <tr><td>Player gets</td><td>1 random power shard</td><td>Craft any of 5 sets</td><td>Up to 3 companions</td></tr>
+            <tr><td>Progression</td><td>Steal shards via PvP</td><td>T1 → T5 armor tiers</td><td>Level 1–100, Loyalty 0–100</td></tr>
+            <tr><td>PvP interaction</td><td>Kill to steal enemy's power</td><td>Reduce specific power dmg</td><td>Fight mode + trust system</td></tr>
+            <tr><td>Special feature</td><td>Spin wheel animation on join</td><td>Full-set bonus passives</td><td>Passive auras, death respawn</td></tr>
           </tbody>
         </table>
       </div>
@@ -438,7 +486,7 @@
       <div class="feat-section-head">
         <span class="eyebrow">PLUGIN 1</span>
         <h2>⚡ Custom Powers</h2>
-        <p>Every player spins a wheel on first join and receives a unique power as a Shard item. Powers grant one active ability (SNEAK + RIGHT CLICK) and one permanent passive bonus. Kill someone in PvP and steal their Shard — and their power with it.</p>
+        <p>Every player spins a wheel on first join and receives a unique power as a Shard item. 10 standard powers are spin-eligible — 1 special (Gravity) and 2 legendary (Warden, Dragon) are craft-only. Powers grant an active ability (SNEAK + RIGHT CLICK) and a permanent passive. Kill someone in PvP and steal their Shard.</p>
       </div>
 
       <div class="info-box" style="margin-bottom:28px;">
@@ -564,6 +612,58 @@
           </div>
         </div>
 
+        <div class="power-card" style="--power-color:linear-gradient(90deg,#008b8b,#00ced1)">
+          <span class="power-icon">🫀</span>
+          <h3>Warden Power</h3>
+          <span class="power-item-label">SHARD: SCULK SHRIEKER</span>
+          <div class="power-abilities">
+            <div class="ability-row">
+              <span class="ability-badge badge-active">ACTIVE</span>
+              <span class="ability-text">Sonic Boom — 25-block beam that bypasses armor, deals 14 damage (10s CD)</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-passive">PASSIVE</span>
+              <span class="ability-text">Darkness Aura on nearby mobs + 25% bonus void damage on every melee hit</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="power-card" style="--power-color:linear-gradient(90deg,#555,#888)">
+          <span class="power-icon">☠️</span>
+          <h3>Wither Power</h3>
+          <span class="power-item-label">SHARD: NETHER STAR</span>
+          <div class="power-abilities">
+            <div class="ability-row">
+              <span class="ability-badge badge-active">ACTIVE</span>
+              <span class="ability-text">Wither Barrage — 3 rays each dealing 8 dmg + Wither II effect (9s CD)</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-passive">PASSIVE</span>
+              <span class="ability-text">Soul Drain on melee + constant Wither I aura to nearby mobs</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="power-card" style="--power-color:linear-gradient(90deg,#7c3cff,#b44fff)">
+          <span class="power-icon">🐉</span>
+          <h3>Dragon Power</h3>
+          <span class="power-item-label">SHARD: DRAGON'S BREATH — CRAFT ONLY (HARDEST)</span>
+          <div class="power-abilities">
+            <div class="ability-row">
+              <span class="ability-badge badge-active">ACTIVE</span>
+              <span class="ability-text">Dragon Sovereignty — 8s transformation: 3× melee + KB immunity (15s CD)</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-active" style="background:#7c3cff20;border-color:#7c3cff60;color:#c084fc;">ACTIVE 2</span>
+              <span class="ability-text">Dimensional Collapse (Q key) — 30-block singularity pulls then blasts enemies (30s CD)</span>
+            </div>
+            <div class="ability-row">
+              <span class="ability-badge badge-passive">PASSIVE</span>
+              <span class="ability-text">Void Wings (no fall dmg) + Dragon Rage triggers automatically at &lt;25% HP</span>
+            </div>
+          </div>
+        </div>
+
         <div class="power-card" style="--power-color:linear-gradient(90deg,#ff6b35,#ffa500)">
           <span class="power-icon">🌀</span>
           <h3>Gravity Power</h3>
@@ -649,10 +749,123 @@
       </div>
     </div>
 
-    <!-- ══════════════════════ PLUGIN 2 — COMPANIONS ══════════════════════ -->
-    <div id="companions" class="feat-section" style="padding-top:8px;">
+    <!-- ══════════════════════ PLUGIN 2 — CUSTOM ARMORS ══════════════════════ -->
+    <div id="armors" class="feat-section" style="padding-top:8px;">
       <div class="feat-section-head">
         <span class="eyebrow">PLUGIN 2</span>
+        <h2>🛡️ Custom Armor System</h2>
+        <p>Five craftable armor sets — each designed to counter specific powers. Equip all 4 pieces for a full-set passive bonus. Combine sets strategically to build the ultimate counter-build.</p>
+      </div>
+
+      <div class="info-box" style="margin-bottom:28px;">
+        <span class="info-box-icon">⚖️</span>
+        <div>
+          <h4>How Damage Reduction Works</h4>
+          <p>Each armor piece reduces damage by (Full Set Reduction ÷ 4) per hit from its matched power. Multiple different sets stack <strong>multiplicatively</strong>. Dragon Scale hard caps all power damage at 15 per hit when wearing the full set.</p>
+        </div>
+      </div>
+
+      <div class="armors-grid">
+        <div class="armor-card" style="--armor-color:linear-gradient(90deg,#ff4500,#ff8c00)">
+          <div class="armor-tier">TIER 1</div>
+          <h3>🔥 Ember Guard</h3>
+          <span class="armor-base">BASE: GOLDEN ARMOR</span>
+          <div class="armor-row"><span class="armor-label">RECIPE</span><span class="armor-val">Blaze Rod + Netherite Ingot</span></div>
+          <div class="armor-row"><span class="armor-label">PROTECTS</span><span class="armor-val">Fire Power — <strong>50% damage reduction</strong></span></div>
+          <div class="armor-row"><span class="armor-label">PER PIECE</span><span class="armor-val">−12.5% per matched hit</span></div>
+          <div class="armor-bonus">✦ Full Set Bonus: Strength I</div>
+        </div>
+
+        <div class="armor-card" style="--armor-color:linear-gradient(90deg,#00cfff,#ffffff)">
+          <div class="armor-tier">TIER 2</div>
+          <h3>❄️ Frost Plate</h3>
+          <span class="armor-base">BASE: DIAMOND ARMOR</span>
+          <div class="armor-row"><span class="armor-label">RECIPE</span><span class="armor-val">Blue Ice + Netherite Ingot</span></div>
+          <div class="armor-row"><span class="armor-label">PROTECTS</span><span class="armor-val">Ice & Wind Power — <strong>50% damage reduction</strong></span></div>
+          <div class="armor-row"><span class="armor-label">PER PIECE</span><span class="armor-val">−12.5% per matched hit</span></div>
+          <div class="armor-bonus">✦ Full Set Bonus: Resistance I</div>
+        </div>
+
+        <div class="armor-card" style="--armor-color:linear-gradient(90deg,#4a00a0,#8a2be2)">
+          <div class="armor-tier">TIER 3</div>
+          <h3>🌑 Void Weave</h3>
+          <span class="armor-base">BASE: BLACK LEATHER ARMOR</span>
+          <div class="armor-row"><span class="armor-label">RECIPE</span><span class="armor-val">Echo Shard + Obsidian</span></div>
+          <div class="armor-row"><span class="armor-label">PROTECTS</span><span class="armor-val">Dark & Rift Power — <strong>50% damage reduction</strong></span></div>
+          <div class="armor-row"><span class="armor-label">PER PIECE</span><span class="armor-val">−12.5% per matched hit</span></div>
+          <div class="armor-bonus">✦ Full Set Bonus: Speed II</div>
+        </div>
+
+        <div class="armor-card" style="--armor-color:linear-gradient(90deg,#008b8b,#00ced1)">
+          <div class="armor-tier">TIER 4</div>
+          <h3>🛡️ Warden Carapace</h3>
+          <span class="armor-base">BASE: CHAINMAIL ARMOR</span>
+          <div class="armor-row"><span class="armor-label">RECIPE</span><span class="armor-val">Sculk Catalyst + Netherite Ingot</span></div>
+          <div class="armor-row"><span class="armor-label">PROTECTS</span><span class="armor-val">Warden Power — <strong>60% damage reduction</strong></span></div>
+          <div class="armor-row"><span class="armor-label">PER PIECE</span><span class="armor-val">−15% per matched hit</span></div>
+          <div class="armor-bonus">✦ Full Set Bonus: Regen I + Darkness immunity</div>
+        </div>
+
+        <div class="armor-card" style="--armor-color:linear-gradient(90deg,#7c3cff,#b44fff);border-color:#7c3cff40;">
+          <div class="armor-tier">TIER 5 — ULTIMATE</div>
+          <h3>🐉 Dragon Scale</h3>
+          <span class="armor-base">BASE: NETHERITE ARMOR</span>
+          <div class="armor-row"><span class="armor-label">RECIPE</span><span class="armor-val">Dragon's Breath + Netherite Ingot</span></div>
+          <div class="armor-row"><span class="armor-label">PROTECTS</span><span class="armor-val">ALL powers — <strong>40% reduction + 15 dmg hard cap</strong></span></div>
+          <div class="armor-row"><span class="armor-label">PER PIECE</span><span class="armor-val">−10% vs all power types</span></div>
+          <div class="armor-bonus" style="background:#7c3cff18;border-color:#7c3cff40;color:#c084fc;">✦ Full Set Bonus: Resistance II</div>
+        </div>
+      </div>
+
+      <!-- PvP Meta Table -->
+      <h3 style="margin:0 0 12px;font-size:20px;">⚔️ Power vs Armor Matchups</h3>
+      <p style="color:var(--muted);font-size:13.5px;margin:0 0 16px;">Every power has a best counter. Build your armor set based on who you're fighting.</p>
+      <div class="compare-wrap" style="margin-bottom:36px;">
+        <table class="pvp-meta-table">
+          <thead>
+            <tr><th>Power User</th><th>Best Counter Armor</th><th>Reduction</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="pvp-power-cell">🔥 Fire</td><td class="pvp-armor-cell">Ember Guard</td><td><span class="pvp-pct">50% less dmg</span></td></tr>
+            <tr><td class="pvp-power-cell">❄️ Ice / 💨 Wind</td><td class="pvp-armor-cell">Frost Plate</td><td><span class="pvp-pct">50% less dmg</span></td></tr>
+            <tr><td class="pvp-power-cell">🌑 Dark / 🌀 Rift</td><td class="pvp-armor-cell">Void Weave</td><td><span class="pvp-pct">50% less dmg</span></td></tr>
+            <tr><td class="pvp-power-cell">🫀 Warden</td><td class="pvp-armor-cell">Warden Carapace</td><td><span class="pvp-pct">60% less dmg</span></td></tr>
+            <tr><td class="pvp-power-cell">☠️ Wither / 🐉 Dragon</td><td class="pvp-armor-cell">Dragon Scale</td><td><span class="pvp-pct">40% + 15 cap</span></td></tr>
+            <tr><td class="pvp-power-cell">⚡ Lightning / ☄️ Gravity</td><td class="pvp-armor-cell">Dragon Scale</td><td><span class="pvp-pct">40% + 15 cap</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Progression Path -->
+      <h3 style="margin:0 0 14px;font-size:20px;">📈 Progression Path</h3>
+      <div class="prog-path">
+        <div class="prog-step" style="--dot-color:#35d07f">
+          <h4>New Player Joins</h4>
+          <p>Spin Wheel animation plays → random standard power assigned permanently.</p>
+        </div>
+        <div class="prog-step" style="--dot-color:#ffa827">
+          <h4>Craft Counter Armor</h4>
+          <p>Gather materials → craft Ember Guard → Frost Plate → Void Weave (T1→T3).</p>
+        </div>
+        <div class="prog-step" style="--dot-color:#ff8fe3">
+          <h4>Grind Warden Carapace (T4)</h4>
+          <p>Farm Sculk Catalysts + Echo Shards → best single-power counter armor.</p>
+        </div>
+        <div class="prog-step" style="--dot-color:#7c3cff">
+          <h4>Kill the End Dragon → Dragon Scale (T5)</h4>
+          <p>Dragon's Breath + Netherite → ultimate armor protecting against ALL powers.</p>
+        </div>
+        <div class="prog-step" style="--dot-color:#b44fff">
+          <h4>Craft Dragon Shard (Endgame)</h4>
+          <p>Collect all 9 shard materials → craft Super Energy Crystal → craft Dragon Shard. Hardest power on the server.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════ PLUGIN 3 — COMPANIONS ══════════════════════ -->
+    <div id="companions" class="feat-section" style="padding-top:8px;">
+      <div class="feat-section-head">
+        <span class="eyebrow">PLUGIN 3</span>
         <h2>🐾 Companion System</h2>
         <p>Tame almost any Minecraft mob and turn it into a loyal companion. Companions level up, remember their owner, use special abilities, and persist across server restarts. Each player can have up to 3 companions at once.</p>
       </div>
