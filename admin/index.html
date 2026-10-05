@@ -406,8 +406,28 @@
       <!-- ── REPORTS & INTELLIGENCE ── -->
 <section id="reports" class="section">
   <div class="section-head">
-    <div><h1>Reports & Intelligence</h1><p>Server health, community metrics, improvement tracker and bug log.</p></div>
+    <div><h1>Reports & Intelligence</h1><p>Server health, player activity, improvement tracker, and development ideas.</p></div>
     <button id="refreshReports" class="btn btn-primary">Refresh All</button>
+  </div>
+
+  <!-- Health Score Banner -->
+  <div class="rpt-health-banner" id="rptHealthBanner">
+    <div class="rpt-health-left">
+      <div class="rpt-health-score-wrap">
+        <svg class="rpt-health-ring" viewBox="0 0 60 60">
+          <circle cx="30" cy="30" r="26" fill="none" stroke="#1a2030" stroke-width="5"/>
+          <circle cx="30" cy="30" r="26" fill="none" stroke="#23a865" stroke-width="5"
+            stroke-dasharray="163.4" stroke-dashoffset="163.4"
+            stroke-linecap="round" id="rptHealthArc" style="transform:rotate(-90deg);transform-origin:center"/>
+        </svg>
+        <div class="rpt-health-score-num" id="rptHealthScore">—</div>
+      </div>
+      <div>
+        <div class="rpt-health-title" id="rptHealthTitle">Calculating…</div>
+        <div class="rpt-health-sub" id="rptHealthSub">Loading server health data</div>
+      </div>
+    </div>
+    <div id="rptHealthIssues" class="rpt-health-issues"></div>
   </div>
 
   <!-- Action Items -->
@@ -453,29 +473,49 @@
     </div>
   </div>
 
-  <!-- Breakdown Bars -->
+  <!-- Activity Insight + Breakdown -->
   <div class="rpt-two-col" style="margin-bottom:16px">
     <div class="card">
-      <div class="rpt-card-title">📝 Application Breakdown</div>
+      <div class="rpt-card-title">📊 Application Breakdown</div>
       <div class="rpt-bars">
         <div class="rpt-bar-row"><span>Pending <b id="rptAppPending">0</b></span><div class="rpt-bar"><div class="rpt-bar-fill rpt-warn" id="rptAppPendingBar"></div></div></div>
         <div class="rpt-bar-row"><span>Approved <b id="rptAppApproved">0</b></span><div class="rpt-bar"><div class="rpt-bar-fill rpt-ok" id="rptAppApprovedBar"></div></div></div>
         <div class="rpt-bar-row"><span>Rejected <b id="rptAppRejected">0</b></span><div class="rpt-bar"><div class="rpt-bar-fill rpt-bad" id="rptAppRejectedBar"></div></div></div>
       </div>
+      <div class="rpt-activity-insight" id="rptAppInsight"></div>
     </div>
     <div class="card">
-      <div class="rpt-card-title">🎫 Ticket Breakdown</div>
-      <div class="rpt-bars">
-        <div class="rpt-bar-row"><span>Open <b id="rptTicketOpen">0</b></span><div class="rpt-bar"><div class="rpt-bar-fill rpt-warn" id="rptTicketOpenBar"></div></div></div>
-        <div class="rpt-bar-row"><span>Closed <b id="rptTicketClosed">0</b></span><div class="rpt-bar"><div class="rpt-bar-fill rpt-ok" id="rptTicketClosedBar"></div></div></div>
+      <div class="rpt-card-title">📅 Player Activity Insight</div>
+      <div class="rpt-mini-grid" style="margin-bottom:12px">
+        <div class="rpt-mini-stat"><div class="rpt-mini-num" id="rptApps7d">—</div><div class="rpt-mini-label">Applications (7 days)</div></div>
+        <div class="rpt-mini-stat"><div class="rpt-mini-num" id="rptApps30d">—</div><div class="rpt-mini-label">Applications (30 days)</div></div>
+        <div class="rpt-mini-stat"><div class="rpt-mini-num" id="rptTickets7d">—</div><div class="rpt-mini-label">Tickets (7 days)</div></div>
+        <div class="rpt-mini-stat"><div class="rpt-mini-num" id="rptReg7d">—</div><div class="rpt-mini-label">New Accounts (7 days)</div></div>
       </div>
+      <div id="rptActivityAlert" class="rpt-activity-insight"></div>
     </div>
+  </div>
+
+  <!-- Server Missing Features (Minecraft) -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="rpt-card-title">⚙️ Server Missing Features
+      <span style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px">Minecraft server improvements — click to track progress</span>
+    </div>
+    <div id="rptServerFeatures" class="rpt-checklist"></div>
+  </div>
+
+  <!-- Development Ideas (when activity is low) -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="rpt-card-title">💡 Development Ideas & Events
+      <span style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px">Ideas to boost activity — click to mark Planned / Done</span>
+    </div>
+    <div id="rptDevIdeas" class="rpt-checklist"></div>
   </div>
 
   <!-- Website Improvement Checklist -->
   <div class="card" style="margin-bottom:16px">
-    <div class="rpt-card-title">✅ Website Improvement Checklist
-      <span style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px">Click a row to toggle Done / In Progress</span>
+    <div class="rpt-card-title">🌐 Website Improvement Checklist
+      <span style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px">Click to toggle Done / In Progress</span>
     </div>
     <div id="rptChecklist" class="rpt-checklist"></div>
   </div>
@@ -483,7 +523,7 @@
   <!-- Bug Tracker -->
   <div class="card" id="rptBugSection" style="margin-bottom:16px">
     <div class="rpt-card-title">🐛 Plugin & Server Bug Tracker
-      <span style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px">Click a row to mark fixed</span>
+      <span style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px">Click to mark fixed</span>
     </div>
     <div id="rptBugList" class="rpt-checklist"></div>
   </div>

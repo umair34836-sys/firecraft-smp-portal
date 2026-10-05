@@ -7,6 +7,7 @@ import {
 import {
   getFirestore, collection, query, orderBy, onSnapshot, doc, getDoc,
   setDoc, updateDoc, deleteDoc, getDocs, where, limit,
+  getCountFromServer,
   serverTimestamp,} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 const app = initializeApp(firebaseConfig);
@@ -965,24 +966,65 @@ $("syncWhitelistBtn").onclick = syncApprovedToWhitelist;
    ══════════════════════════════════════════════════════════ */
 
 const RPT_CHECKLIST = [
-  // Essential
   { id:"privacy_policy",  cat:"🔴 Essential", icon:"⚠️", label:"Privacy Policy page",            detail:"Required by Google AdSense — risks account suspension without it.", def:"missing" },
   { id:"custom_404",      cat:"🔴 Essential", icon:"⚠️", label:"Custom 404 error page",           detail:"Branded error page instead of GitHub Pages default ugly 404.", def:"missing" },
   { id:"gallery_shots",   cat:"🔴 Essential", icon:"⚠️", label:"Gallery screenshots (empty now)", detail:"Gallery section exists but shows 'No screenshots yet'. Add real server screenshots.", def:"missing" },
-  // Growth
   { id:"leaderboard",     cat:"🟡 Growth",    icon:"📊", label:"Leaderboard page",                detail:"Top players by hearts / kills — drives daily repeat visits.", def:"missing" },
   { id:"about_staff",     cat:"🟡 Growth",    icon:"👤", label:"About / Staff page",              detail:"Show who runs the server — builds player trust.", def:"missing" },
   { id:"video_trailer",   cat:"🟡 Growth",    icon:"🎬", label:"Server trailer / YouTube embed",  detail:"Video on homepage increases application rate significantly.", def:"missing" },
   { id:"more_faq",        cat:"🟡 Growth",    icon:"❓", label:"Expand FAQ (only 8 entries now)", detail:"Add powers guide, commands list, heart mechanics, event info.", def:"partial" },
   { id:"social_links",    cat:"🟡 Growth",    icon:"📲", label:"Social media links (YouTube, TikTok, Twitter)", detail:"Only Discord linked in footer currently.", def:"missing" },
   { id:"changelog",       cat:"🟡 Growth",    icon:"📋", label:"Changelog / Updates page",        detail:"Track server patches and new features so players stay engaged.", def:"missing" },
-  // SEO done
-  { id:"seo_meta",        cat:"🟢 SEO",       icon:"✅", label:"Meta titles & descriptions",      detail:"All 5 pages have keyword-rich titles and descriptions.", def:"done" },
-  { id:"seo_og",          cat:"🟢 SEO",       icon:"✅", label:"Open Graph & Twitter Card tags",  detail:"Full social preview tags on all pages.", def:"done" },
-  { id:"seo_schema",      cat:"🟢 SEO",       icon:"✅", label:"JSON-LD structured data",         detail:"WebSite, Organization, WebPage, FAQPage schemas live.", def:"done" },
-  { id:"seo_sitemap",     cat:"🟢 SEO",       icon:"✅", label:"Sitemap.xml live",                detail:"All 5 pages with lastmod dates — submitted to Search Console.", def:"done" },
-  { id:"seo_robots",      cat:"🟢 SEO",       icon:"✅", label:"robots.txt with AI blocker",      detail:"GPTBot, Claude-Web, CCBot, anthropic-ai, Google-Extended blocked.", def:"done" },
-  { id:"seo_clean_urls",  cat:"🟢 SEO",       icon:"✅", label:"Clean URLs (no .html)",           detail:"All pages use clean folder-style URLs (/faq/ not /faq.html).", def:"done" },
+  { id:"seo_meta",        cat:"🟢 SEO Done",  icon:"✅", label:"Meta titles & descriptions",      detail:"All 5 pages have keyword-rich titles and descriptions.", def:"done" },
+  { id:"seo_og",          cat:"🟢 SEO Done",  icon:"✅", label:"Open Graph & Twitter Card tags",  detail:"Full social preview tags on all pages.", def:"done" },
+  { id:"seo_schema",      cat:"🟢 SEO Done",  icon:"✅", label:"JSON-LD structured data",         detail:"WebSite, Organization, WebPage, FAQPage schemas live.", def:"done" },
+  { id:"seo_sitemap",     cat:"🟢 SEO Done",  icon:"✅", label:"Sitemap.xml live",                detail:"All 5 pages with lastmod dates — submitted to Search Console.", def:"done" },
+  { id:"seo_robots",      cat:"🟢 SEO Done",  icon:"✅", label:"robots.txt with AI blocker",      detail:"GPTBot, Claude-Web, CCBot, anthropic-ai, Google-Extended blocked.", def:"done" },
+  { id:"seo_clean_urls",  cat:"🟢 SEO Done",  icon:"✅", label:"Clean URLs (no .html)",           detail:"All pages use clean folder-style URLs (/faq/ not /faq.html).", def:"done" },
+];
+
+/* ── Minecraft Server Missing Features ── */
+const RPT_SERVER_FEATURES = [
+  { id:"sf_economy",     cat:"🔴 Core Gameplay", icon:"💰", label:"Economy / Shop system",           detail:"Players need a way to trade items without meeting in-game. Add a shop plugin (ChestShop, EssentialsX shops, or custom market).", def:"missing" },
+  { id:"sf_discord_bridge", cat:"🔴 Core Gameplay", icon:"💬", label:"Discord ↔ Minecraft chat bridge", detail:"Players want to chat in-game from Discord and vice versa. Boosts engagement massively. Use DiscordSRV plugin.", def:"missing" },
+  { id:"sf_anticheat",   cat:"🔴 Core Gameplay", icon:"🛡️", label:"Anti-cheat plugin",               detail:"No anti-cheat configured. Players can use hacks/killaura in a Lifesteal server which ruins the experience. Use Matrix or Vulcan.", def:"missing" },
+  { id:"sf_spawn",       cat:"🔴 Core Gameplay", icon:"🏛️", label:"Spawn / Hub area built",           detail:"A proper spawn area with info boards, rules display, and portal to world makes the server feel professional.", def:"missing" },
+  { id:"sf_homes",       cat:"🟡 Player QoL",    icon:"🏠", label:"/home command (set multiple homes)", detail:"EssentialsX or CMI provides /home, /sethome — players need this for survival convenience.", def:"missing" },
+  { id:"sf_warps",       cat:"🟡 Player QoL",    icon:"🚀", label:"Community warps system",           detail:"/warp market, /warp pvp arena, /warp spawn — helps players find important locations.", def:"missing" },
+  { id:"sf_tpa",         cat:"🟡 Player QoL",    icon:"🤝", label:"/tpa teleport request",            detail:"Players need to be able to teleport to each other. Essential for any SMP.", def:"missing" },
+  { id:"sf_leaderboard_plugin", cat:"🟡 Player QoL", icon:"🏆", label:"In-game leaderboard (hearts/kills)", detail:"A scoreboard or leaderboard showing top players drives competition. Use FeatherBoard or TAB plugin.", def:"missing" },
+  { id:"sf_death_msgs",  cat:"🟡 Player QoL",    icon:"💀", label:"Custom death messages",            detail:"Funny / dramatic custom death messages add personality. Use CMI or custom plugin.", def:"missing" },
+  { id:"sf_dynmap",      cat:"🟡 Player QoL",    icon:"🗺️", label:"Live world map (Dynmap/BlueMap)",  detail:"Web-accessible live map of the server. Players love seeing where everyone lives and what has been built.", def:"missing" },
+  { id:"sf_backup",      cat:"🔴 Admin",         icon:"💾", label:"Automated world backups",          detail:"If the server crashes without backups, all player progress is lost. Set up hourly or daily backups to cloud storage.", def:"missing" },
+  { id:"sf_rcon",        cat:"🔴 Admin",         icon:"🖥️", label:"RCON / remote console access",     detail:"Without RCON you must be physically at Pterodactyl to run commands. RCON lets you manage server remotely.", def:"missing" },
+  { id:"sf_pvp_arena",   cat:"🟢 Events",        icon:"⚔️", label:"Dedicated PvP arena",             detail:"A flat walled arena for fair PvP practice / tournaments away from the survival world.", def:"missing" },
+  { id:"sf_minigames",   cat:"🟢 Events",        icon:"🎮", label:"Mini-games area (Spleef, Sumo)",   detail:"Simple mini-games give players something to do during downtime and keep the server fun.", def:"missing" },
+  { id:"sf_events_plugin", cat:"🟢 Events",      icon:"🎉", label:"Events plugin / reward system",   detail:"A way to run scheduled events with automatic rewards keeps players logging in regularly.", def:"missing" },
+  { id:"sf_claims",      cat:"🟡 Player QoL",    icon:"🔒", label:"Land claiming plugin",             detail:"Players need to protect their builds. GriefPrevention or Lands plugin is essential for any SMP.", def:"missing" },
+  { id:"sf_lifesteal_ok",cat:"🟢 Done",          icon:"✅", label:"Lifesteal custom plugin",          detail:"Custom powers system with 6 powers (Miner, PvPer, Trader, Flyer, Foody, Hider) is live.", def:"done" },
+  { id:"sf_whitelist_ok",cat:"🟢 Done",          icon:"✅", label:"Whitelist / application system",   detail:"Website whitelist application and Firestore integration is live.", def:"done" },
+];
+
+/* ── Development Ideas ── */
+const RPT_DEV_IDEAS = [
+  // Events
+  { id:"ev_pvp_tournament", cat:"🎯 Events (Run when activity drops)", icon:"⚔️", label:"Weekly PvP Tournament",            detail:"Host a bracket-style 1v1 tournament with a prize (in-game item, role on Discord). Announce 3 days before in Discord.", def:"missing" },
+  { id:"ev_build_contest",  cat:"🎯 Events (Run when activity drops)", icon:"🏗️", label:"Build Contest",                    detail:"Give players a theme and a week to build. Community votes winner. Prize: custom item or Discord role.", def:"missing" },
+  { id:"ev_treasure_hunt",  cat:"🎯 Events (Run when activity drops)", icon:"🗺️", label:"Treasure Hunt Event",              detail:"Hide chests with clues across the map. First player to find the final chest wins. Great for server exploration.", def:"missing" },
+  { id:"ev_heart_race",     cat:"🎯 Events (Run when activity drops)", icon:"❤️", label:"Heart Race — most hearts in 1 week", detail:"Special week where players compete to get the most hearts. Leaderboard posted in Discord daily.", def:"missing" },
+  { id:"ev_halloween",      cat:"🎯 Events (Run when activity drops)", icon:"🎃", label:"Seasonal events (Halloween, Christmas)", detail:"Halloween maze, Christmas gift hunt, etc. Seasonal content keeps long-term players engaged.", def:"missing" },
+  // Plugins / Features
+  { id:"dev_economy",       cat:"⚙️ Development Priority",            icon:"💰", label:"Add economy plugin + /shop",       detail:"An in-game economy gives players goals beyond just surviving. Most active SMPs have this.", def:"missing" },
+  { id:"dev_discord_bridge",cat:"⚙️ Development Priority",            icon:"💬", label:"Discord chat bridge",               detail:"DiscordSRV syncs in-game chat to Discord. Players who aren't online can still be involved.", def:"missing" },
+  { id:"dev_dynmap",        cat:"⚙️ Development Priority",            icon:"🗺️", label:"Dynmap / live world map on website", detail:"Embed the live map on the website. Players show friends their builds — drives applications.", def:"missing" },
+  { id:"dev_leaderboard_web",cat:"⚙️ Development Priority",           icon:"🏆", label:"Website leaderboard page",          detail:"Show top players by hearts/kills on the website. Players check it daily — drives repeat visits.", def:"missing" },
+  { id:"dev_gallery",       cat:"⚙️ Development Priority",            icon:"📸", label:"Add server screenshots to gallery", detail:"Gallery is empty. Add 8-10 good screenshots of builds, PvP moments, base screenshots.", def:"missing" },
+  // Community
+  { id:"cm_announcements",  cat:"📣 Community Building",               icon:"📢", label:"Regular Discord announcements",    detail:"Post in Discord at least 3x per week — server updates, polls, memes. Silence kills community.", def:"missing" },
+  { id:"cm_staff_online",   cat:"📣 Community Building",               icon:"👨‍💼", label:"Staff online times schedule",      detail:"Set fixed times when at least one staff is always online. Players trust staffed servers more.", def:"missing" },
+  { id:"cm_yt_content",     cat:"📣 Community Building",               icon:"🎬", label:"Start YouTube / TikTok channel",   detail:"Record Lifesteal moments on your server. Even 1-2 videos drives organic applications.", def:"missing" },
+  { id:"cm_player_spotlight",cat:"📣 Community Building",              icon:"⭐", label:"Weekly Player Spotlight",          detail:"Feature one player in Discord each week — their base screenshot, achievements. Makes players feel valued.", def:"missing" },
+  { id:"cm_rule_updates",   cat:"📣 Community Building",               icon:"📋", label:"Review and update server rules",   detail:"Outdated or missing rules cause conflicts. Review rules monthly and add gaps based on recent tickets.", def:"missing" },
 ];
 
 const RPT_BUGS = [
@@ -1039,9 +1081,18 @@ function rptRenderChecklist(items, containerId, storageKey, cycleStates) {
   el.innerHTML = html || "<p style='color:#7a8494;font-size:13px'>No items.</p>";
 }
 
+const _rptChecklistMap = {
+  rpt_checklist:        { items: () => RPT_CHECKLIST,       containerId: "rptChecklist",     cycleStates: ["missing","progress","done"] },
+  rpt_bugs:             { items: () => RPT_BUGS,            containerId: "rptBugList",       cycleStates: ["open","progress","fixed"] },
+  rpt_server_features:  { items: () => RPT_SERVER_FEATURES, containerId: "rptServerFeatures",cycleStates: ["missing","progress","done"] },
+  rpt_dev_ideas:        { items: () => RPT_DEV_IDEAS,       containerId: "rptDevIdeas",      cycleStates: ["missing","progress","done"] },
+};
+
 window.rptToggle = function(storageKey, id, cycleStates) {
   const state = rptGetState(storageKey);
-  const items = storageKey === "rpt_checklist" ? RPT_CHECKLIST : RPT_BUGS;
+  const map = _rptChecklistMap[storageKey];
+  if (!map) return;
+  const items = map.items();
   const item = items.find(i => i.id === id);
   if (!item) return;
   const cur = state[id] ?? item.def;
@@ -1049,13 +1100,14 @@ window.rptToggle = function(storageKey, id, cycleStates) {
   const next = cycleStates[(idx + 1) % cycleStates.length];
   state[id] = next;
   rptSaveState(storageKey, state);
-  if (storageKey === "rpt_checklist") rptRenderChecklist(RPT_CHECKLIST, "rptChecklist", "rpt_checklist", ["missing","progress","done"]);
-  else rptRenderChecklist(RPT_BUGS, "rptBugList", "rpt_bugs", ["open","progress","fixed"]);
+  rptRenderChecklist(items, map.containerId, storageKey, cycleStates);
   // Update bug count badge
   const bugState = rptGetState("rpt_bugs");
   const openBugs = RPT_BUGS.filter(b => (bugState[b.id] ?? b.def) !== "fixed").length;
   const bugCountEl = $("rptBugCount");
   if (bugCountEl) bugCountEl.textContent = openBugs;
+  // Refresh health score whenever any checklist changes
+  rptUpdateHealthScore();
 };
 
 async function rptFetchServerStatus() {
@@ -1182,9 +1234,109 @@ async function rptLoadCounts() {
   }
 }
 
+async function rptLoadActivity() {
+  try {
+    const now = Date.now();
+    const ms7  = 7  * 24 * 60 * 60 * 1000;
+    const ms30 = 30 * 24 * 60 * 60 * 1000;
+    const ts7  = new Date(now - ms7);
+    const ts30 = new Date(now - ms30);
+
+    const [apps7, apps30, tix7, users7] = await Promise.all([
+      getCountFromServer(query(collection(db, "applications"), where("submittedAt", ">=", ts7))),
+      getCountFromServer(query(collection(db, "applications"), where("submittedAt", ">=", ts30))),
+      getCountFromServer(query(collection(db, "tickets"),      where("createdAt",   ">=", ts7))),
+      getCountFromServer(query(collection(db, "users"),        where("createdAt",   ">=", ts7))),
+    ]);
+
+    const a7  = apps7.data().count;
+    const a30 = apps30.data().count;
+    const t7  = tix7.data().count;
+    const u7  = users7.data().count;
+
+    if ($("rptApps7d"))   $("rptApps7d").textContent   = a7;
+    if ($("rptApps30d"))  $("rptApps30d").textContent  = a30;
+    if ($("rptTickets7d"))$("rptTickets7d").textContent = t7;
+    if ($("rptReg7d"))    $("rptReg7d").textContent    = u7;
+
+    // Activity insight message
+    const insightEl = $("rptActivityAlert");
+    if (insightEl) {
+      if (a7 === 0 && u7 === 0) {
+        insightEl.innerHTML = `<strong>⚠️ Low Activity Alert:</strong> No new applications or registrations in the last 7 days. Consider running an event or posting in Discord to re-engage the community.`;
+      } else if (a7 < 3) {
+        insightEl.innerHTML = `<strong>📉 Activity is slow:</strong> Only <strong>${a7}</strong> application(s) this week. Try announcing the server in a Minecraft SMP Discord server or posting a short TikTok/YouTube video.`;
+      } else {
+        insightEl.innerHTML = `<strong>✅ Good activity:</strong> <strong>${a7}</strong> applications this week. Keep up the momentum — post a Discord update highlighting recent player achievements.`;
+      }
+    }
+
+    const appInsightEl = $("rptAppInsight");
+    if (appInsightEl) {
+      const trend = a30 > 0 ? Math.round((a7 / a30) * 100) : 0;
+      appInsightEl.innerHTML = `This week's ${a7} applications = <strong>${trend}%</strong> of the last 30 days' total (${a30}). ${trend >= 25 ? "📈 Trending well." : "📉 Activity declining — promote the server."}`;
+    }
+  } catch(e) {
+    console.warn("Activity metrics unavailable:", e);
+  }
+}
+
+function rptUpdateHealthScore() {
+  // Score out of 100 based on server features done + bugs fixed
+  const featState = rptGetState("rpt_server_features");
+  const bugState  = rptGetState("rpt_bugs");
+
+  const totalFeats = RPT_SERVER_FEATURES.length;
+  const doneFeats  = RPT_SERVER_FEATURES.filter(f => (featState[f.id] ?? f.def) === "done").length;
+  const totalBugs  = RPT_BUGS.length;
+  const fixedBugs  = RPT_BUGS.filter(b => (bugState[b.id] ?? b.def) === "fixed").length;
+
+  const score = Math.round((doneFeats / totalFeats) * 60 + (fixedBugs / totalBugs) * 40);
+
+  const scoreEl = $("rptHealthScore");
+  const arcEl   = $("rptHealthArc");
+  const titleEl = $("rptHealthTitle");
+  const subEl   = $("rptHealthSub");
+  const issuesEl= $("rptHealthIssues");
+
+  if (scoreEl) scoreEl.textContent = score;
+
+  // SVG arc: circumference = 2π×40 ≈ 251.3
+  if (arcEl) {
+    const circ = 251.3;
+    const offset = circ - (score / 100) * circ;
+    const color = score >= 70 ? "#23a865" : score >= 40 ? "#d9a020" : "#c0404e";
+    arcEl.setAttribute("stroke-dashoffset", offset);
+    arcEl.setAttribute("stroke", color);
+  }
+
+  if (titleEl) {
+    titleEl.textContent = score >= 70 ? "Server is in good shape!" : score >= 40 ? "Server needs improvement" : "Server needs urgent attention";
+  }
+  if (subEl) {
+    subEl.textContent = `${doneFeats} of ${totalFeats} features implemented · ${fixedBugs} of ${totalBugs} bugs fixed`;
+  }
+
+  // Issue tags
+  if (issuesEl) {
+    const missingCritical = RPT_SERVER_FEATURES
+      .filter(f => (featState[f.id] ?? f.def) !== "done" && f.cat.includes("🔴"))
+      .slice(0, 4);
+    const openHighBugs = RPT_BUGS.filter(b => (bugState[b.id] ?? b.def) !== "fixed" && b.priority === "🔴 HIGH");
+
+    let tags = "";
+    openHighBugs.forEach(b => { tags += `<span class="rpt-health-issue-tag red">🔴 ${esc(b.label)}</span>`; });
+    missingCritical.forEach(f => { tags += `<span class="rpt-health-issue-tag yellow">⚠️ Missing: ${esc(f.label)}</span>`; });
+    if (!tags) tags = `<span class="rpt-health-issue-tag green">✅ No critical issues found</span>`;
+    issuesEl.innerHTML = tags;
+  }
+}
+
 async function loadReports() {
-  rptRenderChecklist(RPT_CHECKLIST, "rptChecklist", "rpt_checklist", ["missing","progress","done"]);
-  rptRenderChecklist(RPT_BUGS,      "rptBugList",   "rpt_bugs",      ["open","progress","fixed"]);
+  rptRenderChecklist(RPT_CHECKLIST,        "rptChecklist",     "rpt_checklist",        ["missing","progress","done"]);
+  rptRenderChecklist(RPT_BUGS,             "rptBugList",       "rpt_bugs",             ["open","progress","fixed"]);
+  rptRenderChecklist(RPT_SERVER_FEATURES,  "rptServerFeatures","rpt_server_features",  ["missing","progress","done"]);
+  rptRenderChecklist(RPT_DEV_IDEAS,        "rptDevIdeas",      "rpt_dev_ideas",        ["missing","progress","done"]);
 
   // Initial bug count
   const bugState = rptGetState("rpt_bugs");
@@ -1192,7 +1344,9 @@ async function loadReports() {
   const bugCountEl = $("rptBugCount");
   if (bugCountEl) bugCountEl.textContent = openBugs;
 
-  await Promise.all([rptFetchServerStatus(), rptLoadCounts()]);
+  rptUpdateHealthScore();
+
+  await Promise.all([rptFetchServerStatus(), rptLoadCounts(), rptLoadActivity()]);
 }
 
 $("refreshReports").onclick = loadReports;

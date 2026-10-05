@@ -316,3 +316,23 @@
 .rpt-recent-item .status-pill{font-size:10px;padding:2px 7px}
 @media(max-width:1100px){.rpt-alert-grid{grid-template-columns:repeat(2,1fr)}.rpt-three-col{grid-template-columns:1fr 1fr}}
 @media(max-width:700px){.rpt-alert-grid{grid-template-columns:1fr}.rpt-two-col,.rpt-three-col{grid-template-columns:1fr}}
+
+/* ── Health Banner ── */
+.rpt-health-banner{display:flex;align-items:center;gap:24px;background:linear-gradient(135deg,#10141c,#131a26);border:1px solid #252b37;border-radius:16px;padding:22px 26px;margin-bottom:20px}
+.rpt-health-ring{flex-shrink:0}
+.rpt-health-ring svg circle{transition:stroke-dashoffset 1s ease}
+.rpt-health-score-wrap{flex:1;min-width:0}
+.rpt-health-score-num{font-size:42px;font-weight:900;line-height:1;background:linear-gradient(135deg,#ff8e3c,#ffd060);-webkit-background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.rpt-health-title{font-size:17px;font-weight:700;margin:6px 0 3px;color:#e0e6f0}
+.rpt-health-sub{font-size:12px;color:#7a8494}
+.rpt-health-issues{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.rpt-health-issue-tag{padding:5px 10px;border-radius:999px;font-size:11px;font-weight:600;background:#1a202b;color:#aeb7c7;border:1px solid #303746}
+.rpt-health-issue-tag.red{background:#4a1820;border-color:#7a2630;color:#ff9ca8}
+.rpt-health-issue-tag.yellow{background:#3a2c0a;border-color:#7a5910;color:#f4d46b}
+.rpt-health-issue-tag.green{background:#0d2e1d;border-color:#176c43;color:#72e0a9}
+
+/* ── Activity Insight ── */
+.rpt-activity-insight{background:#0a0e15;border:1px solid #1e2430;border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:13px;color:#aeb7c7;line-height:1.6}
+.rpt-activity-insight strong{color:#fff}
+
+@media(max-width:700px){.rpt-health-banner{flex-direction:column;align-items:flex-start}.rpt-health-ring{display:none}}
