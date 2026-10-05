@@ -959,4 +959,254 @@ $("downloadWhitelistBtn").onclick = () => {
 
 $("refreshWhitelist").onclick = loadWhitelist;
 $("syncWhitelistBtn").onclick = syncApprovedToWhitelist;
+
+/* ══════════════════════════════════════════════════════════
+   REPORTS & INTELLIGENCE
+   ══════════════════════════════════════════════════════════ */
+
+const RPT_CHECKLIST = [
+  // Essential
+  { id:"privacy_policy",  cat:"🔴 Essential", icon:"⚠️", label:"Privacy Policy page",            detail:"Required by Google AdSense — risks account suspension without it.", def:"missing" },
+  { id:"custom_404",      cat:"🔴 Essential", icon:"⚠️", label:"Custom 404 error page",           detail:"Branded error page instead of GitHub Pages default ugly 404.", def:"missing" },
+  { id:"gallery_shots",   cat:"🔴 Essential", icon:"⚠️", label:"Gallery screenshots (empty now)", detail:"Gallery section exists but shows 'No screenshots yet'. Add real server screenshots.", def:"missing" },
+  // Growth
+  { id:"leaderboard",     cat:"🟡 Growth",    icon:"📊", label:"Leaderboard page",                detail:"Top players by hearts / kills — drives daily repeat visits.", def:"missing" },
+  { id:"about_staff",     cat:"🟡 Growth",    icon:"👤", label:"About / Staff page",              detail:"Show who runs the server — builds player trust.", def:"missing" },
+  { id:"video_trailer",   cat:"🟡 Growth",    icon:"🎬", label:"Server trailer / YouTube embed",  detail:"Video on homepage increases application rate significantly.", def:"missing" },
+  { id:"more_faq",        cat:"🟡 Growth",    icon:"❓", label:"Expand FAQ (only 8 entries now)", detail:"Add powers guide, commands list, heart mechanics, event info.", def:"partial" },
+  { id:"social_links",    cat:"🟡 Growth",    icon:"📲", label:"Social media links (YouTube, TikTok, Twitter)", detail:"Only Discord linked in footer currently.", def:"missing" },
+  { id:"changelog",       cat:"🟡 Growth",    icon:"📋", label:"Changelog / Updates page",        detail:"Track server patches and new features so players stay engaged.", def:"missing" },
+  // SEO done
+  { id:"seo_meta",        cat:"🟢 SEO",       icon:"✅", label:"Meta titles & descriptions",      detail:"All 5 pages have keyword-rich titles and descriptions.", def:"done" },
+  { id:"seo_og",          cat:"🟢 SEO",       icon:"✅", label:"Open Graph & Twitter Card tags",  detail:"Full social preview tags on all pages.", def:"done" },
+  { id:"seo_schema",      cat:"🟢 SEO",       icon:"✅", label:"JSON-LD structured data",         detail:"WebSite, Organization, WebPage, FAQPage schemas live.", def:"done" },
+  { id:"seo_sitemap",     cat:"🟢 SEO",       icon:"✅", label:"Sitemap.xml live",                detail:"All 5 pages with lastmod dates — submitted to Search Console.", def:"done" },
+  { id:"seo_robots",      cat:"🟢 SEO",       icon:"✅", label:"robots.txt with AI blocker",      detail:"GPTBot, Claude-Web, CCBot, anthropic-ai, Google-Extended blocked.", def:"done" },
+  { id:"seo_clean_urls",  cat:"🟢 SEO",       icon:"✅", label:"Clean URLs (no .html)",           detail:"All pages use clean folder-style URLs (/faq/ not /faq.html).", def:"done" },
+];
+
+const RPT_BUGS = [
+  { id:"wither_overflow",    priority:"🔴 HIGH",   label:"WitherPower StackOverflow crash",       detail:"applySoulDrain() → entity.damage() → event loop. Fix: add UUID guard Set before damage call. File: WitherPower.java:83", def:"open" },
+  { id:"offline_mode_sec",   priority:"🔴 HIGH",   label:"Offline mode security risk",            detail:"Server runs offline mode. Ensure AuthMe password is very strong and admin IGN is never shared publicly.", def:"open" },
+  { id:"voice_port_conflict",priority:"🔴 HIGH",   label:"Voice chat UDP port conflict",          detail:"Geyser using port 20011 and voice chat trying same port. Change voice chat to a different UDP port (e.g. 24454).", def:"open" },
+  { id:"whitelist_sync",     priority:"🟡 MEDIUM", label:"Auto-whitelist sync not working",       detail:"Fix: delete plugins/FireCraftNotifier/whitelisted.txt → restart server → run 'whitelist on' → run 'fcn poll'.", def:"open" },
+  { id:"fabric_jars",        priority:"🟡 MEDIUM", label:"Old Fabric JARs in plugins folder",    detail:"Delete: voicechat-fabric-2.6.24+26.4-snapshot-2.jar and ClickVillagers-1.6.7+26.3-fabric.jar from plugins/.", def:"open" },
+];
+
+function rptGetState(storageKey, items) {
+  try {
+    return JSON.parse(localStorage.getItem(storageKey) || "{}");
+  } catch { return {}; }
+}
+
+function rptSaveState(storageKey, state) {
+  try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch {}
+}
+
+function rptRenderChecklist(items, containerId, storageKey, cycleStates) {
+  const state = rptGetState(storageKey, items);
+  const el = $(containerId);
+  if (!el) return;
+
+  // Group by category
+  const cats = {};
+  items.forEach(item => {
+    const s = state[item.id] ?? item.def;
+    if (!cats[item.cat]) cats[item.cat] = [];
+    cats[item.cat].push({ ...item, currentState: s });
+  });
+
+  let html = "";
+  for (const [cat, catItems] of Object.entries(cats)) {
+    const doneCount = catItems.filter(i => i.currentState === "done" || i.currentState === "fixed").length;
+    html += `<div style="margin-top:12px;margin-bottom:4px;font-size:11px;font-weight:700;color:#8992a3;letter-spacing:.5px">${esc(cat)} (${doneCount}/${catItems.length})</div>`;
+    catItems.forEach(item => {
+      const s = item.currentState;
+      const isDone = s === "done" || s === "fixed";
+      const isProgress = s === "progress" || s === "partial";
+      const cls = isDone ? "done" : isProgress ? "progress" : "";
+      const badge = isDone ? "✅" : isProgress ? "🔄" : (item.icon || "⬜");
+      html += `<div class="rpt-check-item ${cls}" data-id="${esc(item.id)}" onclick="rptToggle('${storageKey}','${esc(item.id)}',${JSON.stringify(cycleStates)})">
+        <div class="rpt-check-badge">${badge}</div>
+        <div class="rpt-check-body">
+          <div class="rpt-check-label">${esc(item.label)}</div>
+          <div class="rpt-check-detail">${esc(item.detail)}</div>
+        </div>
+        <div class="rpt-check-cat">${esc(item.priority || "")}</div>
+      </div>`;
+    });
+  }
+  el.innerHTML = html || "<p style='color:#7a8494;font-size:13px'>No items.</p>";
+}
+
+window.rptToggle = function(storageKey, id, cycleStates) {
+  const state = rptGetState(storageKey);
+  const items = storageKey === "rpt_checklist" ? RPT_CHECKLIST : RPT_BUGS;
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  const cur = state[id] ?? item.def;
+  const idx = cycleStates.indexOf(cur);
+  const next = cycleStates[(idx + 1) % cycleStates.length];
+  state[id] = next;
+  rptSaveState(storageKey, state);
+  if (storageKey === "rpt_checklist") rptRenderChecklist(RPT_CHECKLIST, "rptChecklist", "rpt_checklist", ["missing","progress","done"]);
+  else rptRenderChecklist(RPT_BUGS, "rptBugList", "rpt_bugs", ["open","progress","fixed"]);
+  // Update bug count badge
+  const bugState = rptGetState("rpt_bugs");
+  const openBugs = RPT_BUGS.filter(b => (bugState[b.id] ?? b.def) !== "fixed").length;
+  const bugCountEl = $("rptBugCount");
+  if (bugCountEl) bugCountEl.textContent = openBugs;
+};
+
+async function rptFetchServerStatus() {
+  const el = $("rptServerStatus");
+  const timeEl = $("rptServerLastCheck");
+  if (!el) return;
+  try {
+    const r = await fetch("https://api.mcsrvstat.us/3/play.firecraft.fun:20011");
+    const d = await r.json();
+    const now = new Date().toLocaleTimeString();
+    if (timeEl) timeEl.textContent = `Last checked: ${now}`;
+    if (d.online) {
+      const players = d.players ? `${d.players.online} / ${d.players.max}` : "—";
+      const ver = d.version || "—";
+      const sw = d.software || "Paper";
+      const motd = d.motd?.clean?.[0] || "FireCraft SMP";
+      el.innerHTML = `
+        <div class="rpt-server-row"><span class="label">Status</span><span class="value"><span class="rpt-online-dot"></span>Online</span></div>
+        <div class="rpt-server-row"><span class="label">Players</span><span class="value">${esc(players)}</span></div>
+        <div class="rpt-server-row"><span class="label">Version</span><span class="value">${esc(ver)} (${esc(sw)})</span></div>
+        <div class="rpt-server-row"><span class="label">MOTD</span><span class="value">${esc(motd)}</span></div>
+        <div class="rpt-server-row"><span class="label">Address</span><span class="value">play.firecraft.fun:20011</span></div>`;
+    } else {
+      el.innerHTML = `<div class="rpt-server-row"><span class="label">Status</span><span class="value"><span class="rpt-offline-dot"></span>Offline / Unreachable</span></div>`;
+    }
+  } catch {
+    if (el) el.innerHTML = `<p style="color:#7a8494;font-size:13px">Could not fetch server status. API may be temporarily unavailable.</p>`;
+  }
+}
+
+async function rptLoadCounts() {
+  try {
+    // Applications by status
+    const appSnap = await getDocs(collection(db, "applications"));
+    let appPending = 0, appApproved = 0, appRejected = 0;
+    appSnap.forEach(d => {
+      const s = d.data().status;
+      if (s === "pending") appPending++;
+      else if (s === "approved") appApproved++;
+      else if (s === "rejected") appRejected++;
+    });
+    const appTotal = appPending + appApproved + appRejected;
+
+    $("rptPendingAppsNum").textContent = appPending;
+    $("rptAppPending").textContent = appPending;
+    $("rptAppApproved").textContent = appApproved;
+    $("rptAppRejected").textContent = appRejected;
+    if (appTotal > 0) {
+      $("rptAppPendingBar").style.width  = (appPending  / appTotal * 100) + "%";
+      $("rptAppApprovedBar").style.width = (appApproved / appTotal * 100) + "%";
+      $("rptAppRejectedBar").style.width = (appRejected / appTotal * 100) + "%";
+    }
+    $("rptApprovedCount").textContent = appApproved;
+    $("rptApprovalRate").textContent = appTotal > 0 ? Math.round(appApproved / appTotal * 100) + "%" : "—";
+
+    // Tickets by status
+    const tickSnap = await getDocs(collection(db, "tickets"));
+    let tickOpen = 0, tickClosed = 0;
+    tickSnap.forEach(d => {
+      const s = d.data().status;
+      if (s === "open") tickOpen++; else tickClosed++;
+    });
+    const tickTotal = tickOpen + tickClosed;
+    $("rptOpenTicketsNum").textContent = tickOpen;
+    $("rptTicketOpen").textContent = tickOpen;
+    $("rptTicketClosed").textContent = tickClosed;
+    if (tickTotal > 0) {
+      $("rptTicketOpenBar").style.width   = (tickOpen   / tickTotal * 100) + "%";
+      $("rptTicketClosedBar").style.width = (tickClosed / tickTotal * 100) + "%";
+    }
+
+    // Users
+    const userSnap = await getDocs(collection(db, "users"));
+    $("rptTotalUsers").textContent = userSnap.size;
+
+    // Withdrawals pending
+    const wSnap = await getDocs(query(collection(db, "withdrawals"), where("status", "==", "pending")));
+    $("rptPendingWithdrawNum").textContent = wSnap.size;
+
+    // Reviews avg rating
+    const revSnap = await getDocs(collection(db, "reviews"));
+    if (revSnap.size > 0) {
+      let sum = 0;
+      revSnap.forEach(d => { sum += Number(d.data().rating || 0); });
+      $("rptAvgRating").textContent = (sum / revSnap.size).toFixed(1) + " ★";
+    } else {
+      $("rptAvgRating").textContent = "No reviews";
+    }
+
+    // Recent registrations
+    const recentUsers = await getDocs(query(collection(db, "users"), orderBy("createdAt", "desc"), limit(5)));
+    const ruEl = $("rptRecentUsers");
+    if (ruEl) {
+      ruEl.innerHTML = recentUsers.size ? recentUsers.docs.map(d => {
+        const u = d.data();
+        return `<div class="rpt-recent-item"><span class="ign">${esc(u.ign || "—")}</span><span class="meta">${u.createdAt ? u.createdAt.toDate().toLocaleDateString() : "—"}</span></div>`;
+      }).join("") : `<p style="color:#7a8494;font-size:12px">No accounts yet.</p>`;
+    }
+
+    // Recent applications
+    const recentApps = await getDocs(query(collection(db, "applications"), orderBy("submittedAt", "desc"), limit(5)));
+    const raEl = $("rptRecentApps");
+    if (raEl) {
+      raEl.innerHTML = recentApps.size ? recentApps.docs.map(d => {
+        const a = d.data();
+        const cls = a.status === "approved" ? "ok" : a.status === "rejected" ? "bad" : "warn";
+        return `<div class="rpt-recent-item"><span class="ign">${esc(a.ign || "—")}</span><span class="pill ${cls} status-pill">${esc(a.status || "pending")}</span></div>`;
+      }).join("") : `<p style="color:#7a8494;font-size:12px">No applications yet.</p>`;
+    }
+
+    // Recent tickets
+    const recentTix = await getDocs(query(collection(db, "tickets"), orderBy("createdAt", "desc"), limit(5)));
+    const rtEl = $("rptRecentTickets");
+    if (rtEl) {
+      rtEl.innerHTML = recentTix.size ? recentTix.docs.map(d => {
+        const t = d.data();
+        const cls = t.status === "open" ? "warn" : "ok";
+        return `<div class="rpt-recent-item"><span class="ign" style="max-width:130px;overflow:hidden;text-overflow:ellipsis">${esc(t.subject || t.ign || "—")}</span><span class="pill ${cls} status-pill">${esc(t.status || "open")}</span></div>`;
+      }).join("") : `<p style="color:#7a8494;font-size:12px">No tickets yet.</p>`;
+    }
+
+  } catch(e) {
+    console.error("Reports load error:", e);
+  }
+}
+
+async function loadReports() {
+  rptRenderChecklist(RPT_CHECKLIST, "rptChecklist", "rpt_checklist", ["missing","progress","done"]);
+  rptRenderChecklist(RPT_BUGS,      "rptBugList",   "rpt_bugs",      ["open","progress","fixed"]);
+
+  // Initial bug count
+  const bugState = rptGetState("rpt_bugs");
+  const openBugs = RPT_BUGS.filter(b => (bugState[b.id] ?? b.def) !== "fixed").length;
+  const bugCountEl = $("rptBugCount");
+  if (bugCountEl) bugCountEl.textContent = openBugs;
+
+  await Promise.all([rptFetchServerStatus(), rptLoadCounts()]);
+}
+
+$("refreshReports").onclick = loadReports;
+
+// Auto-load when reports section is navigated to
+const _origNavigate = navigate;
+// Patch navigate to trigger loadReports on first visit
+let _reportsLoaded = false;
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (btn.dataset.section === "reports" && !_reportsLoaded) {
+      _reportsLoaded = true;
+      loadReports();
+    }
+  });
+});
 $("whitelistSearch").addEventListener("input", renderWhitelist);

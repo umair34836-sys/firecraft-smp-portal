@@ -50,6 +50,7 @@
       <button class="nav-btn" data-section="withdrawals">💸 Withdrawals</button>
       <button class="nav-btn" data-section="earnSettings">⚙️ Earn Settings</button>
       <button class="nav-btn" data-section="whitelist">📋 Whitelist</button>
+      <button class="nav-btn" data-section="reports">📈 Reports</button>
       </aside>
 
       <main class="content">
@@ -399,6 +400,108 @@
       <thead><tr><th>#</th><th>IGN</th><th>Approved At</th><th>Action</th></tr></thead>
       <tbody id="whitelistList"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody>
     </table>
+  </div>
+</section>
+
+      <!-- ── REPORTS & INTELLIGENCE ── -->
+<section id="reports" class="section">
+  <div class="section-head">
+    <div><h1>Reports & Intelligence</h1><p>Server health, community metrics, improvement tracker and bug log.</p></div>
+    <button id="refreshReports" class="btn btn-primary">Refresh All</button>
+  </div>
+
+  <!-- Action Items -->
+  <div class="rpt-alert-grid">
+    <div class="rpt-alert rpt-a-warn">
+      <div class="rpt-alert-num" id="rptPendingAppsNum">—</div>
+      <div class="rpt-alert-label">Pending Applications</div>
+      <button class="btn btn-small" onclick="navigate('applications')">Review →</button>
+    </div>
+    <div class="rpt-alert rpt-a-info">
+      <div class="rpt-alert-num" id="rptOpenTicketsNum">—</div>
+      <div class="rpt-alert-label">Open Tickets</div>
+      <button class="btn btn-small" onclick="navigate('tickets')">View →</button>
+    </div>
+    <div class="rpt-alert rpt-a-warn">
+      <div class="rpt-alert-num" id="rptPendingWithdrawNum">—</div>
+      <div class="rpt-alert-label">Pending Withdrawals</div>
+      <button class="btn btn-small" onclick="navigate('withdrawals')">Process →</button>
+    </div>
+    <div class="rpt-alert rpt-a-bad">
+      <div class="rpt-alert-num" id="rptBugCount">5</div>
+      <div class="rpt-alert-label">Known Server Issues</div>
+      <a class="btn btn-small" href="#rptBugSection">View →</a>
+    </div>
+  </div>
+
+  <!-- Live Server + Community -->
+  <div class="rpt-two-col" style="margin-bottom:16px">
+    <div class="card">
+      <div class="rpt-card-title">🌐 Live Server Status
+        <span id="rptServerLastCheck" style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px"></span>
+      </div>
+      <div id="rptServerStatus"><p style="color:#7a8494">Checking server…</p></div>
+    </div>
+    <div class="card">
+      <div class="rpt-card-title">👥 Community Overview</div>
+      <div class="rpt-mini-grid">
+        <div class="rpt-mini-stat"><div class="rpt-mini-num" id="rptTotalUsers">—</div><div class="rpt-mini-label">Registered Accounts</div></div>
+        <div class="rpt-mini-stat"><div class="rpt-mini-num" id="rptApprovedCount">—</div><div class="rpt-mini-label">Approved Players</div></div>
+        <div class="rpt-mini-stat"><div class="rpt-mini-num" id="rptApprovalRate">—</div><div class="rpt-mini-label">Approval Rate</div></div>
+        <div class="rpt-mini-stat"><div class="rpt-mini-num" id="rptAvgRating">—</div><div class="rpt-mini-label">Avg Review ★</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breakdown Bars -->
+  <div class="rpt-two-col" style="margin-bottom:16px">
+    <div class="card">
+      <div class="rpt-card-title">📝 Application Breakdown</div>
+      <div class="rpt-bars">
+        <div class="rpt-bar-row"><span>Pending <b id="rptAppPending">0</b></span><div class="rpt-bar"><div class="rpt-bar-fill rpt-warn" id="rptAppPendingBar"></div></div></div>
+        <div class="rpt-bar-row"><span>Approved <b id="rptAppApproved">0</b></span><div class="rpt-bar"><div class="rpt-bar-fill rpt-ok" id="rptAppApprovedBar"></div></div></div>
+        <div class="rpt-bar-row"><span>Rejected <b id="rptAppRejected">0</b></span><div class="rpt-bar"><div class="rpt-bar-fill rpt-bad" id="rptAppRejectedBar"></div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="rpt-card-title">🎫 Ticket Breakdown</div>
+      <div class="rpt-bars">
+        <div class="rpt-bar-row"><span>Open <b id="rptTicketOpen">0</b></span><div class="rpt-bar"><div class="rpt-bar-fill rpt-warn" id="rptTicketOpenBar"></div></div></div>
+        <div class="rpt-bar-row"><span>Closed <b id="rptTicketClosed">0</b></span><div class="rpt-bar"><div class="rpt-bar-fill rpt-ok" id="rptTicketClosedBar"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Website Improvement Checklist -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="rpt-card-title">✅ Website Improvement Checklist
+      <span style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px">Click a row to toggle Done / In Progress</span>
+    </div>
+    <div id="rptChecklist" class="rpt-checklist"></div>
+  </div>
+
+  <!-- Bug Tracker -->
+  <div class="card" id="rptBugSection" style="margin-bottom:16px">
+    <div class="rpt-card-title">🐛 Plugin & Server Bug Tracker
+      <span style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px">Click a row to mark fixed</span>
+    </div>
+    <div id="rptBugList" class="rpt-checklist"></div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="rpt-three-col">
+    <div class="card">
+      <div class="rpt-card-title">🆕 Recent Registrations</div>
+      <div id="rptRecentUsers" class="rpt-recent"></div>
+    </div>
+    <div class="card">
+      <div class="rpt-card-title">📬 Recent Applications</div>
+      <div id="rptRecentApps" class="rpt-recent"></div>
+    </div>
+    <div class="card">
+      <div class="rpt-card-title">🎫 Recent Tickets</div>
+      <div id="rptRecentTickets" class="rpt-recent"></div>
+    </div>
   </div>
 </section>
 
