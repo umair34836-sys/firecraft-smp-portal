@@ -461,6 +461,19 @@
         <span id="rptServerLastCheck" style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px"></span>
       </div>
       <div id="rptServerStatus"><p style="color:#7a8494">Checking server…</p></div>
+      <div id="rptPluginData" style="margin-top:10px;display:none">
+        <div style="font-size:11px;color:#7a8494;margin-bottom:6px;letter-spacing:.3px">📡 PLUGIN LIVE DATA</div>
+        <div class="rpt-mini-grid">
+          <div class="rpt-mini-stat"><div class="rpt-mini-num" id="rptTPS1m">—</div><div class="rpt-mini-label">TPS (1 min)</div></div>
+          <div class="rpt-mini-stat"><div class="rpt-mini-num" id="rptTPS5m">—</div><div class="rpt-mini-label">TPS (5 min)</div></div>
+          <div class="rpt-mini-stat"><div class="rpt-mini-num" id="rptRAMUsed">—</div><div class="rpt-mini-label">RAM Used (MB)</div></div>
+          <div class="rpt-mini-stat"><div class="rpt-mini-num" id="rptRAMMax">—</div><div class="rpt-mini-label">RAM Max (MB)</div></div>
+        </div>
+        <div style="font-size:11px;color:#7a8494;margin-top:6px">Last plugin push: <span id="rptPluginUpdatedAt">—</span></div>
+      </div>
+      <div id="rptPluginOffline" style="margin-top:10px;display:none;font-size:12px;color:#7a8494">
+        ℹ️ Plugin data not available — install <strong>FireCraftNotifier v1.4.0</strong> on the server.
+      </div>
     </div>
     <div class="card">
       <div class="rpt-card-title">👥 Community Overview</div>
@@ -494,6 +507,15 @@
       </div>
       <div id="rptActivityAlert" class="rpt-activity-insight"></div>
     </div>
+  </div>
+
+  <!-- Player Reports (from /report in-game command) -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="rpt-card-title">🚨 Player Reports
+      <span style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px">In-game /report submissions</span>
+      <button class="btn btn-ghost" style="margin-left:auto;font-size:11px;padding:4px 10px" onclick="rptMarkReportResolved(this)">Mark Selected Resolved</button>
+    </div>
+    <div id="rptPlayerReports"><p style="color:#7a8494;font-size:13px">No player reports yet. Once players use /report in-game, reports appear here.</p></div>
   </div>
 
   <!-- Server Missing Features (Minecraft) -->

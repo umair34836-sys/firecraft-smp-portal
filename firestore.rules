@@ -90,6 +90,28 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // ── Plugin Reporting (written by FireCraftNotifier plugin, no auth needed) ─
+
+    // Live server status — plugin PATCHes this every 5 min
+    match /serverStatus/{doc} {
+      allow read: if isAdmin();
+      allow write: if true;
+    }
+
+    // Player /report submissions — plugin POSTs, admin reads
+    match /playerReports/{doc} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // Player session logs (join/quit times) — plugin POSTs, admin reads
+    match /playerSessions/{doc} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
     // Player reviews — one per user (UID is the document ID)
     match /reviews/{uid} {
       allow read: if true;

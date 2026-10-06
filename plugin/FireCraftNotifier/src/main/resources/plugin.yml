@@ -1,18 +1,25 @@
 name: FireCraftNotifier
-version: 1.3.0
+version: 1.4.0
 main: com.firecraft.notifier.FireCraftNotifier
 api-version: '1.21'
-description: Reminds players to visit the FireCraft website for announcements and events.
+description: Server reporting, player alerts, and website sync for FireCraft SMP.
 author: FireCraft
 
 commands:
   fcn:
     description: FireCraftNotifier admin commands.
-    usage: /fcn <help|info|reload|fetch|poll|list|remind|announce|whitelist|whitelist sync>
+    usage: /fcn <help|info|reload|fetch|poll|status|list|remind|announce|whitelist>
     permission: firecraftnotifier.admin
     aliases: [firecraftnotifier]
+  report:
+    description: Report an issue to server staff.
+    usage: /report <message>
+    permission: firecraft.report
 
 permissions:
   firecraftnotifier.admin:
     description: Access to all FireCraftNotifier admin commands.
     default: op
+  firecraft.report:
+    description: Allows players to submit reports to staff via /report.
+    default: true

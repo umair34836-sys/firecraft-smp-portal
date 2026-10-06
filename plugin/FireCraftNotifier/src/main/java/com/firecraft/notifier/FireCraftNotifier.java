@@ -18,6 +18,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -29,14 +30,17 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
@@ -46,6 +50,9 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
     private final Random random = new Random();
     private final MiniMessage mm = MiniMessage.miniMessage();
     private HttpClient httpClient;
+
+    // Session tracking: UUID → join time (ms)
+    private final Map<UUID, Long> playerJoinTimes = new ConcurrentHashMap<>();
 
     private String projectId;
     private String websiteUrl;
@@ -82,8 +89,13 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
             cmd.setTabCompleter(this);
         }
 
-        // Stagger startup: announcements after 30 s, poll after 90 s, reminders after interval
-        // This avoids hammering Firestore on every server restart and hitting 429 rate limits.
+        var reportCmd = getCommand("report");
+        if (reportCmd != null) {
+            reportCmd.setExecutor(this);
+            reportCmd.setTabCompleter(this);
+        }
+
+        // Stagger startup: announcements after 30s, poll after 90s, status after 60s
         long announceTicks  = 20L * 30;
         long announcePeriod = 20L * 60 * 10;
         Bukkit.getScheduler().runTaskTimerAsynchronously(this,
@@ -98,11 +110,20 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
         Bukkit.getScheduler().runTaskTimerAsynchronously(this,
                 this::pollApprovedPlayers, pollTicks, pollPeriod);
 
-        getLogger().info("[FireCraftNotifier] Enabled — reminders every " + reminderIntervalMinutes + " min.");
+        // Push server status to Firestore every 5 minutes (start after 60s)
+        long statusPeriod = 20L * 60 * 5;
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this,
+                this::pushServerStatus, 20L * 60, statusPeriod);
+
+        getLogger().info("[FireCraftNotifier] v1.4.0 Enabled — reminders every " + reminderIntervalMinutes + " min.");
     }
 
     @Override
     public void onDisable() {
+        // Push a final "server offline" status
+        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+            pushServerOffline();
+        });
         getLogger().info("[FireCraftNotifier] Disabled.");
     }
 
@@ -114,10 +135,32 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
         showJoinTitle           = getConfig().getBoolean("show-join-title", true);
     }
 
-    // ─── Admin command ────────────────────────────────────────────────────────
+    // ─── Admin + Report command ───────────────────────────────────────────────
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+
+        // ── /report <message> — player command ───────────────────────────────
+        if (command.getName().equalsIgnoreCase("report")) {
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage(mm.deserialize(PREFIX + "<red>Only in-game players can use /report."));
+                return true;
+            }
+            if (args.length == 0) {
+                player.sendMessage(mm.deserialize(PREFIX + "<red>Usage: /report <message>  (describe what's wrong)"));
+                return true;
+            }
+            String message = String.join(" ", args);
+            Bukkit.getScheduler().runTaskAsynchronously(this, () ->
+                    pushPlayerReport(player.getName(), message));
+            player.sendMessage(mm.deserialize(
+                    "<gradient:#ff3b30:#ff8a00><bold>[FireCraft]</bold></gradient> "
+                    + "<green>Your report has been sent to staff. Thank you!</green>"));
+            getLogger().info("[FCN] Player report from " + player.getName() + ": " + message);
+            return true;
+        }
+
+        // ── /fcn — admin command ──────────────────────────────────────────────
         if (!sender.hasPermission(PERM)) {
             sender.sendMessage(mm.deserialize(PREFIX + "<red>You don't have permission to use this command."));
             return true;
@@ -166,6 +209,14 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
                 });
             }
 
+            case "status" -> {
+                sender.sendMessage(mm.deserialize(PREFIX + "<yellow>Pushing server status to Firestore..."));
+                Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+                    pushServerStatus();
+                    sender.sendMessage(mm.deserialize(PREFIX + "<green>Status pushed."));
+                });
+            }
+
             case "list" -> {
                 if (cachedTitles.isEmpty()) {
                     sender.sendMessage(mm.deserialize(PREFIX + "<gray>No cached announcements. Use <white>/fcn fetch</white> to load them."));
@@ -179,7 +230,6 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
 
             case "remind" -> {
                 if (args.length >= 2) {
-                    // remind a specific player
                     Player target = Bukkit.getPlayerExact(args[1]);
                     if (target == null) {
                         sender.sendMessage(mm.deserialize(PREFIX + "<red>Player <white>" + args[1] + "<red> is not online."));
@@ -196,7 +246,6 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
                         sender.sendMessage(mm.deserialize(PREFIX + "<green>Reminder sent to <white>" + target.getName() + "<green>."));
                     }
                 } else {
-                    // remind all online players
                     if (Bukkit.getOnlinePlayers().isEmpty()) {
                         sender.sendMessage(mm.deserialize(PREFIX + "<gray>No players online."));
                     } else {
@@ -235,7 +284,6 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
 
                 switch (sub) {
                     case "sync" -> {
-                        // Scan whitelisted.txt and run whitelist add for any IGN not yet on the Minecraft whitelist
                         Set<String> currentWhitelist = getServer().getWhitelistedPlayers()
                                 .stream()
                                 .map(p -> p.getName().toLowerCase())
@@ -321,10 +369,11 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (command.getName().equalsIgnoreCase("report")) return Collections.emptyList();
         if (!sender.hasPermission(PERM)) return Collections.emptyList();
 
         if (args.length == 1) {
-            List<String> subs = Arrays.asList("help", "info", "reload", "fetch", "poll", "list", "remind", "announce", "whitelist");
+            List<String> subs = Arrays.asList("help", "info", "reload", "fetch", "poll", "status", "list", "remind", "announce", "whitelist");
             return subs.stream()
                     .filter(s -> s.startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());
@@ -365,6 +414,7 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
         sender.sendMessage(mm.deserialize("<gray>  <white>/fcn reload</white> — Reload config.yml"));
         sender.sendMessage(mm.deserialize("<gray>  <white>/fcn fetch</white> — Re-fetch announcements from Firestore"));
         sender.sendMessage(mm.deserialize("<gray>  <white>/fcn poll</white> — Poll approvedPlayers & auto-whitelist"));
+        sender.sendMessage(mm.deserialize("<gray>  <white>/fcn status</white> — Push server status to Firestore now"));
         sender.sendMessage(mm.deserialize("<gray>  <white>/fcn list</white> — List cached announcements"));
         sender.sendMessage(mm.deserialize("<gray>  <white>/fcn remind [player]</white> — Send reminder to all or one player"));
         sender.sendMessage(mm.deserialize("<gray>  <white>/fcn announce <message></white> — Broadcast a custom message"));
@@ -372,6 +422,144 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
         sender.sendMessage(mm.deserialize("<gray>  <white>/fcn whitelist reset <ign></white> — Remove IGN from tracking"));
         sender.sendMessage(mm.deserialize("<gray>  <white>/fcn whitelist list</white> — List all tracked whitelisted IGNs"));
         sender.sendMessage(mm.deserialize("<gray>  <white>/fcn whitelist sync</white> — Whitelist all tracked IGNs missing from server whitelist"));
+        sender.sendMessage(mm.deserialize("<gray>  <white>/report <message></white> — (Player) Report an issue to staff"));
+    }
+
+    // ─── Server status push ────────────────────────────────────────────────────
+
+    private void pushServerStatus() {
+        if (System.currentTimeMillis() < rateLimitBackoffUntil) return;
+        try {
+            double[] tps = Bukkit.getTPS();
+            Runtime rt = Runtime.getRuntime();
+            long usedMb  = (rt.totalMemory() - rt.freeMemory()) / 1024 / 1024;
+            long maxMb   = rt.maxMemory() / 1024 / 1024;
+            int  online  = Bukkit.getOnlinePlayers().size();
+            int  maxSlots = Bukkit.getMaxPlayers();
+
+            // Collect online player names
+            StringBuilder players = new StringBuilder();
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (players.length() > 0) players.append(",");
+                players.append(p.getName());
+            }
+
+            String body = "{"
+                + "\"fields\":{"
+                + "\"tps1m\":{\"doubleValue\":"  + String.format("%.2f", Math.min(tps[0], 20.0)) + "},"
+                + "\"tps5m\":{\"doubleValue\":"  + String.format("%.2f", Math.min(tps[1], 20.0)) + "},"
+                + "\"tps15m\":{\"doubleValue\":" + String.format("%.2f", Math.min(tps[2], 20.0)) + "},"
+                + "\"ramUsedMb\":{\"integerValue\":\"" + usedMb  + "\"},"
+                + "\"ramMaxMb\":{\"integerValue\":\""  + maxMb   + "\"},"
+                + "\"playersOnline\":{\"integerValue\":\"" + online   + "\"},"
+                + "\"maxPlayers\":{\"integerValue\":\""   + maxSlots + "\"},"
+                + "\"onlinePlayerNames\":{\"stringValue\":\"" + safeJson(players.toString()) + "\"},"
+                + "\"serverVersion\":{\"stringValue\":\"" + safeJson(Bukkit.getVersion()) + "\"},"
+                + "\"status\":{\"stringValue\":\"online\"},"
+                + "\"updatedAt\":{\"timestampValue\":\"" + Instant.now() + "\"}"
+                + "}"
+                + "}";
+
+            firestorePatch("serverStatus/latest", body);
+        } catch (Exception e) {
+            getLogger().warning("[FCN] pushServerStatus error: " + e.getMessage());
+        }
+    }
+
+    private void pushServerOffline() {
+        try {
+            String body = "{"
+                + "\"fields\":{"
+                + "\"status\":{\"stringValue\":\"offline\"},"
+                + "\"playersOnline\":{\"integerValue\":\"0\"},"
+                + "\"updatedAt\":{\"timestampValue\":\"" + Instant.now() + "\"}"
+                + "}"
+                + "}";
+            firestorePatch("serverStatus/latest", body);
+        } catch (Exception e) {
+            getLogger().warning("[FCN] pushServerOffline error: " + e.getMessage());
+        }
+    }
+
+    // ─── Player report ─────────────────────────────────────────────────────────
+
+    private void pushPlayerReport(String ign, String message) {
+        try {
+            String body = "{"
+                + "\"fields\":{"
+                + "\"ign\":{\"stringValue\":\""     + safeJson(ign)     + "\"},"
+                + "\"message\":{\"stringValue\":\""  + safeJson(message) + "\"},"
+                + "\"status\":{\"stringValue\":\"open\"},"
+                + "\"timestamp\":{\"timestampValue\":\"" + Instant.now() + "\"}"
+                + "}"
+                + "}";
+            int code = firestorePost("playerReports", body);
+            if (code != 200) {
+                getLogger().warning("[FCN] pushPlayerReport returned HTTP " + code);
+            }
+        } catch (Exception e) {
+            getLogger().warning("[FCN] pushPlayerReport error: " + e.getMessage());
+        }
+    }
+
+    // ─── Player session tracking ───────────────────────────────────────────────
+
+    private void pushPlayerSession(String ign, String uuid, long minutesPlayed) {
+        try {
+            String body = "{"
+                + "\"fields\":{"
+                + "\"ign\":{\"stringValue\":\""           + safeJson(ign) + "\"},"
+                + "\"uuid\":{\"stringValue\":\""          + uuid           + "\"},"
+                + "\"minutesPlayed\":{\"integerValue\":\"" + minutesPlayed + "\"},"
+                + "\"timestamp\":{\"timestampValue\":\""  + Instant.now() + "\"}"
+                + "}"
+                + "}";
+            firestorePost("playerSessions", body);
+        } catch (Exception e) {
+            getLogger().warning("[FCN] pushPlayerSession error: " + e.getMessage());
+        }
+    }
+
+    // ─── Firestore REST helpers ────────────────────────────────────────────────
+
+    private void firestorePatch(String path, String body) throws Exception {
+        String url = "https://firestore.googleapis.com/v1/projects/" + projectId
+                + "/databases/(default)/documents/" + path;
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(Duration.ofSeconds(8))
+                .header("Content-Type", "application/json")
+                .method("PATCH", HttpRequest.BodyPublishers.ofString(body))
+                .build();
+        HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        if (res.statusCode() == 429) {
+            rateLimitBackoffUntil = System.currentTimeMillis() + 5 * 60 * 1000L;
+            getLogger().warning("[FCN] Firestore rate-limited. Backing off 5 min.");
+        } else if (res.statusCode() != 200) {
+            getLogger().warning("[FCN] Firestore PATCH " + path + " → HTTP " + res.statusCode());
+        }
+    }
+
+    private int firestorePost(String collection, String body) throws Exception {
+        String url = "https://firestore.googleapis.com/v1/projects/" + projectId
+                + "/databases/(default)/documents/" + collection;
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(Duration.ofSeconds(8))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+        HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        if (res.statusCode() == 429) {
+            rateLimitBackoffUntil = System.currentTimeMillis() + 5 * 60 * 1000L;
+            getLogger().warning("[FCN] Firestore rate-limited. Backing off 5 min.");
+        }
+        return res.statusCode();
+    }
+
+    private String safeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "");
     }
 
     // ─── Announcement fetch ───────────────────────────────────────────────────
@@ -474,7 +662,6 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
     private void pollApprovedPlayers() {
         if (System.currentTimeMillis() < rateLimitBackoffUntil) return;
         try {
-            // Query applications collection where status == "approved" via Firestore runQuery
             String url = "https://firestore.googleapis.com/v1/projects/" + projectId
                     + "/databases/(default)/documents:runQuery";
 
@@ -502,13 +689,12 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
                 return;
             }
 
-            // runQuery returns a JSON array; each element is a result row or an end-of-query marker
             JsonArray results = JsonParser.parseString(res.body()).getAsJsonArray();
             List<String> toWhitelist = new ArrayList<>();
 
             for (JsonElement el : results) {
                 JsonObject row = el.getAsJsonObject();
-                if (!row.has("document")) continue; // end-of-query marker has no "document" key
+                if (!row.has("document")) continue;
 
                 JsonObject fields = row.getAsJsonObject("document").getAsJsonObject("fields");
                 if (fields == null || !fields.has("ign")) continue;
@@ -601,16 +787,12 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
         ));
     }
 
-    // ─── Whitelist kick message ───────────────────────────────────────────────
+    // ─── Event handlers ───────────────────────────────────────────────────────
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onLogin(PlayerLoginEvent event) {
         if (event.getResult() != PlayerLoginEvent.Result.KICK_WHITELIST) return;
 
-        // Only replace the kick message when the Minecraft whitelist is the actual cause.
-        // Other plugins (LifeStealZ, Maintenance, etc.) also use KICK_WHITELIST for their
-        // own purposes — if the player IS whitelisted, another plugin is kicking them and
-        // we must not overwrite their message with a misleading "apply for whitelist" prompt.
         if (getServer().hasWhitelist()) {
             UUID uid = event.getPlayer().getUniqueId();
             boolean onWhitelist = getServer().getWhitelistedPlayers()
@@ -642,18 +824,18 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
                 MiniMessage.miniMessage().deserialize(msg));
     }
 
-    // ─── Join event ───────────────────────────────────────────────────────────
-
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        if (!showJoinTitle) return;
-
         Player player = event.getPlayer();
+        // Track session start time
+        playerJoinTimes.put(player.getUniqueId(), System.currentTimeMillis());
+
+        if (!showJoinTitle) return;
         Bukkit.getScheduler().runTaskLater(this, () -> {
             if (!player.isOnline()) return;
             player.showTitle(Title.title(
                     mm.deserialize("<gradient:#ff3b30:#ff8a00><bold>Welcome to FireCraft!</bold></gradient>"),
-                    mm.deserialize("<white>Visit <gold><underlined>" + websiteUrl + "</underlined></gold> for news & events</white>"),
+                    mm.deserialize("<white>Use <gold>/report <msg></gold> to report issues to staff</white>"),
                     Title.Times.times(
                             Duration.ofMillis(500),
                             Duration.ofSeconds(4),
@@ -661,6 +843,19 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
                     )
             ));
         }, 60L);
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        Long joinTime = playerJoinTimes.remove(player.getUniqueId());
+        if (joinTime == null) return;
+        long minutesPlayed = (System.currentTimeMillis() - joinTime) / 60000;
+        // Only log sessions >= 1 minute
+        if (minutesPlayed < 1) return;
+        final long mins = minutesPlayed;
+        Bukkit.getScheduler().runTaskAsynchronously(this, () ->
+                pushPlayerSession(player.getName(), player.getUniqueId().toString(), mins));
     }
 
     // ─── Utility ─────────────────────────────────────────────────────────────

@@ -1234,6 +1234,103 @@ async function rptLoadCounts() {
   }
 }
 
+async function rptLoadPluginData() {
+  try {
+    const snap = await getDoc(doc(db, "serverStatus", "latest"));
+    const pluginDataEl  = $("rptPluginData");
+    const pluginOffline = $("rptPluginOffline");
+    if (!snap.exists()) {
+      if (pluginOffline) pluginOffline.style.display = "block";
+      return;
+    }
+    const d = snap.data();
+    if (pluginDataEl) pluginDataEl.style.display = "block";
+
+    const tps1 = d.tps1m ?? null;
+    const tps5 = d.tps5m ?? null;
+    const tpsColor = t => t === null ? "#7a8494" : t >= 18 ? "#23a865" : t >= 15 ? "#d9a020" : "#c0404e";
+
+    if ($("rptTPS1m")) { $("rptTPS1m").textContent = tps1 !== null ? tps1.toFixed(1) : "—"; $("rptTPS1m").style.color = tpsColor(tps1); }
+    if ($("rptTPS5m")) { $("rptTPS5m").textContent = tps5 !== null ? tps5.toFixed(1) : "—"; $("rptTPS5m").style.color = tpsColor(tps5); }
+    if ($("rptRAMUsed")) $("rptRAMUsed").textContent = d.ramUsedMb ?? "—";
+    if ($("rptRAMMax"))  $("rptRAMMax").textContent  = d.ramMaxMb  ?? "—";
+
+    if ($("rptPluginUpdatedAt") && d.updatedAt) {
+      const ts = d.updatedAt.toDate ? d.updatedAt.toDate() : new Date(d.updatedAt);
+      const diff = Math.round((Date.now() - ts) / 60000);
+      $("rptPluginUpdatedAt").textContent = diff < 1 ? "just now" : diff + " min ago";
+    }
+
+    // Show TPS warning in health issues if TPS is low
+    if (tps1 !== null && tps1 < 16) {
+      const issuesEl = $("rptHealthIssues");
+      if (issuesEl) {
+        const tag = document.createElement("span");
+        tag.className = "rpt-health-issue-tag red";
+        tag.textContent = `⚡ Low TPS: ${tps1.toFixed(1)} (server lag)`;
+        issuesEl.prepend(tag);
+      }
+    }
+  } catch(e) {
+    console.warn("Plugin data unavailable:", e);
+    const pluginOffline = $("rptPluginOffline");
+    if (pluginOffline) pluginOffline.style.display = "block";
+  }
+}
+
+async function rptLoadPlayerReports() {
+  try {
+    const reportsEl = $("rptPlayerReports");
+    if (!reportsEl) return;
+
+    const snap = await getDocs(
+      query(collection(db, "playerReports"), orderBy("timestamp", "desc"), limit(20))
+    );
+
+    if (snap.empty) {
+      reportsEl.innerHTML = `<p style="color:#7a8494;font-size:13px">No player reports yet. Once players use /report in-game, reports appear here.</p>`;
+      return;
+    }
+
+    reportsEl.innerHTML = snap.docs.map(d => {
+      const r = d.data();
+      const ts = r.timestamp?.toDate ? r.timestamp.toDate() : new Date(r.timestamp || 0);
+      const timeAgo = Math.round((Date.now() - ts) / 60000);
+      const timeStr = timeAgo < 60 ? timeAgo + "m ago" : Math.round(timeAgo/60) + "h ago";
+      const status = r.status || "open";
+      const cls = status === "resolved" ? "ok" : "warn";
+      return `<div class="rpt-player-report" data-id="${esc(d.id)}" data-status="${esc(status)}">
+        <div class="rpt-pr-header">
+          <span class="rpt-pr-ign">⚔️ ${esc(r.ign || "Unknown")}</span>
+          <span class="pill ${cls}" style="font-size:10px">${esc(status)}</span>
+          <span class="rpt-pr-time">${timeStr}</span>
+        </div>
+        <div class="rpt-pr-msg">${esc(r.message || "")}</div>
+        ${status === "open" ? `<button class="btn btn-ghost" style="font-size:11px;padding:3px 10px;margin-top:6px" onclick="rptResolveReport('${esc(d.id)}', this)">✓ Resolve</button>` : ""}
+      </div>`;
+    }).join("");
+  } catch(e) {
+    console.warn("Player reports load error:", e);
+  }
+}
+
+window.rptResolveReport = async function(docId, btn) {
+  try {
+    btn.disabled = true;
+    btn.textContent = "…";
+    await updateDoc(doc(db, "playerReports", docId), { status: "resolved" });
+    const row = btn.closest(".rpt-player-report");
+    if (row) {
+      row.querySelector(".pill").className = "pill ok";
+      row.querySelector(".pill").textContent = "resolved";
+      btn.remove();
+    }
+  } catch(e) {
+    btn.textContent = "Error";
+    console.error(e);
+  }
+};
+
 async function rptLoadActivity() {
   try {
     const now = Date.now();
@@ -1346,7 +1443,7 @@ async function loadReports() {
 
   rptUpdateHealthScore();
 
-  await Promise.all([rptFetchServerStatus(), rptLoadCounts(), rptLoadActivity()]);
+  await Promise.all([rptFetchServerStatus(), rptLoadCounts(), rptLoadActivity(), rptLoadPluginData(), rptLoadPlayerReports()]);
 }
 
 $("refreshReports").onclick = loadReports;
