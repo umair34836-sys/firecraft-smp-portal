@@ -2,7 +2,7 @@ require("dotenv").config();
 
 const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 
-const WEBSITE = process.env.WEBSITE_URL || "https://firecraft-smp-portal.web.app";
+const WEBSITE = process.env.WEBSITE_URL || "https://www.firecraft.fun";
 const WELCOME_CHANNEL = process.env.WELCOME_CHANNEL_ID;
 const REMINDER_CHANNEL = process.env.REMINDER_CHANNEL_ID;
 const REMINDER_HOURS = parseInt(process.env.REMINDER_INTERVAL_HOURS || "12");
@@ -38,7 +38,7 @@ client.on("guildMemberAdd", async (member) => {
       .setTitle("🔥 Welcome to FireCraft SMP!")
       .setDescription(`Hey ${member}, glad you're here! 🎮\nCheck your DMs for steps on how to join the server.`)
       .setThumbnail(member.user.displayAvatarURL())
-      .setFooter({ text: "FireCraft SMP • firecraft-smp-portal.web.app" });
+      .setFooter({ text: "FireCraft SMP • firecraft.fun" });
 
     await welcomeChannel.send({ embeds: [welcomeEmbed] }).catch(() => {});
   }

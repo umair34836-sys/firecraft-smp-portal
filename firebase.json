@@ -4,14 +4,17 @@
   },
   "hosting": {
     "public": ".",
+    "cleanUrls": true,
     "ignore": [
       "firebase.json",
       ".firebaserc",
       "firestore.rules",
       "firestore.indexes.json",
       "plugin/**",
+      "discord-bot/**",
       ".github/**",
       "node_modules/**"
-    ]
+    ],
+    "errorPage": "/404.html"
   }
 }

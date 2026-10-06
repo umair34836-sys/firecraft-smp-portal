@@ -1,10 +1,11 @@
-const CACHE = 'firecraft-v1';
+const CACHE = 'firecraft-v2';
 const STATIC = [
   '/',
   '/index.html',
-  '/features.html',
-  '/rules.html',
-  '/faq.html',
+  '/features/',
+  '/rules/',
+  '/faq/',
+  '/leaderboard/',
   '/css/style.css',
   '/js/app.js',
   '/js/ads.js',
