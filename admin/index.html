@@ -448,9 +448,9 @@
       <button class="btn btn-small" onclick="navigate('withdrawals')">Process →</button>
     </div>
     <div class="rpt-alert rpt-a-bad">
-      <div class="rpt-alert-num" id="rptBugCount">5</div>
-      <div class="rpt-alert-label">Known Server Issues</div>
-      <a class="btn btn-small" href="#rptBugSection">View →</a>
+      <div class="rpt-alert-num" id="rptOpenReportsNum">—</div>
+      <div class="rpt-alert-label">Open Player Reports</div>
+      <button class="btn btn-small" onclick="document.getElementById('rptPlayerReports').scrollIntoView({behavior:'smooth'})">View →</button>
     </div>
   </div>
 
@@ -516,38 +516,6 @@
       <button class="btn btn-ghost" style="margin-left:auto;font-size:11px;padding:4px 10px" onclick="rptMarkReportResolved(this)">Mark Selected Resolved</button>
     </div>
     <div id="rptPlayerReports"><p style="color:#7a8494;font-size:13px">No player reports yet. Once players use /report in-game, reports appear here.</p></div>
-  </div>
-
-  <!-- Server Missing Features (Minecraft) -->
-  <div class="card" style="margin-bottom:16px">
-    <div class="rpt-card-title">⚙️ Server Missing Features
-      <span style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px">Minecraft server improvements — click to track progress</span>
-    </div>
-    <div id="rptServerFeatures" class="rpt-checklist"></div>
-  </div>
-
-  <!-- Development Ideas (when activity is low) -->
-  <div class="card" style="margin-bottom:16px">
-    <div class="rpt-card-title">💡 Development Ideas & Events
-      <span style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px">Ideas to boost activity — click to mark Planned / Done</span>
-    </div>
-    <div id="rptDevIdeas" class="rpt-checklist"></div>
-  </div>
-
-  <!-- Website Improvement Checklist -->
-  <div class="card" style="margin-bottom:16px">
-    <div class="rpt-card-title">🌐 Website Improvement Checklist
-      <span style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px">Click to toggle Done / In Progress</span>
-    </div>
-    <div id="rptChecklist" class="rpt-checklist"></div>
-  </div>
-
-  <!-- Bug Tracker -->
-  <div class="card" id="rptBugSection" style="margin-bottom:16px">
-    <div class="rpt-card-title">🐛 Plugin & Server Bug Tracker
-      <span style="font-size:11px;color:#7a8494;font-weight:400;margin-left:8px">Click to mark fixed</span>
-    </div>
-    <div id="rptBugList" class="rpt-checklist"></div>
   </div>
 
   <!-- Recent Activity -->
