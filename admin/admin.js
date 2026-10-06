@@ -53,6 +53,10 @@ function navigate(section){
   $(section).classList.add("active");
   document.querySelector(`[data-section="${section}"]`)?.classList.add("active");
   location.hash = section;
+  if (section === "reports" && typeof _reportsLoaded !== "undefined" && !_reportsLoaded) {
+    _reportsLoaded = true;
+    loadReports();
+  }
 }
 
 
@@ -156,6 +160,7 @@ onAuthStateChanged(auth, async user => {
 
   const hash = location.hash.replace("#","");
   if(hash && $(hash)) navigate(hash);
+  if(hash === "reports" && !_reportsLoaded) { _reportsLoaded = true; loadReports(); }
 });
 
 function subscribeUsers(){
@@ -1298,7 +1303,7 @@ function rptUpdateHealthScore() {
   if (scoreEl) scoreEl.textContent = score;
 
   if (arcEl) {
-    const circ = 251.3;
+    const circ = 163.4; // 2π × r(26)
     const offset = circ - (score / 100) * circ;
     const color = score >= 70 ? "#23a865" : score >= 40 ? "#d9a020" : "#c0404e";
     arcEl.setAttribute("stroke-dashoffset", offset);
@@ -1335,16 +1340,5 @@ async function loadReports() {
 
 $("refreshReports").onclick = loadReports;
 
-// Auto-load when reports section is navigated to
-const _origNavigate = navigate;
-// Patch navigate to trigger loadReports on first visit
 let _reportsLoaded = false;
-document.querySelectorAll(".nav-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    if (btn.dataset.section === "reports" && !_reportsLoaded) {
-      _reportsLoaded = true;
-      loadReports();
-    }
-  });
-});
 $("whitelistSearch").addEventListener("input", renderWhitelist);
