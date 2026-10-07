@@ -5,9 +5,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -16,9 +18,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -95,6 +102,9 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
             reportCmd.setTabCompleter(this);
         }
 
+        var voteCmd = getCommand("vote");
+        if (voteCmd != null) voteCmd.setExecutor(this);
+
         // Stagger startup: announcements after 30s, poll after 90s, status after 60s
         long announceTicks  = 20L * 30;
         long announcePeriod = 20L * 60 * 10;
@@ -115,7 +125,12 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
         Bukkit.getScheduler().runTaskTimerAsynchronously(this,
                 this::pushServerStatus, 20L * 60, statusPeriod);
 
-        getLogger().info("[FireCraftNotifier] v1.4.0 Enabled — reminders every " + reminderIntervalMinutes + " min.");
+        // Vote reminders every 30 minutes (start after 30 min)
+        long voteTicks = 20L * 60 * 30;
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this,
+                this::sendVoteReminder, voteTicks, voteTicks);
+
+        getLogger().info("[FireCraftNotifier] v1.5.0 Enabled — reminders every " + reminderIntervalMinutes + " min.");
     }
 
     @Override
@@ -157,6 +172,16 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
                     "<gradient:#ff3b30:#ff8a00><bold>[FireCraft]</bold></gradient> "
                     + "<green>Your report has been sent to staff. Thank you!</green>"));
             getLogger().info("[FCN] Player report from " + player.getName() + ": " + message);
+            return true;
+        }
+
+        // ── /vote — player command ────────────────────────────────────────────
+        if (command.getName().equalsIgnoreCase("vote")) {
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage(mm.deserialize(PREFIX + "<red>Only in-game players can use /vote."));
+                return true;
+            }
+            openVoteGui(player);
             return true;
         }
 
@@ -856,6 +881,97 @@ public class FireCraftNotifier extends JavaPlugin implements Listener, CommandEx
         final long mins = minutesPlayed;
         Bukkit.getScheduler().runTaskAsynchronously(this, () ->
                 pushPlayerSession(player.getName(), player.getUniqueId().toString(), mins));
+    }
+
+    // ─── Vote GUI ─────────────────────────────────────────────────────────────
+
+    private static class VoteGuiHolder implements InventoryHolder {
+        @Override public Inventory getInventory() { return null; }
+    }
+
+    private void openVoteGui(Player player) {
+        Component title = mm.deserialize("<dark_gray>» <white>Vote for FireCraft SMP</white> <dark_gray>«");
+        Inventory inv = Bukkit.createInventory(new VoteGuiHolder(), 27, title);
+
+        // Background filler
+        ItemStack pane = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta paneMeta = pane.getItemMeta();
+        paneMeta.displayName(Component.empty());
+        pane.setItemMeta(paneMeta);
+        for (int i = 0; i < 27; i++) inv.setItem(i, pane);
+
+        // Slot 11 — Emerald: MinecraftServers.org
+        ItemStack emerald = new ItemStack(Material.EMERALD);
+        ItemMeta eMeta = emerald.getItemMeta();
+        eMeta.displayName(mm.deserialize("<green><bold>⬡ MinecraftServers.org"));
+        eMeta.lore(List.of(
+            mm.deserialize("<dark_gray>▶ <gray>Vote for FireCraft SMP"),
+            mm.deserialize("<dark_gray>▶ <gray>Username: <white>" + player.getName()),
+            mm.deserialize("<yellow>» Click to get vote link «")
+        ));
+        emerald.setItemMeta(eMeta);
+        inv.setItem(11, emerald);
+
+        // Slot 15 — Diamond: MinecraftIPList.com
+        ItemStack diamond = new ItemStack(Material.DIAMOND);
+        ItemMeta dMeta = diamond.getItemMeta();
+        dMeta.displayName(mm.deserialize("<aqua><bold>⬡ MinecraftIPList.com"));
+        dMeta.lore(List.of(
+            mm.deserialize("<dark_gray>▶ <gray>Vote for FireCraft SMP"),
+            mm.deserialize("<dark_gray>▶ <gray>Username: <white>" + player.getName()),
+            mm.deserialize("<yellow>» Click to get vote link «")
+        ));
+        diamond.setItemMeta(dMeta);
+        inv.setItem(15, diamond);
+
+        player.openInventory(inv);
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getInventory().getHolder() instanceof VoteGuiHolder)) return;
+        event.setCancelled(true);
+        if (event.getClickedInventory() == null) return;
+        if (event.getClickedInventory() != event.getView().getTopInventory()) return;
+        int slot = event.getSlot();
+        if (slot == 11) {
+            player.closeInventory();
+            sendVoteLink(player, "MinecraftServers.org", "https://minecraftservers.org/vote/694221");
+        } else if (slot == 15) {
+            player.closeInventory();
+            sendVoteLink(player, "MinecraftIPList.com", "https://www.minecraftiplist.com/server/FireCraftSMP-44868");
+        }
+    }
+
+    private void sendVoteLink(Player player, String siteName, String url) {
+        String border = "<dark_gray><strikethrough>+-----------------------------------------+</strikethrough>";
+        String siteColor = siteName.contains("Servers") ? "<green>" : "<aqua>";
+        Component linkLine = mm.deserialize("<gray>  Link: ")
+                .append(mm.deserialize(siteColor + "<underlined>" + url)
+                        .clickEvent(ClickEvent.openUrl(url)));
+        player.sendMessage(mm.deserialize(border));
+        player.sendMessage(mm.deserialize("<gold><bold>  🗳 Vote: " + siteColor + siteName + "</bold></gold>"));
+        player.sendMessage(mm.deserialize(border));
+        player.sendMessage(mm.deserialize("<gray>  Site: " + siteColor + siteName));
+        player.sendMessage(mm.deserialize("<gray>  Enter username: <white>" + player.getName()));
+        player.sendMessage(Component.empty());
+        player.sendMessage(linkLine);
+        player.sendMessage(mm.deserialize(border));
+    }
+
+    private void sendVoteReminder() {
+        if (Bukkit.getOnlinePlayers().isEmpty()) return;
+        Component line1 = mm.deserialize("<gold><bold>[✦] Vote for FireCraft SMP! [✦]</bold></gold>");
+        Component line2 = mm.deserialize("<yellow>Voting is free and takes only 30 seconds!");
+        Component line3 = mm.deserialize("<white>Type <gold>/vote</gold> to get voting links and support us!");
+        Bukkit.getScheduler().runTask(this, () -> {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                p.sendMessage(line1);
+                p.sendMessage(line2);
+                p.sendMessage(line3);
+            }
+        });
     }
 
     // ─── Utility ─────────────────────────────────────────────────────────────
