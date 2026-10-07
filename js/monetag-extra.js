@@ -15,33 +15,25 @@
   var PU_TTL     = 86400000; // 24 hours in ms
 
   function puCanFire() {
-    try { return Date.now() - (parseInt(localStorage.getItem(PU_KEY), 10) || 0) > PU_TTL; }
-    catch (_) { return true; }
+    try {
+      var last = parseInt(localStorage.getItem(PU_KEY), 10);
+      if (!last || isNaN(last)) return true;
+      return (Date.now() - last) > PU_TTL;
+    } catch (_) { return true; }
   }
 
-  function puFire() {
-    if (!puCanFire()) return;
-    try { localStorage.setItem(PU_KEY, String(Date.now())); } catch (_) {}
-    /* Must be triggered inside a real click event so browsers allow window.open */
-    var w = window.open(DIRECT_URL, '_blank', 'noopener,noreferrer');
-    /* If blocked, fall back to a hidden anchor click */
-    if (!w || w.closed || typeof w.closed === 'undefined') {
-      var a = document.createElement('a');
-      a.href = DIRECT_URL;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.style.cssText = 'position:absolute;top:-9999px;left:-9999px;width:0;height:0;';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function () { a.remove(); }, 500);
-    }
+  /* KEY FIX: only attach the listener when the 24 h cooldown has passed.
+     This prevents a new listener being added on every page navigation
+     during the cooldown window, which was causing the "every click" bug. */
+  if (puCanFire()) {
+    document.addEventListener('click', function onFirstClick() {
+      document.removeEventListener('click', onFirstClick);
+      /* Double-check in case another tab fired it since this page loaded */
+      if (!puCanFire()) return;
+      try { localStorage.setItem(PU_KEY, String(Date.now())); } catch (_) {}
+      window.open(DIRECT_URL, '_blank', 'noopener,noreferrer');
+    });
   }
-
-  /* Attach to the first real user click — removes itself immediately after */
-  document.addEventListener('click', function onFirstClick() {
-    document.removeEventListener('click', onFirstClick);
-    puFire();
-  });
 
   /* ── In-Page Push (Social Bar) ────────────────────────────────
      Loads after the page is interactive so it never delays render.
