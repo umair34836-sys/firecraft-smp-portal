@@ -34,6 +34,8 @@
       item.textContent = link.textContent.trim();
       if (link.target) item.target = link.target;
       if (link.rel) item.rel = link.rel;
+      /* Track origin so clicks can delegate back to the real element */
+      if (link.id) item.dataset.originId = link.id;
       item.style.cssText = [
         'display:block;padding:18px 24px;',
         'font-size:17px;font-weight:600;color:#f0ffe8;',
@@ -45,7 +47,19 @@
         item.style.color = '#ff8fe3';
         item.style.background = '#1a4a1a33';
       }
-      item.addEventListener('click', closeOverlay);
+      item.addEventListener('click', function (e) {
+        var originId = this.dataset.originId;
+        if (originId) {
+          var origin = document.getElementById(originId);
+          if (origin) {
+            e.preventDefault();
+            closeOverlay();
+            origin.click();
+            return;
+          }
+        }
+        closeOverlay();
+      });
       overlay.appendChild(item);
     });
 

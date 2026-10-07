@@ -135,7 +135,7 @@ function openAuth(view="login"){
   $("resetView").classList.toggle("hidden",view!=="reset");
 }
 function closeAuth(){ $("authModal").classList.add("hidden"); }
-$("authBtn").onclick=()=>auth.currentUser ? signOut(auth) : openAuth();
+$("authBtn").onclick=(e)=>{e.preventDefault();auth.currentUser ? signOut(auth) : openAuth();};
 $("closeAuth").onclick=closeAuth;
 $("showSignup").onclick=()=>openAuth("signup");
 $("showLogin").onclick=()=>openAuth("login");
@@ -221,7 +221,11 @@ async function loadUser(user){
   const snap=await getDoc(doc(db,"users",user.uid));
   if(!snap.exists()) return;
   const profile=snap.data();
-  $("authBtn").textContent=`Logout (${profile.ign})`;
+  const logoutLabel=`Logout (${profile.ign})`;
+  $("authBtn").textContent=logoutLabel;
+  try{localStorage.setItem('fc_ign',profile.ign);}catch(_){}
+  const _oc=document.querySelector('#fc-mobile-nav [data-origin-id="authBtn"]');
+  if(_oc)_oc.textContent=logoutLabel;
   $("appIgn").value=profile.ign;
   renderProfile(profile);
   await loadStatus(user.uid);
@@ -243,6 +247,9 @@ function renderProfile(profile){
 }
 function resetUI(){
   $("authBtn").textContent="Login";
+  try{localStorage.removeItem('fc_ign');}catch(_){}
+  const _oc=document.querySelector('#fc-mobile-nav [data-origin-id="authBtn"]');
+  if(_oc)_oc.textContent="Login";
   document.querySelectorAll(".auth-required").forEach(x=>x.classList.add("needs-login"));
   $("statusBox").innerHTML="<p>Login to view your profile and application status.</p>";
   $("profileBox").classList.add("hidden");
