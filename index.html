@@ -18,7 +18,7 @@
   <meta property="og:url" content="https://www.firecraft.fun/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="FireCraft SMP">
-  <meta property="og:image" content="https://www.firecraft.fun/images/og-banner.jpg">
+  <meta property="og:image" content="https://www.firecraft.fun/images/hero/hero-bg.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="FireCraft SMP — Private Lifesteal Minecraft Server">
@@ -27,7 +27,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="FireCraft SMP | Free Private Lifesteal Server — 11 Custom Powers">
   <meta name="twitter:description" content="Free private Lifesteal SMP. 11 custom elemental powers, 63 tameable mobs, 5 custom armor sets. Apply for whitelist.">
-  <meta name="twitter:image" content="https://www.firecraft.fun/images/og-banner.jpg">
+  <meta name="twitter:image" content="https://www.firecraft.fun/images/hero/hero-bg.jpg">
   <meta name="twitter:image:alt" content="FireCraft SMP — Private Lifesteal Minecraft Server">
   <link rel="alternate" hreflang="en" href="https://www.firecraft.fun/">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -130,7 +130,13 @@
   </header>
 
   <main>
+<style>
+  #home.hero { position:relative; overflow:hidden; }
+  .hero-bg-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; z-index:0; opacity:.35; pointer-events:none; }
+  .hero-glow, .hero-content { position:relative; z-index:1; }
+</style>
 <section id="home" class="hero section">
+      <img src="images/hero/hero-bg.jpg" alt="" class="hero-bg-img" fetchpriority="high" loading="eager">
       <div class="hero-glow"></div>
       <div class="hero-content">
         <img src="images/logo-512.png" alt="FireCraft SMP Logo" class="hero-logo" width="512" height="512" fetchpriority="high">
@@ -178,10 +184,13 @@
   </div>
 </section>
 
+    <style>
+      .cards article .icon img { width:72px; height:72px; border-radius:12px; object-fit:cover; display:block; margin:0 auto; }
+    </style>
     <section class="section cards">
-      <article><div class="icon">🩸</div><h3>Lifesteal PvP</h3><p>Kill a player → steal their heart. Lose all hearts → eliminated. Every fight carries real stakes.</p></article>
-      <article><div class="icon">⚡</div><h3>11 Custom Powers</h3><p>Spin the wheel on first join — Fire, Ice, Wind, Dark, Dragon and 6 more. Each gives an active ability + passive.</p></article>
-      <article><div class="icon">🐾</div><h3>63 Tameable Mobs</h3><p>Tame mob companions that fight alongside you. Level them up to 100 and bring up to 3 into battle.</p></article>
+      <article><div class="icon"><img src="images/features/feature-pvp.jpg" alt="Lifesteal PvP" loading="lazy"></div><h3>Lifesteal PvP</h3><p>Kill a player → steal their heart. Lose all hearts → eliminated. Every fight carries real stakes.</p></article>
+      <article><div class="icon"><img src="images/features/feature-powers.jpg" alt="Custom Powers" loading="lazy"></div><h3>11 Custom Powers</h3><p>Spin the wheel on first join — Fire, Ice, Wind, Dark, Dragon and 6 more. Each gives an active ability + passive.</p></article>
+      <article><div class="icon"><img src="images/features/feature-companions.jpg" alt="Tameable Mobs" loading="lazy"></div><h3>63 Tameable Mobs</h3><p>Tame mob companions that fight alongside you. Level them up to 100 and bring up to 3 into battle.</p></article>
     </section>
 
     <section class="section panel-section" id="from-blog">
@@ -365,10 +374,22 @@
       </p>
     </section>
 
+    <style>
+      .gallery-static { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:10px; margin-top:16px; }
+      .gallery-static img { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:10px; display:block; transition:transform .2s; }
+      .gallery-static img:hover { transform:scale(1.02); }
+    </style>
     <section id="gallery" class="section panel-section">
       <div class="section-head"><div><span class="eyebrow">SCREENSHOTS</span><h2>Gallery</h2><p>A look inside the world of FireCraft SMP.</p></div></div>
       <div id="galleryGrid" class="gallery-grid">
-        <div class="gallery-empty"><span>📸</span><p>No screenshots yet — check back soon!</p></div>
+        <div class="gallery-static">
+          <img src="images/gallery/scene-pvp.jpg" alt="PvP Battle on FireCraft SMP" loading="lazy">
+          <img src="images/gallery/scene-companions.jpg" alt="Player with Companions" loading="lazy">
+          <img src="images/gallery/scene-event.jpg" alt="Server Event Arena" loading="lazy">
+          <img src="images/gallery/scene-base.jpg" alt="Player Base Build" loading="lazy">
+          <img src="images/gallery/scene-spawn.jpg" alt="Custom Spawn Area" loading="lazy">
+          <img src="images/gallery/scene-nether.jpg" alt="Nether Exploration" loading="lazy">
+        </div>
       </div>
     </section>
   </main>
