@@ -409,7 +409,7 @@ body.cursor-none a, body.cursor-none button, body.cursor-none [tabindex] { curso
 
 /* ── Powers — 3D flip cards ── */
 .pgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(158px,1fr)); gap:14px }
-.pscene { perspective:700px; height:178px }
+.pscene { perspective:700px; height:192px }
 .pscene:hover { perspective:1500px }
 .pc { width:100%;height:100%; transform-style:preserve-3d; transition:transform .65s cubic-bezier(.25,.46,.45,.94) }
 .pscene:hover .pc { transform:rotateY(180deg) }
@@ -436,10 +436,10 @@ body.cursor-none a, body.cursor-none button, body.cursor-none [tabindex] { curso
   .pscene.flipped .pface.pback { display:flex; position:static; transform:none; backface-visibility:visible; -webkit-backface-visibility:visible }
   .pscene { cursor:pointer }
 }
-.picon { font-size:34px; line-height:1; filter:drop-shadow(0 0 6px rgba(255,69,0,.4)) }
+.picon { width:64px; height:64px; border-radius:12px; object-fit:cover; filter:drop-shadow(0 0 8px rgba(255,69,0,.45)); box-shadow:0 2px 12px rgba(0,0,0,.45) }
 .pname { font-weight:700; font-size:13.5px }
 .phint { font-size:10px; color:var(--muted) }
-.pbico { font-size:26px; line-height:1; margin-bottom:3px }
+.pbico { width:46px; height:46px; border-radius:8px; object-fit:cover; margin-bottom:3px; box-shadow:0 2px 8px rgba(0,0,0,.4) }
 .pbtit { font-weight:700; font-size:13px; color:#ff9060 }
 .pbdsc { font-size:11px; color:var(--muted); line-height:1.5 }
 .pbctr { font-size:10px;font-weight:600;background:rgba(255,69,0,.14);border:1px solid rgba(255,69,0,.24);border-radius:6px;padding:3px 8px;color:#ff9060;margin-top:3px }
