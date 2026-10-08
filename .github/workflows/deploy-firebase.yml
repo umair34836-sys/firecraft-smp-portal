@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - claude/stoic-maxwell-avsg81
     paths:
       - 'firestore.rules'
       - 'firebase.json'
