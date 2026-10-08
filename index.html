@@ -41,6 +41,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="FireCraft SMP">
   <link rel="stylesheet" href="css/style.css?v=7">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="css/3d.css">
   <!-- Google AdSense -->
   <meta name="google-adsense-account" content="ca-pub-4837345120897086">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4837345120897086" crossorigin="anonymous"></script>
@@ -119,6 +122,27 @@
   </script>
 </head>
 <body>
+
+  <!-- SVG liquid-glass filter (Chromium desktop only, inert elsewhere) -->
+  <svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true">
+    <filter id="lg" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="5" result="noise"/>
+      <feGaussianBlur in="noise" stdDeviation="2.5" result="soft"/>
+      <feDisplacementMap in="SourceGraphic" in2="soft" scale="22" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="lg2" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.009" numOctaves="2" seed="8" result="noise2"/>
+      <feGaussianBlur in="noise2" stdDeviation="2" result="soft2"/>
+      <feDisplacementMap in="SourceGraphic" in2="soft2" scale="18" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
+
+  <!-- Custom cursor (desktop hover only — JS adds .cursor-none to body) -->
+  <div id="cur"></div>
+  <!-- Ambient glows (hidden on mobile via CSS) -->
+  <div class="amb a1"></div>
+  <div class="amb a2"></div>
+
   <header class="topbar">
     <a class="brand" href="#home"><img src="images/logo-192.png" alt="FireCraft SMP" class="brand-logo" width="32" height="32" loading="lazy"> FIRECRAFT <small>SMP</small></a>
     <nav id="nav">
@@ -136,28 +160,64 @@
   .hero-glow, .hero-content { position:relative; z-index:1; }
 </style>
 <section id="home" class="hero section">
-      <img src="images/hero/hero-bg.jpg" alt="" class="hero-bg-img" width="1600" height="900" fetchpriority="high" loading="eager">
-      <div class="hero-glow"></div>
-      <div class="hero-content">
-        <img src="images/logo-512.png" alt="FireCraft SMP Logo" class="hero-logo" width="512" height="512" fetchpriority="high">
-        <div class="pill">PRIVATE • WHITELISTED • LIFESTEAL</div>
-        <h1>Welcome to <span>FireCraft SMP</span></h1>
-        <p>A private Lifesteal SMP built around custom plugins, community events and a controlled whitelist.</p>
-        <div class="hero-actions">
-          <a class="btn" href="#apply" id="heroApplyBtn">Apply for Whitelist</a>
-          <a class="btn btn-ghost" href="#status">Check Application</a>
-          <a class="btn btn-discord" href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener">Join Discord</a>
+  <!-- Decorative corner mini-cubes -->
+  <div class="dcube dc1"><div class="mc" style="--cs:9s;--cr:normal"><div class="mf f"></div><div class="mf bk"></div><div class="mf l"></div><div class="mf r"></div><div class="mf tp"></div><div class="mf bt"></div></div></div>
+  <div class="dcube dc2"><div class="mc" style="--cs:12s;--cr:reverse"><div class="mf f"></div><div class="mf bk"></div><div class="mf l"></div><div class="mf r"></div><div class="mf tp"></div><div class="mf bt"></div></div></div>
+  <div class="dcube dc3"><div class="mc" style="--cs:15s;--cr:normal"><div class="mf f"></div><div class="mf bk"></div><div class="mf l"></div><div class="mf r"></div><div class="mf tp"></div><div class="mf bt"></div></div></div>
+  <div class="dcube dc4"><div class="mc" style="--cs:10s;--cr:reverse"><div class="mf f"></div><div class="mf bk"></div><div class="mf l"></div><div class="mf r"></div><div class="mf tp"></div><div class="mf bt"></div></div></div>
+
+  <div id="hero-cont">
+    <div id="hero-scene">
+      <!-- Layer 1 — spinning logo cube -->
+      <div class="dl-back">
+        <div style="position:relative;margin-bottom:28px;display:flex;justify-content:center">
+          <div class="cube-glow"></div>
+          <div class="cube-wrap"><div class="cube">
+            <div class="cf f">🔥</div><div class="cf bk">⚡</div>
+            <div class="cf l">❄️</div><div class="cf r">🐉</div>
+            <div class="cf tp">💀</div><div class="cf bt">🌑</div>
+          </div></div>
         </div>
-<div id="serverStatusBadge" class="server-status-badge">
+      </div>
+
+      <!-- Layer 2 — title -->
+      <div class="dl-mid" style="text-align:center;width:100%">
+        <span class="eyebrow">PRIVATE LIFESTEAL SMP — APPLY FREE</span>
+        <h1 class="h1-3d"><span class="fire-w">FIRE</span>CRAFT<br>SMP</h1>
+        <p class="hero-sub">11 Custom Elemental Powers &nbsp;•&nbsp; 63 Tameable Mobs &nbsp;•&nbsp; 5 Armor Sets</p>
+      </div>
+
+      <!-- Layer 3 — CTA (heroApplyBtn preserved for ads.js) -->
+      <div class="dl-front" style="text-align:center">
+        <div class="dbtn-row">
+          <a class="dbtn dbtn-p" href="#apply" id="heroApplyBtn">⚡ Apply for Whitelist</a>
+          <a class="dbtn dbtn-g" href="#status">My Status</a>
+          <a class="dbtn dbtn-discord-3d" href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener">🎮 Discord</a>
+        </div>
+        <!-- Server status — app.js updates these IDs -->
+        <div id="serverStatusBadge" class="server-status-badge" style="justify-content:center">
           <span id="statusDot" class="dot dot-checking"></span>
           <span id="statusText">Checking server…</span>
         </div>
-        <div class="server-box">
+        <div class="server-box" style="max-width:420px;margin:10px auto 0">
           <div><span class="dot"></span><b>Server Address</b><code><span data-server-java-ip>play.firecraft.fun:20011</span></code></div>
           <button class="copy-btn" data-copy="play.firecraft.fun:20011">Copy</button>
         </div>
       </div>
-    </section>
+
+      <!-- Layer 4 — stat chips -->
+      <div class="dl-fore" style="margin-top:0">
+        <div class="chips-row">
+          <div class="chip3d" style="--fd:4.2s;--ad:0s"><div class="cn" data-target="63">0</div><div class="cl">Tameable Mobs</div></div>
+          <div class="chip3d" style="--fd:5s;--ad:.13s"><div class="cn" data-target="11">0</div><div class="cl">Custom Powers</div></div>
+          <div class="chip3d" style="--fd:3.8s;--ad:.26s"><div class="cn" data-target="5">0</div><div class="cl">Armor Sets</div></div>
+          <div class="chip3d" style="--fd:4.6s;--ad:.39s"><div class="cn" data-target="3">0</div><div class="cl">Legendary Weapons</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="scrlhint">↓ scroll to enter the world</div>
+</section>
 
 
 <section class="fc-sponsored-section" aria-label="Sponsored">
@@ -225,6 +285,99 @@
         .blog-preview-card p{font-size:13px;opacity:.75;line-height:1.65;margin:0;flex:1}
         .bp-read{font-size:12px;color:var(--accent,#ff5e1a);margin-top:auto}
       </style>
+    </section>
+
+    <!-- POWERS SHOWCASE -->
+    <section class="section reveal scroll-tilt" id="powers-showcase" style="padding-top:48px">
+      <div class="container">
+        <div class="shead">
+          <span class="eyebrow">ELEMENTAL SYSTEM</span>
+          <h2>11 Custom Powers</h2>
+          <p>Spin the Power Wheel on first login. Hover or tap any card to flip it. Permanently yours.</p>
+        </div>
+        <div class="pgrid">
+          <div class="pscene"><div class="pc"><div class="pface pfront"><div class="picon">🔥</div><div class="pname">Fire</div><div class="phint">tap to flip</div></div><div class="pface pback"><div class="pbico">🔥</div><div class="pbtit">Fire Power</div><div class="pbdsc">Ignite enemies on hit, fire aura radius</div><div class="pbctr">Counter: Ember Guard −50%</div></div></div></div>
+          <div class="pscene"><div class="pc"><div class="pface pfront"><div class="picon">❄️</div><div class="pname">Ice</div><div class="phint">tap to flip</div></div><div class="pface pback"><div class="pbico">❄️</div><div class="pbtit">Ice Power</div><div class="pbdsc">Freeze &amp; slow opponents, ice trail</div><div class="pbctr">Counter: Frost Plate −50%</div></div></div></div>
+          <div class="pscene"><div class="pc"><div class="pface pfront"><div class="picon">⚡</div><div class="pname">Lightning</div><div class="phint">tap to flip</div></div><div class="pface pback"><div class="pbico">⚡</div><div class="pbtit">Lightning</div><div class="pbdsc">Chain damage across nearby groups</div><div class="pbctr">No armor counter</div></div></div></div>
+          <div class="pscene"><div class="pc"><div class="pface pfront"><div class="picon">🌪️</div><div class="pname">Wind</div><div class="phint">tap to flip</div></div><div class="pface pback"><div class="pbico">🌪️</div><div class="pbtit">Wind Power</div><div class="pbdsc">Knockback control &amp; launch enemies</div><div class="pbctr">Counter: Frost Plate −50%</div></div></div></div>
+          <div class="pscene"><div class="pc"><div class="pface pfront"><div class="picon">🌑</div><div class="pname">Dark</div><div class="phint">tap to flip</div></div><div class="pface pback"><div class="pbico">🌑</div><div class="pbtit">Dark Power</div><div class="pbdsc">Blindness, shadows &amp; stealth</div><div class="pbctr">Counter: Void Weave −50%</div></div></div></div>
+          <div class="pscene"><div class="pc"><div class="pface pfront"><div class="picon">🌀</div><div class="pname">Rift</div><div class="phint">tap to flip</div></div><div class="pface pback"><div class="pbico">🌀</div><div class="pbtit">Rift Power</div><div class="pbdsc">Teleport &amp; void pull enemies</div><div class="pbctr">Counter: Void Weave −50%</div></div></div></div>
+          <div class="pscene"><div class="pc"><div class="pface pfront"><div class="picon">💰</div><div class="pname">Trader</div><div class="phint">tap to flip</div></div><div class="pface pback"><div class="pbico">💰</div><div class="pbtit">Trader Power</div><div class="pbdsc">Economy buffs, discount trades</div><div class="pbctr">No armor counter</div></div></div></div>
+          <div class="pscene"><div class="pc"><div class="pface pfront"><div class="picon">🦺</div><div class="pname">Warden</div><div class="phint">tap to flip</div></div><div class="pface pback"><div class="pbico">🦺</div><div class="pbtit">Warden Power</div><div class="pbdsc">Sonic shriek, knockback resilience</div><div class="pbctr">Counter: Warden Carapace −60%</div></div></div></div>
+          <div class="pscene"><div class="pc"><div class="pface pfront"><div class="picon">💀</div><div class="pname">Wither</div><div class="phint">tap to flip</div></div><div class="pface pback"><div class="pbico">💀</div><div class="pbtit">Wither Power</div><div class="pbdsc">Necrotic decay &amp; wither effect</div><div class="pbctr">No armor counter</div></div></div></div>
+          <div class="pscene"><div class="pc"><div class="pface pfront"><div class="picon">🐉</div><div class="pname">Dragon</div><div class="phint">tap to flip</div></div><div class="pface pback"><div class="pbico">🐉</div><div class="pbtit">Dragon Power</div><div class="pbdsc">Counters ALL powers (40% reduction)</div><div class="pbctr">Counter: Dragon Scale −40%+cap</div></div></div></div>
+          <div class="pscene"><div class="pc"><div class="pface pfront"><div class="picon">🌍</div><div class="pname">Gravity</div><div class="phint">tap to flip</div></div><div class="pface pback"><div class="pbico">🌍</div><div class="pbtit">Gravity Power</div><div class="pbdsc">Pull enemies &amp; gravity crush</div><div class="pbctr">No armor counter</div></div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIFESTEAL SHOWCASE -->
+    <section class="section reveal" id="lifesteal-showcase">
+      <div class="container">
+        <div class="shead">
+          <span class="eyebrow">LIFESTEAL MECHANICS</span>
+          <h2>Every Fight Has Stakes</h2>
+          <p>Hearts define your power. Lose them all and you're gone for the season.</p>
+        </div>
+        <div class="lswrap">
+          <div class="lspanel scroll-tilt">
+            <div class="lscard">
+              <div class="hrow" id="hearts"></div>
+              <div class="lstit">You Start with 10 Hearts</div>
+              <div class="lsdsc">Kill a player and steal their heart. Die and lose one. Hearts are everything — hoard them, defend them, steal them.</div>
+              <ul class="lsrul">
+                <li>⚔️ Kill player → <strong>+1 max heart</strong></li>
+                <li>🩸 Die to player → <strong>−1 max heart</strong></li>
+                <li>💎 Heart Crystal → <strong>Revive yourself</strong></li>
+                <li>🛡️ Max hearts → <strong>Stronger in combat</strong></li>
+              </ul>
+            </div>
+          </div>
+          <div class="lspanel scroll-tilt">
+            <div class="lscard elim-card">
+              <div class="elim-n">0</div>
+              <div class="lstit">0 Hearts = Eliminated</div>
+              <div class="lsdsc">Reach zero max hearts and you are permanently eliminated from this season. No respawning. Craft Heart Crystals before it's too late.</div>
+              <ul class="lsrul">
+                <li>💔 0 hearts → <strong>Permanent elimination</strong></li>
+                <li>⚗️ Craft Heart Crystal to revive</li>
+                <li>🔄 Come back stronger next season</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- JOIN STEPS (3D showcase, links to real #apply form) -->
+    <section class="section reveal" id="join-steps-showcase">
+      <div class="container">
+        <div class="shead">
+          <span class="eyebrow">WHITELIST APPLICATION</span>
+          <h2>Join in 3 Steps</h2>
+          <p>FireCraft is private and hand-picked. Application takes 2 minutes; staff reviews in 24–48 hours.</p>
+        </div>
+        <div class="stgrid">
+          <div class="stwrap"><div class="stcard">
+            <div class="stn">01</div>
+            <h3>Read the Rules</h3>
+            <p>Applications showing rule knowledge get approved faster. No griefing, no hacks, respect everyone.</p>
+            <a href="/rules/" class="stlnk">Read Rules →</a>
+          </div></div>
+          <div class="stwrap"><div class="stcard">
+            <div class="stn">02</div>
+            <h3>Submit Application</h3>
+            <p>Fill out the whitelist form with your Minecraft IGN and a short intro. Be genuine — staff appreciates it.</p>
+            <a href="#apply" class="stlnk">Apply Now →</a>
+          </div></div>
+          <div class="stwrap"><div class="stcard">
+            <div class="stn">03</div>
+            <h3>Get Approved</h3>
+            <p>Staff reviews within 24–48 hours. Check My Status to see your whitelist result and the server IP.</p>
+            <a href="#status" class="stlnk">Check Status →</a>
+          </div></div>
+        </div>
+      </div>
     </section>
 
     <section id="apply" class="section panel-section">
@@ -397,7 +550,41 @@
     </section>
   </main>
 
-<footer><span>🔥 FireCraft SMP</span><span>Private Lifesteal • Custom Plugins</span><a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="footer-discord">Discord</a><span>© <span id="year"></span> FireCraft</span></footer>
+  <!-- CTA -->
+  <section class="section reveal" id="cta-section" style="padding-bottom:64px">
+    <div class="container">
+      <div class="ctawrap">
+        <div class="pring pr1"></div>
+        <div class="pring pr2"></div>
+        <div class="pring pr3"></div>
+        <div class="ctabody">
+          <span class="eyebrow">100% FREE — NO PAYMENT EVER</span>
+          <h2>Ready to Play?</h2>
+          <p>Takes 2 minutes to apply. Staff reviews within 24–48 hours.</p>
+          <div class="ctabtns">
+            <a href="#apply" class="dbtn dbtn-p" id="ctaApplyBtn">⚡ Apply for Whitelist</a>
+            <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="dbtn dbtn-discord-3d">🎮 Join Discord</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<footer>
+  <div class="ftin">
+    <div class="fbr">🔥 FIRECRAFT SMP</div>
+    <p style="font-size:12.5px;color:var(--muted)">Private Lifesteal • Custom Plugins • Free to Join</p>
+    <div class="flinks">
+      <a href="/features/">Features</a>
+      <a href="/rules/">Rules</a>
+      <a href="/faq/">FAQ</a>
+      <a href="/leaderboard/">Leaderboard</a>
+      <a href="/blog/">Blog</a>
+      <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener">Discord</a>
+    </div>
+    <div class="fcp">© <span id="year"></span> FireCraft SMP — All rights reserved</div>
+  </div>
+</footer>
 
   <div id="withdrawModal" class="modal hidden">
     <div class="modal-card">
@@ -592,5 +779,6 @@
   <script src="js/notify.js"></script>
   <script src="js/nav.js"></script>
   <script src="/js/monetag-extra.js"></script>
+  <script src="js/3d-design.js"></script>
 </body>
 </html>
