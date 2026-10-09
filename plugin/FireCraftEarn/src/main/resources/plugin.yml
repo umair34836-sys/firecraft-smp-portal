@@ -1,0 +1,24 @@
+name: FireCraftEarn
+version: 1.0.0
+main: fun.firecraft.earn.FireCraftEarn
+api-version: '1.20'
+description: Tracks player playtime and reports to FireCraft website for earn rewards.
+author: FireCraft
+
+commands:
+  fcearnadmin:
+    description: FireCraftEarn admin commands
+    usage: /<command> [reload|status|sync]
+    permission: firecraft.earn.admin
+  fcwallet:
+    description: Check your earn wallet balance
+    usage: /<command>
+    permission: firecraft.earn.player
+
+permissions:
+  firecraft.earn.admin:
+    description: Admin commands for FireCraftEarn
+    default: op
+  firecraft.earn.player:
+    description: Player wallet check
+    default: true

@@ -1,0 +1,24 @@
+# FireCraftNotifier Configuration
+
+# Firebase project ID (do not change unless you moved to a new project)
+firebase-project-id: "firecraft-smp-portal"
+
+# Your website URL shown to players
+website-url: "https://www.firecraft.fun"
+
+# How often (in minutes) to show a random reminder to online players
+# Recommended: 8-15 minutes so players are not annoyed
+reminder-interval-minutes: 10
+
+# How often (in minutes) to poll Firestore for newly approved players and auto-whitelist them
+# Keep this at 5 or higher to avoid Firestore rate limits (HTTP 429)
+poll-interval-minutes: 5
+
+# Show a welcome title to players when they join the server
+show-join-title: true
+
+# Direct link shown in the whitelist-kick message
+apply-url: "https://www.firecraft.fun"
+
+# Discord invite link shown in the whitelist-kick message
+discord-url: "https://discord.firecraft.fun"

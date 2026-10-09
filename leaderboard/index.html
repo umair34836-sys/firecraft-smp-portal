@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script>(function(s){s.dataset.zone='11927742',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+  <title>Leaderboard | FireCraft SMP — Lifesteal Minecraft Server</title>
+  <meta name="description" content="FireCraft SMP Leaderboard — see all whitelisted players, their current hearts, kills and status.">
+  <link rel="canonical" href="https://www.firecraft.fun/leaderboard/">
+  <meta property="og:title" content="Leaderboard | FireCraft SMP Lifesteal">
+  <meta property="og:description" content="FireCraft SMP Leaderboard — current hearts, kills and player status.">
+  <meta property="og:url" content="https://www.firecraft.fun/leaderboard/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="FireCraft SMP">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:image" content="https://www.firecraft.fun/images/leaderboard/leaderboard-banner.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Leaderboard | FireCraft SMP Lifesteal">
+  <meta name="twitter:description" content="FireCraft SMP Leaderboard — current hearts, kills and player status. Every heart matters.">
+  <meta name="twitter:image" content="https://www.firecraft.fun/images/leaderboard/leaderboard-banner.jpg">
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="../images/logo-192.png">
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#ff8fe3">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <link rel="stylesheet" href="../css/style.css?v=7">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "FireCraft SMP", "item": "https://www.firecraft.fun/" },
+          { "@type": "ListItem", "position": 2, "name": "Leaderboard", "item": "https://www.firecraft.fun/leaderboard/" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/css/3d.css">
+  <style>
+    .lb-hero { text-align:center; padding:80px 24px 40px; }
+    .lb-hero h1 span { color:var(--red); }
+
+    .lb-wrap { max-width:900px; margin:0 auto; padding:0 24px 80px; }
+
+    .lb-controls { display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:24px; }
+    .lb-search { background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 16px; border-radius:8px; font-size:.95rem; width:260px; outline:none; }
+    .lb-search:focus { border-color:var(--red); }
+    .lb-count { color:var(--muted); font-size:.9rem; }
+
+    .lb-table { width:100%; border-collapse:collapse; }
+    .lb-table thead th { text-align:left; padding:10px 14px; font-size:.78rem; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; border-bottom:1px solid var(--line); }
+    .lb-table tbody tr { border-bottom:1px solid var(--line); transition:background .15s; }
+    .lb-table tbody tr:hover { background:var(--panel); }
+    .lb-table tbody td { padding:14px; font-size:.95rem; vertical-align:middle; }
+
+    .lb-rank { width:52px; color:var(--muted); font-size:.85rem; text-align:center; }
+    .rank-1 { color:#ffd700; font-weight:700; font-size:1.1rem; }
+    .rank-2 { color:#c0c0c0; font-weight:700; }
+    .rank-3 { color:#cd7f32; font-weight:700; }
+
+    .lb-ign { font-weight:600; display:flex; align-items:center; gap:10px; }
+    .lb-avatar { width:28px; height:28px; border-radius:4px; image-rendering:pixelated; }
+
+    .lb-hearts { display:flex; align-items:center; gap:6px; }
+    .heart-icon { color:#e74c3c; }
+    .lb-hearts-val { font-weight:600; }
+    .lb-hearts-max { color:var(--muted); font-size:.85rem; }
+
+    .lb-badge { display:inline-block; padding:3px 9px; border-radius:99px; font-size:.75rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
+    .badge-active { background:rgba(53,208,127,.15); color:#35d07f; border:1px solid rgba(53,208,127,.3); }
+    .badge-eliminated { background:rgba(255,60,60,.12); color:#ff6b6b; border:1px solid rgba(255,60,60,.25); }
+
+    .lb-loading { text-align:center; padding:60px 0; color:var(--muted); }
+    .lb-spinner { width:36px; height:36px; border:3px solid var(--line); border-top-color:var(--red); border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 16px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .lb-empty { text-align:center; padding:60px 0; color:var(--muted); }
+    .lb-empty-icon { font-size:2.5rem; margin-bottom:12px; }
+
+    .lb-note { text-align:center; color:var(--muted); font-size:.82rem; margin-top:32px; }
+
+    @media(max-width:600px) {
+      .lb-col-kills, .lb-col-joined { display:none; }
+      .lb-search { width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="../"><img src="../images/logo-192.png" alt="FireCraft SMP" class="brand-logo" width="32" height="32" loading="lazy"> FIRECRAFT <span class="brand-tag">SMP</span></a>
+    <nav id="nav">
+      <a href="../">Home</a>
+      <a href="../#apply">Apply</a>
+      <a href="../#status">My Status</a>
+      <a href="../#support">Support</a>
+      <a href="../#reviews">Reviews</a>
+      <a href="/features/">Features</a>
+      <a href="/rules/">Rules</a>
+      <a href="/faq/">FAQ</a>
+      <a href="/leaderboard/" class="active">Leaderboard</a>
+      <a href="/join/">Join</a>
+      <a href="/blog/">Blog</a>
+      <a href="/#status" id="authNavLink" class="btn btn-small">Login</a>
+      <span class="nav-sep" aria-hidden="true"></span>
+      <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="btn btn-small btn-discord">Discord</a>
+    </nav>
+    <button class="menu" id="menuBtn">☰</button>
+  </header>
+
+  <main>
+    <section class="lb-hero">
+      <span class="eyebrow">FIRECRAFT SMP • LIFESTEAL</span>
+      <h1>Player <span>Leaderboard</span></h1>
+      <p>Current season standings. Every heart matters — every kill counts.</p>
+    </section>
+
+    <div class="lb-wrap">
+      <div class="lb-controls">
+        <input class="lb-search" id="lbSearch" type="search" placeholder="Search player…" autocomplete="off">
+        <span class="lb-count" id="lbCount"></span>
+      </div>
+
+      <div id="lbLoading" class="lb-loading">
+        <div class="lb-spinner"></div>
+        <p>Loading players…</p>
+      </div>
+
+      <div id="lbEmpty" class="lb-empty" style="display:none;">
+        <div class="lb-empty-icon">🔍</div>
+        <p>No players match your search.</p>
+      </div>
+
+      <div id="lbTableWrap" style="overflow-x:auto;">
+      <table class="lb-table" id="lbTable" style="display:none;">
+        <thead>
+          <tr>
+            <th class="lb-rank">#</th>
+            <th>Player</th>
+            <th>Hearts</th>
+            <th class="lb-col-kills">Kills</th>
+            <th>Status</th>
+            <th class="lb-col-joined">Joined</th>
+          </tr>
+        </thead>
+        <tbody id="lbBody"></tbody>
+      </table>
+      </div>
+
+      <p class="lb-note" id="lbNote" style="display:none;">Stats update live from the server. ❤️ = current max hearts.</p>
+    </div>
+  </main>
+
+  <footer>
+    <span>🔥 FireCraft SMP</span>
+    <span>Private Lifesteal • Custom Plugins</span>
+    <a href="https://discord.gg/k3wmWeBsmD" target="_blank" rel="noopener" class="footer-discord">Discord</a>
+    <span>© <span id="year"></span> FireCraft</span>
+  </footer>
+
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+    import { firebaseConfig } from "../js/firebase-config.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let allPlayers = [];
+
+    function heartBar(current, max) {
+      if (current == null) return '<span class="lb-hearts-val" style="color:var(--muted)">—</span>';
+      return `<span class="lb-hearts">
+        <span class="heart-icon">❤</span>
+        <span class="lb-hearts-val">${current}</span>
+        <span class="lb-hearts-max">/ ${max ?? current}</span>
+      </span>`;
+    }
+
+    function statusBadge(eliminated) {
+      return eliminated
+        ? '<span class="lb-badge badge-eliminated">Eliminated</span>'
+        : '<span class="lb-badge badge-active">Active</span>';
+    }
+
+    function rankLabel(i) {
+      if (i === 0) return '<span class="rank-1">🥇</span>';
+      if (i === 1) return '<span class="rank-2">🥈</span>';
+      if (i === 2) return '<span class="rank-3">🥉</span>';
+      return `<span>${i + 1}</span>`;
+    }
+
+    function fmtDate(ts) {
+      if (!ts) return '—';
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    }
+
+    function renderRows(players) {
+      const tbody = document.getElementById('lbBody');
+      const table = document.getElementById('lbTable');
+      const empty = document.getElementById('lbEmpty');
+      const note  = document.getElementById('lbNote');
+
+      if (!players.length) {
+        table.style.display = 'none';
+        note.style.display  = 'none';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      table.style.display = 'table';
+      note.style.display  = 'block';
+
+      tbody.innerHTML = players.map((p, i) => `
+        <tr>
+          <td class="lb-rank">${rankLabel(i)}</td>
+          <td>
+            <span class="lb-ign">
+              <img class="lb-avatar"
+                src="https://crafthead.net/helm/${encodeURIComponent(p.ign)}/28"
+                alt="${p.ign}"
+                onerror="this.style.display='none'">
+              ${p.ign}
+            </span>
+          </td>
+          <td>${heartBar(p.hearts, p.maxHearts)}</td>
+          <td class="lb-col-kills">${p.kills ?? '—'}</td>
+          <td>${statusBadge(p.eliminated)}</td>
+          <td class="lb-col-joined">${fmtDate(p.approvedAt)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function sortPlayers(players) {
+      return [...players].sort((a, b) => {
+        const aH = a.hearts ?? (a.eliminated ? -1 : 10);
+        const bH = b.hearts ?? (b.eliminated ? -1 : 10);
+        if (bH !== aH) return bH - aH;
+        const aK = a.kills ?? 0;
+        const bK = b.kills ?? 0;
+        return bK - aK;
+      });
+    }
+
+    async function load() {
+      try {
+        const snap = await getDocs(collection(db, 'approvedPlayers'));
+        allPlayers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const sorted = sortPlayers(allPlayers);
+        document.getElementById('lbCount').textContent = `${sorted.length} player${sorted.length !== 1 ? 's' : ''}`;
+        renderRows(sorted);
+      } catch(e) {
+        console.error('Leaderboard load failed:', e);
+        document.getElementById('lbLoading').innerHTML = '<p style="color:var(--muted)">Could not load leaderboard. Check back later.</p>';
+        return;
+      }
+      document.getElementById('lbLoading').style.display = 'none';
+    }
+
+    document.getElementById('lbSearch').addEventListener('input', function() {
+      const q = this.value.trim().toLowerCase();
+      const filtered = q
+        ? sortPlayers(allPlayers).filter(p => p.ign.toLowerCase().includes(q))
+        : sortPlayers(allPlayers);
+      document.getElementById('lbCount').textContent = `${filtered.length} player${filtered.length !== 1 ? 's' : ''}`;
+      renderRows(filtered);
+    });
+
+    load();
+  </script>
+  <script type="module" src="/js/auth-nav.js"></script>
+  <script src="../js/bg.js"></script>
+  <script src="../js/notify.js"></script>
+  <script src="../js/nav.js"></script>
+  <script src="/js/monetag-extra.js"></script>
+</body>
+</html>

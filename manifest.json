@@ -1,0 +1,19 @@
+{
+  "name": "FireCraft SMP",
+  "short_name": "FireCraft",
+  "description": "Private Lifesteal SMP — Custom Plugins & Community",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#020e06",
+  "theme_color": "#ff8fe3",
+  "orientation": "portrait-primary",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "images/logo-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "images/logo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [
+    { "src": "images/logo-512.png", "sizes": "512x512", "type": "image/png", "form_factor": "narrow" }
+  ]
+}

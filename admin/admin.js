@@ -7,6 +7,7 @@ import {
 import {
   getFirestore, collection, query, orderBy, onSnapshot, doc, getDoc,
   setDoc, updateDoc, deleteDoc, getDocs, where, limit,
+  getCountFromServer,
   serverTimestamp,} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 const app = initializeApp(firebaseConfig);
@@ -52,6 +53,10 @@ function navigate(section){
   $(section).classList.add("active");
   document.querySelector(`[data-section="${section}"]`)?.classList.add("active");
   location.hash = section;
+  if (section === "reports" && typeof _reportsLoaded !== "undefined" && !_reportsLoaded) {
+    _reportsLoaded = true;
+    loadReports();
+  }
 }
 
 
@@ -117,7 +122,10 @@ $("refreshSponsors")?.addEventListener("click", loadSponsoredPlacements);
 
 
 document.querySelectorAll(".nav-btn").forEach(btn => {
-  btn.addEventListener("click", () => navigate(btn.dataset.section));
+  btn.addEventListener("click", () => {
+    navigate(btn.dataset.section);
+    if (btn.dataset.section === "whitelist") loadWhitelist();
+  });
 });
 document.querySelectorAll("[data-close]").forEach(btn => {
   btn.addEventListener("click", () => closeModal(btn.dataset.close));
@@ -148,9 +156,11 @@ onAuthStateChanged(auth, async user => {
   loadServerSettings();
   loadWebsiteSettings();
   loadSponsoredPlacements();
+  loadEarnAdmin();
 
   const hash = location.hash.replace("#","");
   if(hash && $(hash)) navigate(hash);
+  if(hash === "reports" && !_reportsLoaded) { _reportsLoaded = true; loadReports(); }
 });
 
 function subscribeUsers(){
@@ -286,7 +296,40 @@ async function setApplicationStatus(status){
     });
     showToast(`Application marked ${status}.`);
     closeModal("applicationModal");
-  }catch(e){showToast(e.message);}
+  }catch(e){showToast(e.message); return;}
+  if(status === "approved" && selectedApplication.ign){
+    try{
+      const ignKey = selectedApplication.ign.toLowerCase();
+      await setDoc(doc(db,"approvedPlayers",ignKey), {
+        ign: selectedApplication.ign,
+        approvedAt: new Date(),
+        approvedBy: currentUser.uid,
+        applicationId: selectedApplication.id
+      });
+    }catch(e){
+      console.warn("approvedPlayers write failed (rules not deployed yet?):", e.message);
+    }
+    // Email notification — sent after 5 min delay so player is already whitelisted when they read it
+    try{
+      const userSnap = await getDoc(doc(db,"users",selectedApplication.uid));
+      const email = userSnap.exists() ? userSnap.data().email : null;
+      if(email && window.emailjs){
+        setTimeout(async () => {
+          try{
+            await window.emailjs.send(
+              "service_cacpon8",
+              "template_0cfrwpb",
+              { to_email: email, ign: selectedApplication.ign, site_url: "https://www.firecraft.fun" }
+            );
+            console.log("Approval email sent to " + selectedApplication.ign);
+          }catch(e2){ console.warn("Email notification failed:", e2.message); }
+        }, 2 * 60 * 1000); // 2 minute delay — matches plugin whitelist poll interval
+        showToast("Approval email will be sent to " + selectedApplication.ign + " in 2 minutes.");
+      }
+    }catch(e){
+      console.warn("Email notification failed:", e.message);
+    }
+  }
 }
 $("approveApplicationBtn").onclick = () => setApplicationStatus("approved");
 $("pendingApplicationBtn").onclick = () => setApplicationStatus("pending");
@@ -569,3 +612,733 @@ document.getElementById("announcementCancel")?.addEventListener("click",()=>{
   form.querySelector("#announcementEnabled").checked=true;
 });
 loadAnnouncements();
+
+// ── EARN SYSTEM ADMIN ────────────────────────────────────────────────────────
+
+let partnerServers = [], withdrawals = [];
+let selectedWithdrawal = null;
+
+// ── Partner Servers ──
+
+async function loadPartnerServers() {
+  const snap = await getDocs(collection(db, "partnerServers"));
+  partnerServers = snap.docs.map(d => ({id: d.id, ...d.data()}));
+  renderPartnerServers();
+}
+
+function renderPartnerServers() {
+  $("partnerServersList").innerHTML = partnerServers.length ? partnerServers.map(s => `
+    <tr>
+      <td><strong>${esc(s.name || "—")}</strong></td>
+      <td>${esc(s.ip || "—")}${s.port ? ":"+esc(s.port) : ""}</td>
+      <td>${esc(String(s.ratePerHour || 0))} PKR</td>
+      <td>${statusPill(s.enabled ? "active" : "disabled")}</td>
+      <td>
+        <button class="btn btn-primary ps-edit" data-id="${esc(s.id)}">Edit</button>
+        <button class="btn btn-danger ps-delete" data-id="${esc(s.id)}">Delete</button>
+      </td>
+    </tr>`).join("") : emptyRow(5, "No partner servers added yet.");
+  document.querySelectorAll(".ps-edit").forEach(b => b.onclick = () => editPartnerServer(b.dataset.id));
+  document.querySelectorAll(".ps-delete").forEach(b => b.onclick = () => deletePartnerServer(b.dataset.id));
+}
+
+function editPartnerServer(id) {
+  const s = partnerServers.find(x => x.id === id);
+  if (!s) return;
+  $("psEditId").value = s.id;
+  $("psName").value = s.name || "";
+  $("psIp").value = s.ip || "";
+  $("psPort").value = s.port || "";
+  $("psDesc").value = s.description || "";
+  $("psLogo").value = s.logo || "";
+  $("psRate").value = s.ratePerHour || "";
+  $("psMinHours").value = s.minHoursToEarn || "";
+  $("psFirebaseEmail").value = s.firebaseEmail || "";
+  $("psServerId").value = s.id || "";
+  $("psEnabled").checked = s.enabled !== false;
+}
+
+async function deletePartnerServer(id) {
+  if (!confirm("Delete this partner server?")) return;
+  try {
+    await deleteDoc(doc(db, "partnerServers", id));
+    showToast("Partner server deleted.");
+    loadPartnerServers();
+  } catch(e) { showToast(e.message); }
+}
+
+$("savePsBtn").onclick = async () => {
+  const name = $("psName").value.trim();
+  const ip   = $("psIp").value.trim();
+  if (!name || !ip) return showToast("Server name and IP are required.");
+  const editId = $("psEditId").value.trim();
+  const serverId = $("psServerId").value.trim() || crypto.randomUUID().slice(0,8);
+  const data = {
+    name, ip,
+    port: $("psPort").value.trim(),
+    description: $("psDesc").value.trim(),
+    logo: $("psLogo").value.trim(),
+    ratePerHour: parseFloat($("psRate").value) || 0,
+    minHoursToEarn: parseFloat($("psMinHours").value) || 1,
+    firebaseEmail: $("psFirebaseEmail").value.trim(),
+    enabled: $("psEnabled").checked,
+    updatedAt: serverTimestamp(),
+    updatedBy: currentUser.uid
+  };
+  try {
+    const docId = editId || serverId;
+    await setDoc(doc(db, "partnerServers", docId), data, {merge: true});
+    showToast("Partner server saved. ID: " + docId);
+    $("psEditId").value = "";
+    ["psName","psIp","psPort","psDesc","psLogo","psRate","psMinHours","psFirebaseEmail","psServerId"]
+      .forEach(id => $(id).value = "");
+    $("psEnabled").checked = true;
+    loadPartnerServers();
+  } catch(e) { showToast(e.message); }
+};
+$("clearPsBtn").onclick = () => {
+  $("psEditId").value = "";
+  ["psName","psIp","psPort","psDesc","psLogo","psRate","psMinHours","psFirebaseEmail","psServerId"]
+    .forEach(id => $(id).value = "");
+  $("psEnabled").checked = true;
+};
+$("refreshPartnerServers").onclick = loadPartnerServers;
+
+// Server Accounts (maps Firebase UID → serverId)
+$("saveServerAccountBtn").onclick = async () => {
+  const uid = $("saUid").value.trim();
+  const serverId = $("saServerId").value.trim();
+  if (!uid || !serverId) return showToast("UID and Server ID are required.");
+  try {
+    await setDoc(doc(db, "serverAccounts", uid), {uid, serverId, active: true, createdAt: serverTimestamp()}, {merge: true});
+    showToast("Server account saved.");
+    $("saUid").value = "";
+    $("saServerId").value = "";
+  } catch(e) { showToast(e.message); }
+};
+
+// ── Withdrawals ──
+
+async function loadWithdrawals() {
+  const snap = await getDocs(query(collection(db, "withdrawalRequests"), orderBy("createdAt", "desc")));
+  withdrawals = snap.docs.map(d => ({id: d.id, ...d.data()}));
+  renderWithdrawals();
+}
+
+function renderWithdrawals() {
+  const statusFilter = $("withdrawalStatusFilter").value;
+  const list = withdrawals.filter(w => !statusFilter || w.status === statusFilter);
+  $("withdrawalsList").innerHTML = list.length ? list.map(w => `
+    <tr>
+      <td><strong>${esc(w.ign || "—")}</strong></td>
+      <td><strong>${esc(String(w.amount || 0))} PKR</strong></td>
+      <td>${esc(w.paymentMethod || "—")}</td>
+      <td>${statusPill(w.status || "pending")}</td>
+      <td>${fmt(w.createdAt)}</td>
+      <td><button class="btn btn-primary wd-view" data-id="${esc(w.id)}">View</button></td>
+    </tr>`).join("") : emptyRow(6, "No withdrawal requests.");
+  document.querySelectorAll(".wd-view").forEach(b => b.onclick = () => openWithdrawal(b.dataset.id));
+}
+
+function openWithdrawal(id) {
+  selectedWithdrawal = withdrawals.find(x => x.id === id);
+  if (!selectedWithdrawal) return;
+  const w = selectedWithdrawal;
+  $("withdrawalDetails").innerHTML = `<div class="detail-grid">
+    <div class="detail"><small>IGN</small><strong>${esc(w.ign || "—")}</strong></div>
+    <div class="detail"><small>Amount</small><strong>${esc(String(w.amount))} PKR</strong></div>
+    <div class="detail"><small>Method</small><strong>${esc(w.paymentMethod || "—")}</strong></div>
+    <div class="detail"><small>Account</small><strong>${esc(w.accountNumber || "—")}</strong></div>
+    <div class="detail"><small>Status</small><strong>${esc(w.status || "pending")}</strong></div>
+    <div class="detail"><small>Requested</small><strong>${esc(fmt(w.createdAt))}</strong></div>
+    ${w.playerNote ? `<div class="detail full"><small>Player Note</small><strong>${esc(w.playerNote)}</strong></div>` : ""}
+  </div>`;
+  $("withdrawalAdminNote").value = w.adminNote || "";
+  openModal("withdrawalModal");
+}
+
+$("payWithdrawalBtn").onclick = async () => {
+  if (!selectedWithdrawal) return;
+  if (!confirm(`Mark PKR ${selectedWithdrawal.amount} as PAID to ${selectedWithdrawal.ign}?`)) return;
+  try {
+    await updateDoc(doc(db, "withdrawalRequests", selectedWithdrawal.id), {
+      status: "paid",
+      adminNote: $("withdrawalAdminNote").value.trim(),
+      paidBy: currentUser.uid,
+      paidAt: serverTimestamp()
+    });
+    const walletRef = doc(db, "wallets", selectedWithdrawal.uid);
+    const walletSnap = await getDoc(walletRef);
+    const prev = walletSnap.exists() ? (walletSnap.data().totalPaidOut || 0) : 0;
+    await setDoc(walletRef, {totalPaidOut: prev + Number(selectedWithdrawal.amount), uid: selectedWithdrawal.uid}, {merge: true});
+    showToast("Marked as paid. Wallet updated.");
+    closeModal("withdrawalModal");
+    loadWithdrawals();
+  } catch(e) { showToast(e.message); }
+};
+
+$("rejectWithdrawalBtn").onclick = async () => {
+  if (!selectedWithdrawal) return;
+  try {
+    await updateDoc(doc(db, "withdrawalRequests", selectedWithdrawal.id), {
+      status: "rejected",
+      adminNote: $("withdrawalAdminNote").value.trim(),
+      rejectedBy: currentUser.uid,
+      rejectedAt: serverTimestamp()
+    });
+    showToast("Withdrawal rejected.");
+    closeModal("withdrawalModal");
+    loadWithdrawals();
+  } catch(e) { showToast(e.message); }
+};
+
+$("refreshWithdrawals").onclick = loadWithdrawals;
+$("withdrawalStatusFilter").addEventListener("input", renderWithdrawals);
+
+// ── Earn Settings ──
+
+async function loadEarnSettings() {
+  const snap = await getDoc(doc(db, "earnSettings", "global"));
+  const s = snap.exists() ? snap.data() : {};
+  $("earnCurrency").value = s.currency || "PKR";
+  $("earnMinWithdraw").value = s.minWithdraw || 100;
+  $("earnMaxWeekly").value = s.maxWeekly || 5000;
+  $("earnNotice").value = s.notice || "";
+  $("earnEnabled").checked = s.enabled !== false;
+}
+
+$("saveEarnSettings").onclick = async () => {
+  try {
+    await setDoc(doc(db, "earnSettings", "global"), {
+      currency: $("earnCurrency").value.trim() || "PKR",
+      minWithdraw: parseFloat($("earnMinWithdraw").value) || 100,
+      maxWeekly: parseFloat($("earnMaxWeekly").value) || 5000,
+      notice: $("earnNotice").value.trim(),
+      enabled: $("earnEnabled").checked,
+      updatedAt: serverTimestamp(),
+      updatedBy: currentUser.uid
+    });
+    showToast("Earn settings saved.");
+  } catch(e) { showToast(e.message); }
+};
+
+document.querySelector('[data-close="withdrawalModal"]')?.addEventListener("click", () => closeModal("withdrawalModal"));
+
+function loadEarnAdmin() {
+  loadPartnerServers();
+  loadWithdrawals();
+  loadEarnSettings();
+}
+
+// ── Whitelist Manager ──────────────────────────────────────────────────────
+
+let allApprovedPlayers = [];
+
+async function loadWhitelist() {
+  // Pull from both approvedPlayers collection AND applications with status=approved
+  // so we never miss anyone approved before approvedPlayers was created
+  const [apSnap, appSnap] = await Promise.all([
+    getDocs(collection(db, "approvedPlayers")),
+    getDocs(query(collection(db, "applications"), where("status", "==", "approved")))
+  ]);
+
+  const map = {};
+
+  // Seed from applications first (has all historical data)
+  appSnap.docs.forEach(d => {
+    const data = d.data();
+    const ign = data.ign?.trim();
+    if (!ign) return;
+    const key = ign.toLowerCase();
+    if (!map[key]) {
+      map[key] = { id: key, ign, approvedAt: data.approvedAt || data.createdAt || null };
+    }
+  });
+
+  // Overlay with approvedPlayers (may have more precise approvedAt)
+  apSnap.docs.forEach(d => {
+    const data = d.data();
+    const ign = data.ign?.trim();
+    if (!ign) return;
+    const key = ign.toLowerCase();
+    map[key] = { id: key, ign, approvedAt: data.approvedAt || map[key]?.approvedAt || null };
+  });
+
+  allApprovedPlayers = Object.values(map)
+    .sort((a, b) => String(a.ign).localeCompare(String(b.ign)));
+  renderWhitelist();
+}
+
+async function syncApprovedToWhitelist() {
+  const btn = $("syncWhitelistBtn");
+  btn.disabled = true;
+  btn.textContent = "Syncing...";
+  try {
+    const appSnap = await getDocs(
+      query(collection(db, "applications"), where("status", "==", "approved"))
+    );
+    let count = 0;
+    const writes = [];
+    const seen = new Set();
+    appSnap.docs.forEach(d => {
+      const data = d.data();
+      const ign = data.ign?.trim();
+      if (!ign) return;
+      const key = ign.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      writes.push(setDoc(doc(db, "approvedPlayers", key), {
+        ign,
+        approvedAt: data.approvedAt || data.createdAt || new Date(),
+        approvedBy: data.reviewedBy || "sync",
+        syncedAt: new Date()
+      }, { merge: true }));
+      count++;
+    });
+    await Promise.all(writes);
+    showToast(`Synced ${count} unique approved players to whitelist.`);
+    await loadWhitelist();
+  } catch(e) {
+    showToast("Sync error: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Sync from Applications";
+  }
+}
+
+function renderWhitelist() {
+  const q = ($("whitelistSearch")?.value || "").toLowerCase();
+  const list = allApprovedPlayers.filter(p =>
+    !q || String(p.ign || "").toLowerCase().includes(q)
+  );
+
+  $("whitelistTotal").textContent = allApprovedPlayers.length;
+  $("whitelistCount").textContent = allApprovedPlayers.length + " approved player(s)";
+
+  const cmds = allApprovedPlayers.map(p => `whitelist add ${p.ign}`).join("\n");
+  $("whitelistCmdPreview").value = cmds;
+
+  $("whitelistList").innerHTML = list.length ? list.map((p, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><strong>${esc(p.ign)}</strong></td>
+      <td style="font-size:.8rem;color:var(--muted)">${p.approvedAt?.toDate ? p.approvedAt.toDate().toLocaleDateString() : "—"}</td>
+      <td><button class="btn btn-small btn-danger" onclick="removeFromWhitelist('${esc(p.id)}','${esc(p.ign)}')">Remove</button></td>
+    </tr>`).join("") :
+    `<tr><td colspan="4" class="empty">No approved players found.</td></tr>`;
+}
+
+window.removeFromWhitelist = async (id, ign) => {
+  if (!confirm(`Remove ${ign} from approved players list?`)) return;
+  try {
+    await deleteDoc(doc(db, "approvedPlayers", id));
+    allApprovedPlayers = allApprovedPlayers.filter(p => p.id !== id);
+    renderWhitelist();
+    showToast(`${ign} removed.`);
+  } catch(e) { showToast(e.message); }
+};
+
+$("copyWhitelistCmdsBtn").onclick = () => {
+  const cmds = $("whitelistCmdPreview").value;
+  if (!cmds) { showToast("No approved players found."); return; }
+  navigator.clipboard.writeText(cmds).then(() =>
+    showToast("Commands copied! Paste into server console.")
+  ).catch(() => {
+    $("whitelistCmdPreview").select();
+    document.execCommand("copy");
+    showToast("Commands copied!");
+  });
+};
+
+$("downloadWhitelistBtn").onclick = () => {
+  if (!allApprovedPlayers.length) { showToast("No approved players."); return; }
+  const json = JSON.stringify(
+    allApprovedPlayers.map(p => ({ uuid: "", name: p.ign })),
+    null, 2
+  );
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+  a.download = "whitelist.json";
+  a.click();
+  showToast("whitelist.json downloaded. Note: UUIDs are blank — server will fill them when players join.");
+};
+
+$("refreshWhitelist").onclick = loadWhitelist;
+$("syncWhitelistBtn").onclick = syncApprovedToWhitelist;
+
+/* ══════════════════════════════════════════════════════════
+   REPORTS & INTELLIGENCE
+   ══════════════════════════════════════════════════════════ */
+
+let _rptRealData = { tps1m: null, openReports: 0, pendingApps: 0, openTickets: 0 };
+
+
+async function rptFetchServerStatus() {
+  const el = $("rptServerStatus");
+  const timeEl = $("rptServerLastCheck");
+  if (!el) return;
+  try {
+    const r = await fetch("https://api.mcsrvstat.us/3/play.firecraft.fun:20011");
+    const d = await r.json();
+    const now = new Date().toLocaleTimeString();
+    if (timeEl) timeEl.textContent = `Last checked: ${now}`;
+    if (d.online) {
+      const players = d.players ? `${d.players.online} / ${d.players.max}` : "—";
+      const ver = d.version || "—";
+      const sw = d.software || "Paper";
+      const motd = d.motd?.clean?.[0] || "FireCraft SMP";
+      el.innerHTML = `
+        <div class="rpt-server-row"><span class="label">Status</span><span class="value"><span class="rpt-online-dot"></span>Online</span></div>
+        <div class="rpt-server-row"><span class="label">Players</span><span class="value">${esc(players)}</span></div>
+        <div class="rpt-server-row"><span class="label">Version</span><span class="value">${esc(ver)} (${esc(sw)})</span></div>
+        <div class="rpt-server-row"><span class="label">MOTD</span><span class="value">${esc(motd)}</span></div>
+        <div class="rpt-server-row"><span class="label">Address</span><span class="value">play.firecraft.fun:20011</span></div>`;
+    } else {
+      el.innerHTML = `<div class="rpt-server-row"><span class="label">Status</span><span class="value"><span class="rpt-offline-dot"></span>Offline / Unreachable</span></div>`;
+    }
+  } catch {
+    if (el) el.innerHTML = `<p style="color:#7a8494;font-size:13px">Could not fetch server status. API may be temporarily unavailable.</p>`;
+  }
+}
+
+async function rptLoadCounts() {
+  try {
+    // Applications by status
+    const appSnap = await getDocs(collection(db, "applications"));
+    let appPending = 0, appApproved = 0, appRejected = 0;
+    appSnap.forEach(d => {
+      const s = d.data().status;
+      if (s === "pending") appPending++;
+      else if (s === "approved") appApproved++;
+      else if (s === "rejected") appRejected++;
+    });
+    const appTotal = appPending + appApproved + appRejected;
+
+    $("rptPendingAppsNum").textContent = appPending;
+    $("rptAppPending").textContent = appPending;
+    $("rptAppApproved").textContent = appApproved;
+    $("rptAppRejected").textContent = appRejected;
+    if (appTotal > 0) {
+      $("rptAppPendingBar").style.width  = (appPending  / appTotal * 100) + "%";
+      $("rptAppApprovedBar").style.width = (appApproved / appTotal * 100) + "%";
+      $("rptAppRejectedBar").style.width = (appRejected / appTotal * 100) + "%";
+    }
+    $("rptApprovedCount").textContent = appApproved;
+    $("rptApprovalRate").textContent = appTotal > 0 ? Math.round(appApproved / appTotal * 100) + "%" : "—";
+
+    // Tickets by status
+    const tickSnap = await getDocs(collection(db, "tickets"));
+    let tickOpen = 0, tickClosed = 0;
+    tickSnap.forEach(d => {
+      const s = d.data().status;
+      if (s === "open") tickOpen++; else tickClosed++;
+    });
+    const tickTotal = tickOpen + tickClosed;
+    $("rptOpenTicketsNum").textContent = tickOpen;
+    $("rptTicketOpen").textContent = tickOpen;
+    $("rptTicketClosed").textContent = tickClosed;
+    _rptRealData.pendingApps = appPending;
+    _rptRealData.openTickets = tickOpen;
+    rptUpdateHealthScore();
+    if (tickTotal > 0) {
+      $("rptTicketOpenBar").style.width   = (tickOpen   / tickTotal * 100) + "%";
+      $("rptTicketClosedBar").style.width = (tickClosed / tickTotal * 100) + "%";
+    }
+
+    // Users
+    const userSnap = await getDocs(collection(db, "users"));
+    $("rptTotalUsers").textContent = userSnap.size;
+
+    // Withdrawals pending
+    const wSnap = await getDocs(query(collection(db, "withdrawals"), where("status", "==", "pending")));
+    $("rptPendingWithdrawNum").textContent = wSnap.size;
+
+    // Reviews avg rating
+    const revSnap = await getDocs(collection(db, "reviews"));
+    if (revSnap.size > 0) {
+      let sum = 0;
+      revSnap.forEach(d => { sum += Number(d.data().rating || 0); });
+      $("rptAvgRating").textContent = (sum / revSnap.size).toFixed(1) + " ★";
+    } else {
+      $("rptAvgRating").textContent = "No reviews";
+    }
+
+    // Recent registrations
+    const recentUsers = await getDocs(query(collection(db, "users"), orderBy("createdAt", "desc"), limit(5)));
+    const ruEl = $("rptRecentUsers");
+    if (ruEl) {
+      ruEl.innerHTML = recentUsers.size ? recentUsers.docs.map(d => {
+        const u = d.data();
+        return `<div class="rpt-recent-item"><span class="ign">${esc(u.ign || "—")}</span><span class="meta">${u.createdAt ? u.createdAt.toDate().toLocaleDateString() : "—"}</span></div>`;
+      }).join("") : `<p style="color:#7a8494;font-size:12px">No accounts yet.</p>`;
+    }
+
+    // Recent applications
+    const recentApps = await getDocs(query(collection(db, "applications"), orderBy("submittedAt", "desc"), limit(5)));
+    const raEl = $("rptRecentApps");
+    if (raEl) {
+      raEl.innerHTML = recentApps.size ? recentApps.docs.map(d => {
+        const a = d.data();
+        const cls = a.status === "approved" ? "ok" : a.status === "rejected" ? "bad" : "warn";
+        return `<div class="rpt-recent-item"><span class="ign">${esc(a.ign || "—")}</span><span class="pill ${cls} status-pill">${esc(a.status || "pending")}</span></div>`;
+      }).join("") : `<p style="color:#7a8494;font-size:12px">No applications yet.</p>`;
+    }
+
+    // Recent tickets
+    const recentTix = await getDocs(query(collection(db, "tickets"), orderBy("createdAt", "desc"), limit(5)));
+    const rtEl = $("rptRecentTickets");
+    if (rtEl) {
+      rtEl.innerHTML = recentTix.size ? recentTix.docs.map(d => {
+        const t = d.data();
+        const cls = t.status === "open" ? "warn" : "ok";
+        return `<div class="rpt-recent-item"><span class="ign" style="max-width:130px;overflow:hidden;text-overflow:ellipsis">${esc(t.subject || t.ign || "—")}</span><span class="pill ${cls} status-pill">${esc(t.status || "open")}</span></div>`;
+      }).join("") : `<p style="color:#7a8494;font-size:12px">No tickets yet.</p>`;
+    }
+
+  } catch(e) {
+    console.error("Reports load error:", e);
+  }
+}
+
+async function rptLoadPluginData() {
+  try {
+    const snap = await getDoc(doc(db, "serverStatus", "latest"));
+    const pluginDataEl  = $("rptPluginData");
+    const pluginOffline = $("rptPluginOffline");
+    if (!snap.exists()) {
+      if (pluginOffline) pluginOffline.style.display = "block";
+      return;
+    }
+    const d = snap.data();
+    if (pluginDataEl) pluginDataEl.style.display = "block";
+
+    const tps1 = d.tps1m ?? null;
+    const tps5 = d.tps5m ?? null;
+    const tpsColor = t => t === null ? "#7a8494" : t >= 18 ? "#23a865" : t >= 15 ? "#d9a020" : "#c0404e";
+
+    if ($("rptTPS1m")) { $("rptTPS1m").textContent = tps1 !== null ? tps1.toFixed(1) : "—"; $("rptTPS1m").style.color = tpsColor(tps1); }
+    if ($("rptTPS5m")) { $("rptTPS5m").textContent = tps5 !== null ? tps5.toFixed(1) : "—"; $("rptTPS5m").style.color = tpsColor(tps5); }
+    if ($("rptRAMUsed")) $("rptRAMUsed").textContent = d.ramUsedMb ?? "—";
+    if ($("rptRAMMax"))  $("rptRAMMax").textContent  = d.ramMaxMb  ?? "—";
+
+    if ($("rptPluginUpdatedAt") && d.updatedAt) {
+      const ts = d.updatedAt.toDate ? d.updatedAt.toDate() : new Date(d.updatedAt);
+      const diff = Math.round((Date.now() - ts) / 60000);
+      $("rptPluginUpdatedAt").textContent = diff < 1 ? "just now" : diff + " min ago";
+    }
+
+    _rptRealData.tps1m = tps1;
+    rptUpdateHealthScore();
+  } catch(e) {
+    console.warn("Plugin data unavailable:", e);
+    const pluginOffline = $("rptPluginOffline");
+    if (pluginOffline) pluginOffline.style.display = "block";
+  }
+}
+
+async function rptLoadPlayerReports() {
+  try {
+    const reportsEl = $("rptPlayerReports");
+    if (!reportsEl) return;
+
+    const snap = await getDocs(
+      query(collection(db, "playerReports"), orderBy("timestamp", "desc"), limit(20))
+    );
+
+    if (snap.empty) {
+      reportsEl.innerHTML = `<p style="color:#7a8494;font-size:13px">No player reports yet. Once players use /report in-game, reports appear here.</p>`;
+      _rptRealData.openReports = 0;
+      if ($("rptOpenReportsNum")) $("rptOpenReportsNum").textContent = "0";
+      rptUpdateHealthScore();
+      return;
+    }
+
+    let openCount = 0;
+    snap.docs.forEach(d => { if ((d.data().status || "open") === "open") openCount++; });
+    _rptRealData.openReports = openCount;
+    if ($("rptOpenReportsNum")) $("rptOpenReportsNum").textContent = openCount;
+    rptUpdateHealthScore();
+
+    reportsEl.innerHTML = snap.docs.map(d => {
+      const r = d.data();
+      const ts = r.timestamp?.toDate ? r.timestamp.toDate() : new Date(r.timestamp || 0);
+      const timeAgo = Math.round((Date.now() - ts) / 60000);
+      const timeStr = timeAgo < 60 ? timeAgo + "m ago" : Math.round(timeAgo/60) + "h ago";
+      const status = r.status || "open";
+      const cls = status === "resolved" ? "ok" : "warn";
+      return `<div class="rpt-player-report" data-id="${esc(d.id)}" data-status="${esc(status)}">
+        <div class="rpt-pr-header">
+          <span class="rpt-pr-ign">⚔️ ${esc(r.ign || "Unknown")}</span>
+          <span class="pill ${cls}" style="font-size:10px">${esc(status)}</span>
+          <span class="rpt-pr-time">${timeStr}</span>
+        </div>
+        <div class="rpt-pr-msg">${esc(r.message || "")}</div>
+        ${status === "open" ? `<button class="btn btn-ghost" style="font-size:11px;padding:3px 10px;margin-top:6px" onclick="rptResolveReport('${esc(d.id)}', this)">✓ Resolve</button>` : ""}
+      </div>`;
+    }).join("");
+  } catch(e) {
+    console.warn("Player reports load error:", e);
+  }
+}
+
+window.rptResolveReport = async function(docId, btn) {
+  try {
+    btn.disabled = true;
+    btn.textContent = "…";
+    await updateDoc(doc(db, "playerReports", docId), { status: "resolved" });
+    const row = btn.closest(".rpt-player-report");
+    if (row) {
+      row.querySelector(".pill").className = "pill ok";
+      row.querySelector(".pill").textContent = "resolved";
+      row.dataset.status = "resolved";
+      btn.remove();
+    }
+    _rptRealData.openReports = Math.max(0, _rptRealData.openReports - 1);
+    if ($("rptOpenReportsNum")) $("rptOpenReportsNum").textContent = _rptRealData.openReports;
+    rptUpdateHealthScore();
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = "✓ Resolve";
+    console.error(e);
+  }
+};
+
+window.rptMarkReportResolved = async function(btn) {
+  const rows = document.querySelectorAll('.rpt-player-report[data-status="open"]');
+  if (!rows.length) { showToast("No open reports to resolve."); return; }
+  btn.disabled = true;
+  btn.textContent = "Resolving…";
+  let resolved = 0;
+  for (const row of rows) {
+    const id = row.dataset.id;
+    if (!id) continue;
+    try {
+      await updateDoc(doc(db, "playerReports", id), { status: "resolved" });
+      row.querySelector(".pill").className = "pill ok";
+      row.querySelector(".pill").textContent = "resolved";
+      row.dataset.status = "resolved";
+      row.querySelector(".btn.btn-ghost")?.remove();
+      resolved++;
+    } catch(e) { console.error(e); }
+  }
+  btn.disabled = false;
+  btn.textContent = "Mark Selected Resolved";
+  if (resolved > 0) {
+    _rptRealData.openReports = 0;
+    if ($("rptOpenReportsNum")) $("rptOpenReportsNum").textContent = "0";
+    rptUpdateHealthScore();
+    showToast(`${resolved} report${resolved !== 1 ? "s" : ""} resolved.`);
+  }
+};
+
+async function rptLoadActivity() {
+  try {
+    const now = Date.now();
+    const ms7  = 7  * 24 * 60 * 60 * 1000;
+    const ms30 = 30 * 24 * 60 * 60 * 1000;
+    const ts7  = new Date(now - ms7);
+    const ts30 = new Date(now - ms30);
+
+    const [apps7, apps30, tix7, users7] = await Promise.all([
+      getCountFromServer(query(collection(db, "applications"), where("submittedAt", ">=", ts7))),
+      getCountFromServer(query(collection(db, "applications"), where("submittedAt", ">=", ts30))),
+      getCountFromServer(query(collection(db, "tickets"),      where("createdAt",   ">=", ts7))),
+      getCountFromServer(query(collection(db, "users"),        where("createdAt",   ">=", ts7))),
+    ]);
+
+    const a7  = apps7.data().count;
+    const a30 = apps30.data().count;
+    const t7  = tix7.data().count;
+    const u7  = users7.data().count;
+
+    if ($("rptApps7d"))   $("rptApps7d").textContent   = a7;
+    if ($("rptApps30d"))  $("rptApps30d").textContent  = a30;
+    if ($("rptTickets7d"))$("rptTickets7d").textContent = t7;
+    if ($("rptReg7d"))    $("rptReg7d").textContent    = u7;
+
+    // Activity insight message
+    const insightEl = $("rptActivityAlert");
+    if (insightEl) {
+      if (a7 === 0 && u7 === 0) {
+        insightEl.innerHTML = `<strong>⚠️ Low Activity Alert:</strong> No new applications or registrations in the last 7 days. Consider running an event or posting in Discord to re-engage the community.`;
+      } else if (a7 < 3) {
+        insightEl.innerHTML = `<strong>📉 Activity is slow:</strong> Only <strong>${a7}</strong> application(s) this week. Try announcing the server in a Minecraft SMP Discord server or posting a short TikTok/YouTube video.`;
+      } else {
+        insightEl.innerHTML = `<strong>✅ Good activity:</strong> <strong>${a7}</strong> applications this week. Keep up the momentum — post a Discord update highlighting recent player achievements.`;
+      }
+    }
+
+    const appInsightEl = $("rptAppInsight");
+    if (appInsightEl) {
+      const trend = a30 > 0 ? Math.round((a7 / a30) * 100) : 0;
+      appInsightEl.innerHTML = `This week's ${a7} applications = <strong>${trend}%</strong> of the last 30 days' total (${a30}). ${trend >= 25 ? "📈 Trending well." : "📉 Activity declining — promote the server."}`;
+    }
+  } catch(e) {
+    console.warn("Activity metrics unavailable:", e);
+  }
+}
+
+function rptUpdateHealthScore() {
+  const { tps1m, openReports, pendingApps, openTickets } = _rptRealData;
+
+  let score = 100;
+  if (tps1m !== null) {
+    if (tps1m < 15) score -= 40;
+    else if (tps1m < 18) score -= 20;
+  }
+  if (openReports > 5) score -= 20;
+  else if (openReports > 0) score -= openReports * 3;
+  if (pendingApps > 10) score -= 15;
+  else if (pendingApps > 3) score -= 8;
+  if (openTickets > 10) score -= 15;
+  else if (openTickets > 3) score -= 8;
+  score = Math.max(0, Math.min(100, score));
+
+  const scoreEl = $("rptHealthScore");
+  const arcEl   = $("rptHealthArc");
+  const titleEl = $("rptHealthTitle");
+  const subEl   = $("rptHealthSub");
+  const issuesEl= $("rptHealthIssues");
+
+  if (scoreEl) scoreEl.textContent = score;
+
+  if (arcEl) {
+    const circ = 163.4; // 2π × r(26)
+    const offset = circ - (score / 100) * circ;
+    const color = score >= 70 ? "#23a865" : score >= 40 ? "#d9a020" : "#c0404e";
+    arcEl.setAttribute("stroke-dashoffset", offset);
+    arcEl.setAttribute("stroke", color);
+  }
+
+  if (titleEl) {
+    titleEl.textContent = score >= 70 ? "Server is in good shape!" : score >= 40 ? "Server needs improvement" : "Server needs urgent attention";
+  }
+
+  if (subEl) {
+    const parts = [];
+    if (tps1m !== null) parts.push(`TPS: ${tps1m.toFixed(1)}`);
+    if (openReports > 0) parts.push(`${openReports} open report${openReports !== 1 ? "s" : ""}`);
+    if (pendingApps > 0) parts.push(`${pendingApps} pending app${pendingApps !== 1 ? "s" : ""}`);
+    if (openTickets > 0) parts.push(`${openTickets} open ticket${openTickets !== 1 ? "s" : ""}`);
+    subEl.textContent = parts.length ? parts.join(" · ") : "All clear";
+  }
+
+  if (issuesEl) {
+    let tags = "";
+    if (tps1m !== null && tps1m < 16) tags += `<span class="rpt-health-issue-tag red">⚡ Low TPS: ${tps1m.toFixed(1)} (server lag)</span>`;
+    if (openReports > 0) tags += `<span class="rpt-health-issue-tag ${openReports > 5 ? "red" : "yellow"}">🚨 ${openReports} open player report${openReports !== 1 ? "s" : ""}</span>`;
+    if (pendingApps > 3) tags += `<span class="rpt-health-issue-tag yellow">📬 ${pendingApps} applications waiting review</span>`;
+    if (openTickets > 5) tags += `<span class="rpt-health-issue-tag yellow">🎫 ${openTickets} open support tickets</span>`;
+    if (!tags) tags = `<span class="rpt-health-issue-tag green">✅ No critical issues found</span>`;
+    issuesEl.innerHTML = tags;
+  }
+}
+
+async function loadReports() {
+  await Promise.all([rptFetchServerStatus(), rptLoadCounts(), rptLoadActivity(), rptLoadPluginData(), rptLoadPlayerReports()]);
+}
+
+$("refreshReports").onclick = loadReports;
+
+let _reportsLoaded = false;
+$("whitelistSearch").addEventListener("input", renderWhitelist);

@@ -16,23 +16,31 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    function isServerAccount() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/serverAccounts/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/serverAccounts/$(request.auth.uid)).data.active == true;
+    }
+
+    function serverOwnsId(serverId) {
+      return isServerAccount() &&
+        get(/databases/$(database)/documents/serverAccounts/$(request.auth.uid)).data.serverId == serverId;
+    }
+
     match /users/{uid} {
       allow read: if isSelf(uid) || isAdmin();
-
       allow create: if isSelf(uid)
         && request.resource.data.uid == uid
         && request.resource.data.role == "player";
-
       allow update: if isAdmin()
         || (isSelf(uid)
             && request.resource.data.uid == resource.data.uid
             && request.resource.data.role == resource.data.role);
-
       allow delete: if isAdmin();
     }
 
     match /usernames/{username} {
-      allow read: if signedIn();
+      allow read: if true;
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid;
       allow update, delete: if isAdmin();
@@ -42,10 +50,9 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.status == "pending";
-
       allow read: if isAdmin()
-        || (signedIn() && resource.data.uid == request.auth.uid);
-
+        || (signedIn() && resource.data.uid == request.auth.uid)
+        || resource.data.status == "approved";
       allow update, delete: if isAdmin();
     }
 
@@ -53,10 +60,8 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.status == "open";
-
       allow read: if isAdmin()
         || (signedIn() && resource.data.uid == request.auth.uid);
-
       allow update, delete: if isAdmin();
     }
 
@@ -64,7 +69,6 @@ service cloud.firestore {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }
-
 
     match /sponsoredPlacements/{placementId} {
       allow read: if true;
@@ -76,18 +80,112 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    match /powerAssignments/{uid} {
-      allow read: if isSelf(uid) || isAdmin();
+    match /approvedPlayers/{ign} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /gallery/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ── Plugin Reporting (written by FireCraftNotifier plugin, no auth needed) ─
+
+    // Live server status — plugin PATCHes this every 5 min
+    match /serverStatus/{doc} {
+      allow read: if isAdmin();
+      allow write: if true;
+    }
+
+    // Player /report submissions — plugin POSTs, admin reads
+    match /playerReports/{doc} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // Player session logs (join/quit times) — plugin POSTs, admin reads
+    match /playerSessions/{doc} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // Player reviews — one per user (UID is the document ID)
+    match /reviews/{uid} {
+      allow read: if true;
       allow create: if isSelf(uid)
-        && !exists(/databases/$(database)/documents/powerAssignments/$(uid))
+        && !exists(/databases/$(database)/documents/reviews/$(uid))
         && request.resource.data.uid == uid
-        && request.resource.data.powerId in ["miner", "pvper", "trader", "flyer", "foody", "hider"];
+        && request.resource.data.rating is number
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 10
+        && request.resource.data.text.size() <= 500;
       allow update, delete: if isAdmin();
     }
 
     match /staff/{uid} {
       allow read: if isAdmin();
       allow create, update, delete: if isAdmin();
+    }
+
+    // ── Earn System ─────────────────────────────────────────────────────────
+
+    // Partner server listings (public read)
+    match /partnerServers/{serverId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Server accounts — maps each server's Firebase UID to its serverId
+    match /serverAccounts/{uid} {
+      allow read: if isAdmin() || isSelf(uid);
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Earn system global settings (min withdrawal, currency, etc.)
+    match /earnSettings/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Active sessions — only server accounts can write; players can read own
+    match /activeSessions/{playerUid} {
+      allow read: if isAdmin() || isSelf(playerUid);
+      allow create, update: if isServerAccount();
+      allow delete: if isAdmin() || isServerAccount();
+    }
+
+    // Playtime logs — only server accounts can create for their own serverId
+    match /playtimeLogs/{logId} {
+      allow create: if isServerAccount()
+        && serverOwnsId(request.resource.data.serverId)
+        && request.resource.data.uid != null
+        && request.resource.data.minutesPlayed is number;
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // Wallets — players read own; only admin writes (balance is server-authoritative)
+    match /wallets/{uid} {
+      allow read: if isAdmin() || isSelf(uid);
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Withdrawal requests — players create own pending requests; admin manages
+    match /withdrawalRequests/{reqId} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == "pending"
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0;
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update, delete: if isAdmin();
     }
   }
 }
